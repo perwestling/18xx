@@ -18,13 +18,18 @@ module Engine
     def buying_train!(entity, train)
       next! while @next_on.include?(train.sym)
 
-      train.events.each do |event|
+      train.events.reject { |e| e['at'] }.each do |event|
         @game.send("event_#{event['type']}!")
       end
-      train.events.clear
 
       rust_trains!(train, entity)
       close_companies_on_train!(entity)
+
+      train.events.select { |e| e['at'] }.each do |event|
+        @game.send("event_#{event['type']}!")
+      end
+
+      train.events.clear
     end
 
     def current

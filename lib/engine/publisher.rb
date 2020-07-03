@@ -35,6 +35,10 @@ module Engine
         name: 'Z-MAN Games',
         url: 'https://zmangames.com/',
       },
+      self: {
+        name: 'Selfpublished',
+        url: 'https://www.google.com/',
+      },
     }.freeze
   end
 end
