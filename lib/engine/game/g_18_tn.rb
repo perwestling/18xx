@@ -14,6 +14,10 @@ module Engine
       GAME_DESIGNER = 'Mark Derrick'
 
       include CompanyPrice50To150Percent
+
+      def operating_round(round_num)
+        Round::G18TN::Operating.new(@corporations, game: self, round_num: round_num)
+      end
     end
   end
 end
