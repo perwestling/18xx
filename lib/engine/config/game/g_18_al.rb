@@ -238,7 +238,14 @@ module Engine
             100
          ],
          "coordinates":"A4",
-         "color":"blue"
+         "color":"blue",
+         "abilities": [
+            {
+              "type": "destination",
+              "name": "Historical objective",
+              "hex": "G4"
+            }
+         ]
       },
       {
          "sym":"M&O",
@@ -251,7 +258,14 @@ module Engine
             100
          ],
          "coordinates":"Q2",
-         "color":"orange"
+         "color":"orange",
+         "abilities": [
+            {
+              "type": "destination",
+              "name": "Historical objective",
+              "hex": "K2"
+            }
+         ]
       },
       {
          "sym":"WRA",
@@ -264,7 +278,14 @@ module Engine
             100
          ],
          "coordinates":"L5",
-         "color":"red"
+         "color":"red",
+         "abilities": [
+            {
+              "type": "destination",
+              "name": "Historical objective",
+              "hex": "J7"
+            }
+         ]
       },
       {
          "sym":"ATN",
@@ -276,7 +297,14 @@ module Engine
             100
          ],
          "coordinates":"F1",
-         "color":"black"
+         "color":"black",
+         "abilities": [
+            {
+              "type": "destination",
+              "name": "Historical objective",
+              "hex": "L1"
+            }
+         ]
       },
       {
          "sym":"ABC",
@@ -287,7 +315,14 @@ module Engine
             40
          ],
          "coordinates":"G6",
-         "color":"green"
+         "color":"green",
+         "abilities": [
+            {
+              "type": "destination",
+              "name": "Historical objective",
+              "hex": "G4"
+            }
+         ]
       },
       {
          "sym":"TAG",
@@ -299,7 +334,14 @@ module Engine
          ],
          "coordinates":"E6",
          "color":"yellow",
-         "text_color":"black"
+         "text_color":"black",
+         "abilities": [
+            {
+              "type": "destination",
+              "name": "Historical objective",
+              "hex": "G4"
+            }
+         ]
       }
    ],
    "trains":[
