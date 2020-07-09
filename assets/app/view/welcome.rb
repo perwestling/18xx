@@ -14,7 +14,10 @@ module View
 
     def render_notification
       message = <<~MESSAGE
-        <p>Using company abilities have changed. When they are corporation owned, you click on them to activate them.</p>
+        <h1>THIS IS A TEST SITE - NO SUPPORT</h1>
+        <p>Intention is to try out pre-alpha versions of 18xx for 18xx.games.</p>
+        <p>Currently only available game is 18AL</p>
+<!--        <p>Using company abilities have changed. When they are corporation owned, you click on them to activate them.</p>
         <p>1836Jr30 is now available for beta.</p>
         <p>1846 is now available for alpha.</p>
 
@@ -35,7 +38,8 @@ module View
         <a href='https://join.slack.com/t/18xxgames/shared_invite/zt-8ksy028m-CSZC~G5QtiFv60_jdqqulQ'>18xx slack</a>.
         General 18xx.games discussion is in #18xxgames, development discussion is in #18xxgamesdev (you can ask about
         bugs there), and general 18xx chat in #general.
-        </p>
+        </p> -->
+        <p>For the "real thing", go to <a href="http://18xx.games">18xx.games</a></p>
       MESSAGE
 
       props = {
@@ -54,8 +58,7 @@ module View
 
     def render_introduction
       message = <<~MESSAGE
-        <p>18xx.games is a website where you can play async or real-time 18xx games (based on the system originally devised by the brilliant Francis Tresham)! Right now only 1889 and 18Chesapeake are implemented
-        but I'm planning on doing many more in the future.</p>
+        <p>18xx.games is a website where you can play async or real-time 18xx games (based on the system originally devised by the brilliant Francis Tresham)!</p>
 
         <p>You can play locally with hot seat mode without an account. If you want to play multiplayer, you'll need to create an account.</p>
 

@@ -9,6 +9,8 @@ module Engine
     class G18MS < Base
       load_from_json(Config::Game::G18MS::JSON)
 
+#      DEV_STAGE = :alpha
+
       GAME_LOCATION = 'Mississippi, USA'
       GAME_DESIGNER = 'Mark Derrick'
       GAME_PUBLISHER = Publisher::INFO[:all_aboard_games]

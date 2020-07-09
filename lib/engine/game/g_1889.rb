@@ -1,3 +1,4 @@
+# coding: utf-8
 # frozen_string_literal: true
 
 require_relative '../config/game/g_1889'
@@ -16,7 +17,7 @@ module Engine
 
       load_from_json(Config::Game::G1889::JSON)
 
-      DEV_STAGE = :production
+#      DEV_STAGE = :production
 
       GAME_LOCATION = 'Shikoku, Japan'
       GAME_RULES_URL = 'http://dl.deepthoughtgames.com/1889-Rules.pdf'

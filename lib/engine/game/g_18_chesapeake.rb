@@ -16,7 +16,7 @@ module Engine
 
       load_from_json(Config::Game::G18Chesapeake::JSON)
 
-      DEV_STAGE = :production
+#      DEV_STAGE = :production
 
       GAME_LOCATION = nil
       GAME_RULES_URL = 'https://www.dropbox.com/s/x0dsehrxqr1tl6w/18Chesapeake_Rules.pdf'
