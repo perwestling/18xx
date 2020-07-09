@@ -7,7 +7,7 @@
 # This is used in e.g 18MEX and 18AL.
 #
 module CompanyPrice50To150Percent
-  def setup
+  def setup_company_price_50_to_150_percent
     @companies.each do |company|
       company.min_price = company.value * 0.5
       company.max_price = company.value * 1.5

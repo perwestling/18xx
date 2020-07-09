@@ -15,7 +15,9 @@ module Engine
       GAME_DESIGNER = 'Mark Derrick'
 
       include CompanyPrice50To150Percent
+
       def setup
+        setup_company_price_50_to_150_percent
         @minors.each do |minor|
           train = @depot.upcoming[0]
           train.buyable = false

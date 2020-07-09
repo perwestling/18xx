@@ -31,6 +31,18 @@ module Engine
 
         revenue
       end
+
+      def setup
+        setup_company_price_50_to_150_percent
+        @corporations.each do |corporation|
+          corporation.abilities(:destination) do |ability|
+            hex = @hexes.select do |h|
+              h.name == ability.hex
+            end.first
+            ability.value = hex.location_name
+          end
+        end
+      end
     end
   end
 end

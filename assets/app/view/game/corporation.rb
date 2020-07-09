@@ -44,6 +44,11 @@ module View
           children << h(Companies, owner: @corporation, game: @game) if @corporation.companies.any?
         end
 
+        corporation_only_abilities = @corporation.all_abilities.select do |ability|
+          ability.owner.corporation?
+        end
+        children << render_abilities(corporation_only_abilities) unless corporation_only_abilities.empty?
+
         if @corporation.owner
           subchildren = (@corporation.operating_history.empty? ? [] : [render_revenue_history])
           children << h('table.center', [h(:tr, subchildren)])
@@ -292,8 +297,31 @@ module View
       end
 
       def render_revenue_history
-        last_run = @corporation.operating_history[@corporation.operating_history.keys.max].revenue
-        h('td.bold', "Last Run: #{@game.format_currency(last_run)}")
+        latest_run = @corporation.operating_history[@corporation.operating_history.keys.max].revenue
+        h('td.bold', "Latest Run: #{@game.format_currency(latest_run)}")
+      end
+
+      def render_abilities(abilities)
+        attribute_lines = []
+
+        abilities.each do |ability|
+          attribute_lines << h('div.name.nowrap', ability.name)
+          attribute_lines << h('div.right', ability.value)
+        end
+
+        table_props = {
+          style: {
+            padding: '0 0.5rem',
+            grid: 'auto / 3fr 2fr',
+            gap: '0 0.2rem',
+          },
+        }
+
+        h('div#company_table', table_props, [
+          h('div.bold', 'Attribute'),
+          h('div.bold.right', 'Value'),
+          *attribute_lines,
+        ])
       end
 
       def selected?
