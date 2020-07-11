@@ -131,9 +131,24 @@ module View
       end
 
       def from_depot(depot_trains)
+        trains_from_depot = buyable_trains_in_depot(depot_trains, nil)
+        @corporation.abilities(:train_discount) do |ability|
+          trains_from_depot.concat(buyable_trains_in_depot(depot_trains, ability))
+        end
+        trains_from_depot
+      end
+
+      def buyable_trains_in_depot(depot_trains, ability)
         depot_trains.flat_map do |train|
+          next unless ability.nil? || (ability.trains.include? train.name)
+
           train.variants.sort_by { |_, v| v[:price] }.flat_map do |name, variant|
             price = variant[:price]
+            price -= if ability.absolute
+                       ability.discount
+                     else
+                       price * (ability.discount / 100.0)
+                     end unless ability.nil?
 
             buy_train = lambda do
               process_action(Engine::Action::BuyTrain.new(
@@ -141,10 +156,12 @@ module View
                 train: train,
                 price: price,
                 variant: name,
+                ability: ability
               ))
             end
 
             source = @depot.discarded.include?(train) ? 'The Discard' : 'The Depot'
+            source += ' discounted' unless ability.nil?
 
             [h(:div, name),
              h('div.nowrap', source),

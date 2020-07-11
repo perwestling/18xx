@@ -366,7 +366,7 @@ module Engine
       end
 
       def process_buy_train(action)
-        buy_train(action.entity, action.train, action.price, action.exchange)
+        buy_train(action.entity, action.train, action.price, action.exchange, action.ability)
         @last_share_sold_price = nil
       end
 
@@ -492,7 +492,7 @@ module Engine
         log_share_price(@current_entity, prev)
       end
 
-      def buy_train(entity, train, price, exchange)
+      def buy_train(entity, train, price, exchange, ability)
         # Check if the train is actually buyable in the current situation
         raise GameError, 'Not a buyable train' unless buyable_trains.include?(train)
 
@@ -523,6 +523,22 @@ module Engine
         @log << "#{entity.name} #{verb} a #{train.name} train for "\
           "#{@game.format_currency(price)} from #{source}"
         entity.buy_train(train, price)
+
+        update_ability(entity, ability)
+      end
+
+      def update_ability(entity, ability)
+        return if ability.nil?
+
+        entity.companies.each do |company|
+          company.abilities(ability.type) do |a|
+            a.use!
+            next if a.count.positive?
+
+            company.close!
+            @log << "Closing company #{company.name}"
+          end
+        end
       end
 
       def sell_shares(bundle)

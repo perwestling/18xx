@@ -257,7 +257,22 @@ module Engine
          "name":"New Decatur Yards",
          "value":120,
          "revenue":20,
-         "desc":"A corporation which owns the New Decatur Yards may purchase any one new train from the bank for half the regular price. This action closes the New Decatur Yards."
+         "desc":"A corporation which owns the New Decatur Yards may purchase any one new train from the bank for half the regular price. This action closes the New Decatur Yards.",
+         "abilities": [
+            {
+              "type": "train_discount",
+              "discount": 50,
+              "absolute": false,
+              "owner_type": "corporation",
+              "trains": [
+                 "3",
+                 "4",
+                 "5"
+              ],
+              "count": 1,
+              "when": "train"
+            }
+         ]
       }
    ],
    "corporations":[
