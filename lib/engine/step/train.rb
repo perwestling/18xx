@@ -61,6 +61,7 @@ module Engine
         train = action.train
         price = action.price
         exchange = action.exchange
+        ability = action.ability
         @game.phase.buying_train!(entity, train)
         # Check if the train is actually buyable in the current situation
         raise GameError, 'Not a buyable train' unless buyable_trains.include?(train)
@@ -92,6 +93,7 @@ module Engine
           "#{@game.format_currency(price)} from #{source}"
         entity.buy_train(train, price)
         @bought = true
+        entity.abilities(ability.to_sym, &:use!) unless ability.nil?
         pass! unless can_buy_train?(entity)
       end
 

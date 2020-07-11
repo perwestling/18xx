@@ -5,14 +5,15 @@ require_relative 'base'
 module Engine
   module Action
     class BuyTrain < Base
-      attr_reader :train, :price, :exchange
+      attr_reader :train, :price, :exchange, :ability
 
-      def initialize(entity, train:, price:, variant: nil, exchange: nil)
+      def initialize(entity, train:, price:, variant: nil, exchange: nil, ability: nil)
         @entity = entity
         @train = train
         @price = price
         @train.variant = variant
         @exchange = exchange
+        @ability = ability
       end
 
       def self.h_to_args(h, game)
@@ -21,6 +22,7 @@ module Engine
           price: h['price'],
           variant: h['variant'],
           exchange: game.train_by_id(h['exchange']),
+          ability: h['ability'],
         }
       end
 
@@ -30,6 +32,7 @@ module Engine
           'price' => @price,
           'variant' => @train.variants.one? ? nil : @train.name,
           'exchange' => @exchange&.id,
+          'ability' => @ability,
         }
       end
     end

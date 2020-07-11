@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../train'
+require_relative 'train'
 
 module Engine
   module Step

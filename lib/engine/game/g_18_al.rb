@@ -39,7 +39,7 @@ module Engine
           Step::G18AL::Token,
           Step::Route,
           Step::Dividend,
-          Step::SingleDepotTrainBuyBeforePhase4,
+          Step::G18AL::Train,
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
       end
