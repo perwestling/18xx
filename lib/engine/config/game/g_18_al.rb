@@ -205,11 +205,30 @@ module Engine
          "desc":"Comes with a Warrior Coal Field token. The owning corporation may place it in Gadsden Anniston Oxmoor Birmingham or Tuscaloosa provided that the corporation owns a train that can reach that city on existing track. Placing the token does NOT close the S&NA. The token makes that city worth an extra $10 (when run to) for that corporation only. The token remains on the board until the first 6 Train is purchased."
       },
       {
-         "sym":"BLC",
+         "sym":"B&SLC",
          "name":"Brown & Sons Lumber Co.",
          "value":70,
          "revenue":15,
-         "desc":"Owning corporation may lay the Lumber Terminal track tile (number 445) in an empty swamp hex. It need not be connected to an existing station of the corporation.  The corporation need not pay the $20 cost of the swamp hex.  And it does not count as the corporation's one tile lay per turn.  (But it still must be laid during the tile-laying step of the corporation's turn). Laying the tile does not close the B&SLC. The Lumber Terminal tile is permanent, and cannot be upgraded."
+         "desc":"Owning corporation may lay the Lumber Terminal track tile (number 445) in an empty swamp hex. It need not be connected to an existing station of the corporation.  The corporation need not pay the $20 cost of the swamp hex.  And it does not count as the corporation's one tile lay per turn.  (But it still must be laid during the tile-laying step of the corporation's turn). Laying the tile does not close the B&SLC. The Lumber Terminal tile is permanent, and cannot be upgraded.",
+         "abilities": [
+             {
+               "type": "tile_lay",
+               "free":true,
+               "owner_type": "corporation",
+               "tiles": [
+                  "445"
+               ],
+               "hexes": [
+                 "G2",
+                 "M2",
+                 "O4",
+                 "N5",
+                 "P5"
+               ],
+               "count": 1,
+               "when": "track"
+             }
+         ]
       },
       {
          "sym":"M&C",
