@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../config/game/g_18_al'
+require_relative '../g_18_al/phase'
 require_relative 'base'
 require_relative 'company_price_50_to_150_percent'
 
@@ -29,11 +30,19 @@ module Engine
         end
       end
 
+      def stock_round
+        Round::G18AL::Stock.new(@players, game: self)
+      end
+
+      def init_phase
+        Engine::G18AL::Phase.new(self.class::PHASES, self)
+      end
+
       def operating_round(round_num)
         Round::Operating.new(self, [
           Step::Bankrupt,
           Step::DiscardTrain,
-          Step::BuyCompany,
+          Step::G18AL::BuyCompany,
           Step::HomeToken,
           Step::G18AL::Track,
           Step::G18AL::Token,
@@ -42,6 +51,32 @@ module Engine
           Step::G18AL::Train,
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
+      end
+
+      def action_processed(action)
+        case action
+        when Action::Assign
+          company = action.entity
+          target = action.target
+
+          # Add a revenue bonus for the corporation
+          # that will be removed in phase 6
+          ability = Engine::Ability::HexBonus.new(
+            type: :hex_bonus,
+            name: 'Coal Field token',
+            value: target.id,
+            **{
+              'bonus_name' => "Visit hex #{target.id}",
+              'hex' => target.id,
+              'bonus' => 10,
+            }
+          )
+          company.owner.add_ability(ability)
+        end
+
+        @corporations.dup.each do |corporation|
+          close_corporation(corporation) if corporation.share_price&.price&.zero?
+        end
       end
 
       def revenue_for(route)
@@ -53,6 +88,11 @@ module Engine
           revenue = 2 * revenue - route.stops
             .select { |stop| stop.hex.tile.towns.any? }
             .sum { |stop| stop.route_revenue(route.phase, route.train) }
+        end
+
+        route.corporation.abilities(:hex_bonus) do |ability|
+          bonus = route.stops.sum { |stop| ability.hex == stop.hex.id ? ability.bonus : 0 }
+          revenue += bonus if bonus.positive?
         end
 
         revenue

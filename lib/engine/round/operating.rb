@@ -70,6 +70,10 @@ module Engine
       def teleported?(entity)
         entity.abilities(:teleport)&.find(&:used?)
       end
+
+      def calculate_route_bonus
+        RouteBonus.new(@current_entity).bonus_for_all(@current_routes)
+      end
     end
   end
 end
