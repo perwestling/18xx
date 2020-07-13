@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../config/game/g_18_al'
+require_relative '../g_18_al/phase'
 require_relative 'base'
 require_relative 'company_price_50_to_150_percent'
 
@@ -20,16 +21,16 @@ module Engine
         Round::G18AL::Operating.new(@corporations, game: self, round_num: round_num)
       end
 
-      def revenue_for(route)
-        revenue = super
+      def stock_round
+        Round::G18AL::Stock.new(@players, game: self)
+      end
 
-        if route.train.name == '4D'
-          revenue = 2 * revenue - route.stops
-            .select { |stop| stop.hex.tile.towns.any? }
-            .sum { |stop| stop.route_revenue(route.phase, route.train) }
-        end
+      def initiate_special
+        Round::G18AL::Special.new(@companies, game: self)
+      end
 
-        revenue
+      def init_phase
+        Engine::G18AL::Phase.new(self.class::PHASES, self)
       end
 
       def setup
@@ -42,6 +43,23 @@ module Engine
             ability.value = hex.location_name
           end
         end
+      end
+
+      def revenue_for(route)
+        revenue = super
+
+        if route.train.name == '4D'
+          revenue = 2 * revenue - route.stops
+            .select { |stop| stop.hex.tile.towns.any? }
+            .sum { |stop| stop.route_revenue(route.phase, route.train) }
+        end
+
+        route.corporation.abilities(:hex_bonus) do |ability|
+          bonus = route.stops.sum { |stop| ability.hex == stop.hex.id ? ability.bonus : 0 }
+          revenue += bonus if bonus.positive?
+        end
+
+        revenue
       end
     end
   end

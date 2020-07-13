@@ -10,6 +10,7 @@ end
 require_relative '../corporation'
 require_relative 'base'
 require_relative '../operating_info'
+require_relative 'route_bonus'
 
 module Engine
   module Round
@@ -346,10 +347,13 @@ module Engine
           @log << "#{@current_entity.name} runs a #{train.name} train for "\
             "#{@game.format_currency(route.revenue)} (#{hexes})"
         end
+        route_bonus = calculate_route_bonus
+        @log << "#{@current_entity.name} received a route bonus of "\
+          "#{@game.format_currency(route_bonus)}" if route_bonus.positive?
       end
 
       def process_dividend(action)
-        revenue = @current_routes.sum(&:revenue)
+        revenue = @current_routes.sum(&:revenue) + calculate_route_bonus
         rust_obsolete_trains!(@current_entity.trains)
         @current_entity.operating_history[[@game.turn, @round_num]] = OperatingInfo.new(
           @current_routes,
@@ -694,6 +698,10 @@ module Engine
         end
 
         @log << '-- Event: Obsolete trains rust --' if rusted_trains.any?
+      end
+
+      def calculate_route_bonus
+        RouteBonus.new(@current_entity).bonus_for_all(@current_routes)
       end
     end
   end

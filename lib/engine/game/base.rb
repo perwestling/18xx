@@ -282,7 +282,7 @@ module Engine
 
         @round_history = []
         @round = init_round
-        @special = Round::Special.new(@companies, game: self)
+        @special = initiate_special
 
         cache_objects
         connect_hexes
@@ -823,6 +823,10 @@ module Engine
 
       def operating_round(round_num)
         Round::Operating.new(@corporations, game: self, round_num: round_num)
+      end
+
+      def initiate_special
+        Round::Special.new(@companies, game: self)
       end
 
       def event_close_companies!
