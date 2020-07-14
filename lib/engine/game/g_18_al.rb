@@ -41,7 +41,15 @@ module Engine
       def revenue_for(route)
         ensure_terminus_first_or_last(route, %w[A4 Q2])
 
-        super
+        revenue = super
+
+        if route.train.name == '4D'
+          revenue = 2 * revenue - route.stops
+            .select { |stop| stop.hex.tile.towns.any? }
+            .sum { |stop| stop.route_revenue(route.phase, route.train) }
+        end
+
+        revenue
       end
 
       private
