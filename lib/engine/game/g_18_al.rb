@@ -37,6 +37,22 @@ module Engine
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
       end
+
+      def revenue_for(route)
+        ensure_terminus_first_or_last(route, %w[A4 Q2])
+
+        super
+      end
+
+      private
+
+      def ensure_terminus_first_or_last(route, termini)
+        inside_names = route.hexes[1...-1].map(&:name)
+        (termini & inside_names).each do |name|
+          city_name = route.hexes.detect { |h| h.name == name }.location_name
+          raise GameError, "#{city_name} must be first or last in route"
+        end
+      end
     end
   end
 end
