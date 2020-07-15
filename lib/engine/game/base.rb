@@ -43,6 +43,13 @@ module Engine
       GAME_DESIGNER = nil
       GAME_PUBLISHER = nil
 
+      # Allowed game end check values, if triggered:
+      #  none - selected trigger does not cause game to end
+      #  immediate - ends in current turn
+      #  current_or - ends at the next end of an OR
+      #  full_or - ends at the next end of a complete OR set
+      GAME_END_CHECK = { bankrupt: :immediate, stockmarket: :none, bank: :full_or }.freeze
+
       BANK_CASH = 12_000
 
       CURRENCY_FORMAT_STR = '$%d'
@@ -415,7 +422,7 @@ module Engine
         action_processed(action)
         @actions << action
 
-        end_game! if game_end_reason&.last == :immediate
+        end_game! if game_end_check&.last == :immediate
         while @round.finished? && !@finished
           @round.entities.each(&:unpass!)
           next_round!
@@ -818,11 +825,7 @@ module Engine
       end
 
       def next_round!
-        if (_reason, after = game_end_reason)
-          if after != :full_round || (@round.is_a?(Round::Operating) && @round.round_num == @operating_rounds)
-            return end_game!
-          end
-        end
+        return end_game! unless game_end_check.first.nil?
 
         @round =
           case @round
@@ -849,9 +852,33 @@ module Engine
         @round_history << @actions.size
       end
 
+      def game_end_check
+        when_points = [:immediate]
+        when_points << :current_or if @round.is_a?(Round::Operating)
+        when_points << :full_or if @round.is_a?(Round::Operating) && @round.round_num == @operating_rounds
+
+        triggers = {
+          bankrupt: -> { bankruptcy_limit_reached? },
+          bank: -> { @bank.broken? },
+          stockmarket: -> { @stock_market.max_reached? },
+        }
+
+        when_points.each do |when_point|
+          triggers.keys.each do |what|
+            next if self.class::GAME_END_CHECK[what] != when_point
+
+            return [what, when_point] if triggers[what].call
+          end
+        end
+
+        [nil, nil]
+      end
+
       def game_ending_description
-        reason, after = game_end_reason
-        return unless after
+        game_end_check_result = game_end_check
+        reason = game_end_check_result.first
+        after = game_end_check_result.last
+        return if reason.nil?
 
         after_text = ''
 
@@ -859,9 +886,9 @@ module Engine
           after_text = case after
                        when :immediate
                          ' : Game Ends immediately'
-                       when :current_round
-                         " : Game Ends at conclusion of this round (#{turn}.#{round_num})"
-                       when :full_round
+                       when :current_or
+                         " : Game Ends at conclusion of this OR (#{turn}.#{@round.round_num})"
+                       when :full_or
                          " : Game Ends at conclusion of OR #{turn}.#{operating_rounds}"
                        end
         end
@@ -872,11 +899,6 @@ module Engine
                        stockmarket: 'Company hit max stock value',
                      }
         "#{reason_map[reason]}#{after_text}"
-      end
-
-      def game_end_reason
-        return :bankrupt, :immediate if bankruptcy_limit_reached?
-        return :bank, :full_round if @bank.broken?
       end
 
       def action_processed(_action); end
