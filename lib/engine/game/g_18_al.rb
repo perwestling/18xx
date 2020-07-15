@@ -14,6 +14,8 @@ module Engine
       GAME_LOCATION = 'Alabama, USA'
       GAME_RULES_URL = 'http://www.diogenes.sacramento.ca.us/18AL_Rules_v1_64.pdf'
       GAME_DESIGNER = 'Mark Derrick'
+      GAME_END_CHECK_STOCKMARKET = true
+      GAME_END = :current_round
 
       include CompanyPrice50To150Percent
 

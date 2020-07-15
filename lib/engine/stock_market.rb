@@ -8,6 +8,8 @@ module Engine
 
     def initialize(market, unlimited_colors, multiple_buy_colors: [])
       @par_prices = []
+      @max_reached = false
+      @share_price_max = 0
       @market = market.map.with_index do |row, r_index|
         row.map.with_index do |code, c_index|
           price = SharePrice.from_code(code,
@@ -16,9 +18,11 @@ module Engine
                                        unlimited_colors,
                                        multiple_buy_colors: multiple_buy_colors)
           @par_prices << price if price&.can_par
+          @share_price_max = [@share_price_max, price&.price].max unless price&.price.nil?
           price
         end
       end
+      @par_prices.sort_by!(&:price).reverse!
     end
 
     def one_d?
@@ -87,6 +91,10 @@ module Engine
       end
     end
 
+    def max_reached?
+      @max_reached
+    end
+
     private
 
     def share_price(row, column)
@@ -99,6 +107,7 @@ module Engine
 
       corporation.share_price.corporations.delete(corporation)
       corporation.share_price = share_price
+      @max_reached = true unless @share_price_max > share_price.price
       share_price.corporations << corporation
     end
   end

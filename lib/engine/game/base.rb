@@ -42,6 +42,8 @@ module Engine
       GAME_RULES_URL = nil
       GAME_DESIGNER = nil
       GAME_PUBLISHER = nil
+      GAME_END_CHECK_STOCKMARKET = false
+      GAME_END = :full_round
 
       BANK_CASH = 12_000
 
@@ -720,9 +722,7 @@ module Engine
 
       def next_round!
         if (_reason, after = game_end_reason)
-          if after != :full_round || (@round.is_a?(Round::Operating) && @round.round_num == @operating_rounds)
-            return end_game!
-          end
+          return end_game! if after != :full_round || game_end_in_current_or?
         end
 
         @round =
@@ -746,6 +746,13 @@ module Engine
         @round_history << @actions.size
       end
 
+      def game_end_in_current_or?
+        return false unless @round.is_a?(Round::Operating)
+        return true if @round.round_num == @operating_rounds
+
+        self.class::GAME_END == :current_round
+      end
+
       def game_ending_description
         reason, after = game_end_reason
         return unless after
@@ -757,7 +764,7 @@ module Engine
                        when :immediate
                          ' : Game Ends immediately'
                        when :current_round
-                         " : Game Ends at conclusion of this round (#{turn}.#{round_num})"
+                         " : Game Ends at conclusion of this round (#{turn}.#{@round.round_num})"
                        when :full_round
                          " : Game Ends at conclusion of OR #{turn}.#{operating_rounds}"
                        end
@@ -773,7 +780,9 @@ module Engine
 
       def game_end_reason
         return :bankrupt, :immediate if @round.is_a?(Round::Operating) && bankruptcy_limit_reached?
-        return :bank, :full_round if @bank.broken?
+        return :bank, self.class::GAME_END if @bank.broken?
+        return :stockmarket, self.class::GAME_END if
+          self.class::GAME_END_CHECK_STOCKMARKET && @stock_market.max_reached?
       end
 
       def action_processed(_action); end
