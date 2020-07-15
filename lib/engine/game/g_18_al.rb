@@ -46,6 +46,7 @@ module Engine
       end
 
       def revenue_for(route)
+        ensure_terminus_first_or_last(route, %w[A4 Q2])
         revenue = super
 
         if route.train.name == '4D'
@@ -60,6 +61,16 @@ module Engine
         end
 
         revenue
+      end
+
+      private
+
+      def ensure_terminus_first_or_last(route, termini)
+        termini.each do |terminus|
+          index = route.hexes.index { |hex| hex.name == terminus }
+          raise GameError, "#{route.hexes[index].location_name} must be first or last in route" unless
+            index.nil? || index.zero? || index + 1 == route.hexes.length
+        end
       end
     end
   end
