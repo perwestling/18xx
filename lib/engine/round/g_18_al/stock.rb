@@ -15,8 +15,9 @@ module Engine
         def log_pass(entity)
           begin
             ability = route_bonus_ability
-            ability.owner.remove_ability(ability)
-            @game.log << "Removed ability due to presidency change: #{ability.name}"
+            ability.owner.remove_ability(ability.type)
+            @bonus_controller = nil
+            @game.log << "Removed from #{ability.owner.name} due to presidency change: #{ability.name}"
           end unless @bonus_controller.nil? || @bonus_controller == player_controlling_route_bonus_ability
 
           super
