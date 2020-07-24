@@ -326,7 +326,7 @@ module Engine
          "float_percent":50,
          "sym":"CHI",
          "name":"Chihuahua Pacific Railway",
-         "logo":"18_mex/CHI",
+         "logo":"18_mex/Chi",
          "tokens":[
             0,
             40,
@@ -438,8 +438,7 @@ module Engine
             {
                "nodes":[
                   "city",
-                  "offboard",
-                  "town"
+                  "offboard"
                ],
                "pay":2,
                "visit":2
@@ -453,7 +452,7 @@ module Engine
             }
          ],
          "price":100,
-         "num":9,
+         "num":6,
          "rusts_on":"4"
       },
       {
@@ -462,8 +461,7 @@ module Engine
             {
                "nodes":[
                   "city",
-                  "offboard",
-                  "town"
+                  "offboard"
                ],
                "pay":3,
                "visit":3
@@ -477,7 +475,30 @@ module Engine
             }
          ],
          "price":180,
-         "num":6,
+         "num":4,
+         "rusts_on":"6"
+      },
+      {
+         "name":"3½",
+         "distance":[
+            {
+               "nodes":[
+                  "city",
+                  "offboard"
+               ],
+               "pay":3,
+               "visit":3
+            },
+            {
+               "nodes":[
+                  "town"
+               ],
+               "pay":99,
+               "visit":99
+            }
+         ],
+         "price":180,
+         "num":2,
          "rusts_on":"6"
       },
       {
@@ -486,8 +507,7 @@ module Engine
             {
                "nodes":[
                   "city",
-                  "offboard",
-                  "town"
+                  "offboard"
                ],
                "pay":4,
                "visit":4
@@ -502,7 +522,7 @@ module Engine
          ],
          "price":300,
          "num":3,
-         "rusts_on":"4D"
+         "rusts_on":"6½"
       },
       {
          "name":"5",
@@ -510,8 +530,7 @@ module Engine
             {
                "nodes":[
                   "city",
-                  "offboard",
-                  "town"
+                  "offboard"
                ],
                "pay":5,
                "visit":5
@@ -533,8 +552,7 @@ module Engine
             {
                "nodes":[
                   "city",
-                  "offboard",
-                  "town"
+                  "offboard"
                ],
                "pay":6,
                "visit":6
@@ -548,7 +566,29 @@ module Engine
             }
          ],
          "price":600,
-         "num":2
+         "num":1
+      },
+      {
+         "name":"6½",
+         "distance":[
+            {
+               "nodes":[
+                  "city",
+                  "offboard"
+               ],
+               "pay":6,
+               "visit":6
+            },
+            {
+               "nodes":[
+                  "town"
+               ],
+               "pay":99,
+               "visit":99
+            }
+         ],
+         "price":600,
+         "num":1
       },
       {
          "name":"4D",
@@ -556,8 +596,7 @@ module Engine
             {
                "nodes":[
                   "city",
-                  "offboard",
-                  "town"
+                  "offboard"
                ],
                "pay":4,
                "visit":4
@@ -722,56 +761,98 @@ module Engine
          "tiles":[
             "yellow"
          ],
-         "buy_companies":true
+         "operating_rounds": 1,
+         "events":{
+            "buy_one":true
+         }
       },
       {
          "name":"3",
+         "on":"3",
          "train_limit":3,
          "tiles":[
             "yellow",
             "green"
          ],
-         "buy_companies":true
+         "buy_companies":true,
+         "operating_rounds": 2
+      },
+      {
+         "name":"3½",
+         "on":"3½",
+         "train_limit":3,
+         "tiles":[
+            "yellow",
+            "green"
+         ],
+         "buy_companies":true,
+         "operating_rounds": 2,
+         "events":{
+            "minors_closed":true
+         }
       },
       {
          "name":"4",
-         "train_limit":3,
+         "on":"4",
+         "train_limit":2,
          "tiles":[
             "yellow",
             "green"
          ],
-         "buy_companies":true
+         "buy_companies":true,
+         "operating_rounds": 2,
+         "events":{
+            "buy_many":true
+         }
       },
       {
          "name":"5",
-         "train_limit":3,
+         "on":"5",
+         "train_limit":2,
          "tiles":[
             "yellow",
             "green",
             "brown"
          ],
+         "operating_rounds": 3,
          "events":{
-            "close_companies":true
+            "close_companies":true,
+            "ndm_merger":true
          }
       },
       {
          "name":"6",
-         "train_limit":3,
+         "on":"6",
+         "train_limit":2,
          "tiles":[
             "yellow",
             "green",
             "brown"
-         ]
+         ],
+         "operating_rounds": 3
+      },
+      {
+         "name":"6½",
+         "on":"6½",
+         "train_limit":2,
+         "tiles":[
+            "yellow",
+            "green",
+            "brown"
+         ],
+         "operating_rounds": 3
       },
       {
          "name":"4D",
-         "train_limit":3,
+         "on":"4D",
+         "train_limit":2,
          "tiles":[
             "yellow",
             "green",
             "brown",
             "gray"
-         ]
+         ],
+         "operating_rounds": 3
       }
    ]
 }

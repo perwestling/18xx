@@ -16,6 +16,13 @@ module Engine
       GAME_DESIGNER = 'Mark Derrick'
       GAME_END_CHECK = { bankrupt: :immediate, stock_market: :current_or, bank: :current_or }.freeze
 
+      EVENTS_TEXT = Base::EVENTS_TEXT.merge(
+        'buy_one' => ['Buy one', 'Can only buy 1 train from bank per OR'],
+        'minors_closed' => ['Minors closed', 'Minors closed, NdM available'],
+        'buy_many' => ['Buy many', 'Can buy many trains from bank'],
+        'ndm_merger' => ['NdM merger', 'NdM merger']
+      ).freeze
+
       include CompanyPrice50To150Percent
       include Revenue4D
       include TerminusCheck
@@ -53,6 +60,22 @@ module Engine
         ensure_termini_not_passed_through(route, %w[Q14])
 
         adjust_revenue_for_4d_train(route, super)
+      end
+
+      def event_buy_one!
+        @log << 'A company can only buy one train per OR from the bank'
+      end
+
+      def event_minors_closed!
+        @log << 'Now minors should close. Not implemented yet!'
+      end
+
+      def event_buy_many!
+        @log << 'Buy restriction of one train per OR removed'
+      end
+
+      def event_ndm_merger!
+        @log << 'Now NdM should offer to merge other corporation. Not implemented yet!'
       end
     end
   end
