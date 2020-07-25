@@ -784,6 +784,15 @@ module Engine
          ],
          "path=a:1,b:4;upgrade=cost:60,terrain:mountain":[
             "R13"
+         ],
+         "town=revenue:10;path=a:1,b:_0;path=a:_0,b:4;border=edge:2,type:impassable":[
+            "L13"
+         ],
+         "town=revenue:10;path=a:1,b:_0;path=a:_0,b:4;border=edge:3,type:impassable":[
+            "L5"
+         ],
+         "town=revenue:10;path=a:1,b:_0;path=a:_0,b:4":[
+            "O14"
          ]
       }
    },
