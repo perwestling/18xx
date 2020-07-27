@@ -32,7 +32,7 @@ module Engine
           'price' => @price,
           'variant' => @train.variants.one? ? nil : @train.name,
           'exchange' => @exchange&.id,
-          'ability' => @ability.nil? ? nil : @ability.type,
+          'ability' => @ability,
         }
       end
     end

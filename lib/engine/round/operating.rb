@@ -492,7 +492,7 @@ module Engine
         log_share_price(@current_entity, prev)
       end
 
-      def buy_train(entity, train, price, exchange, ability)
+      def buy_train(entity, train, price, exchange, ability_type)
         # Check if the train is actually buyable in the current situation
         raise GameError, 'Not a buyable train' unless buyable_trains.include?(train)
 
@@ -524,14 +524,14 @@ module Engine
           "#{@game.format_currency(price)} from #{source}"
         entity.buy_train(train, price)
 
-        update_ability(entity, ability)
+        update_ability(entity, ability_type)
       end
 
-      def update_ability(entity, ability)
-        return if ability.nil?
+      def update_ability(entity, ability_type)
+        return if ability_type.nil?
 
         entity.companies.each do |company|
-          company.abilities(ability.type) do |a|
+          company.abilities(ability_type) do |a|
             a.use!
             next if a.count.positive?
 

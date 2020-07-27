@@ -156,12 +156,12 @@ module View
                 train: train,
                 price: price,
                 variant: name,
-                ability: ability
+                ability: ability&.type
               ))
             end
 
             source = @depot.discarded.include?(train) ? 'The Discard' : 'The Depot'
-            source += ' discounted' unless ability.nil?
+            source += ' discounted' if ability
 
             [h(:div, name),
              h('div.nowrap', source),
