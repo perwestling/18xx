@@ -189,8 +189,8 @@ module View
         }
 
         revenue = begin
-                    route_bonus = Engine::Round::RouteBonus.new(@game.round.current_entity)
-                    @game.format_currency(active_routes.sum(&:revenue) + route_bonus.bonus_for_all(active_routes))
+                    @game.format_currency(active_routes.sum(&:revenue) +
+                      Engine::Round::RouteBonus.bonus_for_all(@game.round.current_entity, active_routes))
                   rescue Engine::GameError
                     '(Invalid Route)'
                   end

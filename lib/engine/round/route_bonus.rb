@@ -3,16 +3,12 @@
 module Engine
   module Round
     class RouteBonus
-      def initialize(entity)
-        @bonus_candidates = []
-        entity.abilities(:route_bonus) do |ability|
-          @bonus_candidates.concat(ability.bonuses)
-        end
-      end
+      def self.bonus_for_all(entity, routes)
+        candidates = entity.abilities(:route_bonus)
+        return 0 if candidates.empty?
 
-      def bonus_for_all(routes)
         triggered_bonus_infos = []
-        @bonus_candidates.each do |bonus_info|
+        candidates.first.bonuses.each do |bonus_info|
           routes.each do |route|
             hexes = route.hexes.map(&:name)
             bonus_hexes = bonus_info.hexes.select { |hex_name| hexes.include? hex_name }

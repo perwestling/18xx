@@ -20,11 +20,9 @@ module Engine
             type: :hex_bonus,
             name: 'Coal Field token',
             value: target.id,
-            **{
-              'bonus_name' => "Visit hex #{target.id}",
-              'hex' => target.id,
-              'bonus' => 10,
-            }
+            bonus_name: "Visit hex #{target.id}",
+            hex: target.id,
+            bonus: 10
           )
           company.owner.add_ability(ability)
         end

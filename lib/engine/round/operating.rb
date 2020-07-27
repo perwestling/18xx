@@ -717,7 +717,7 @@ module Engine
       end
 
       def calculate_route_bonus
-        RouteBonus.new(@current_entity).bonus_for_all(@current_routes)
+        Engine::Round::RouteBonus.bonus_for_all(@current_entity, @current_routes)
       end
     end
   end
