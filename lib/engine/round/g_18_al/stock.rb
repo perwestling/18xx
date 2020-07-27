@@ -16,7 +16,7 @@ module Engine
           return if @controller_at_start.nil? || @controller_at_start == current_controller
 
           @log << "#{route_bonus_ability.owner.name} removes route bonuses as presidency changed"
-          president_changed(route_bonus_ability.owner)
+          route_bonus_ability.owner.remove_ability(route_bonus_ability.type)
           @controller_at_start = nil
         end
 
@@ -34,12 +34,6 @@ module Engine
           end
 
           nil
-        end
-
-        def president_changed(corporation)
-          corporation.abilities(:route_bonus) do |ability|
-            corporation.remove_ability(ability)
-          end
         end
       end
     end
