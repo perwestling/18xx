@@ -37,6 +37,7 @@ module Engine
         { sym: :double_yellow_first_or, desc: '7a: Allow corporation to lay 2 yellows its first OR' },
         { sym: :LN_home_city_moved, desc: '7b: Move L&N home city to Decatur - Nashville becomes off board hex' },
         { sym: :unlimited_4d, desc: '7c: Unlimited number of 4D' },
+        { sym: :hard_rust_t4, desc: '7d: Hard rust for T4' },
       ].freeze
 
       include CompanyPrice50To150Percent
@@ -198,6 +199,15 @@ module Engine
           new_4d.index = i
           @depot.add_train(new_4d)
         end
+      end
+
+      def change_4t_to_hardrust
+        @depot.trains
+          .select { |t| t.name == '4' }
+          .each do |t|
+            t.rusts_on = t.obsolete_on
+            t.obsolete_on = nil
+          end
       end
     end
   end
