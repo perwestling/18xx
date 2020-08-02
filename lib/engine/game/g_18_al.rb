@@ -36,6 +36,7 @@ module Engine
       OPTIONAL_RULES = [
         { sym: :double_yellow_first_or, desc: '7a: Allow corporation to lay 2 yellows its first OR' },
         { sym: :LN_home_city_moved, desc: '7b: Move L&N home city to Decatur - Nashville becomes off board hex' },
+        { sym: :unlimited_4d, desc: '7c: Unlimited number of 4D' },
       ].freeze
 
       include CompanyPrice50To150Percent
@@ -59,6 +60,8 @@ module Engine
             @log << " * #{o_r[:desc]})"
           end
           move_ln_corporation if @optional_rules.include?(:LN_home_city_moved)
+          add_extra_4d if @optional_rules.include?(:unlimited_4d)
+          change_4t_to_hardrust if @optional_rules.include?(:hard_rust_t4)
         end if @optional_rules
 
         @corporations.each do |corporation|
@@ -185,6 +188,16 @@ module Engine
         previous_hex.tile = Tile.from_code(old_tile.name, old_tile.color, tile_string)
 
         ln.coordinates = 'C4'
+      end
+
+      def add_extra_4d
+        diesel_trains = @depot.trains.select { |t| t.name == '4D' }
+        diesel = diesel_trains.first
+        (diesel_trains.length + 1).upto(8) do |i|
+          new_4d = diesel.clone
+          new_4d.index = i
+          @depot.add_train(new_4d)
+        end
       end
     end
   end

@@ -60,6 +60,12 @@ module Engine
       @discarded.delete(train)
     end
 
+    def add_train(train)
+      train.owner = self
+      @trains << train
+      @upcoming << train
+    end
+
     def depot_trains
       [
         @upcoming.first,
