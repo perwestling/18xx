@@ -35,6 +35,7 @@ module Engine
 
       OPTIONAL_RULES = [
         { sym: :double_yellow_first_or, desc: '7a: Allow corporation to lay 2 yellows its first OR' },
+        { sym: :LN_home_city_moved, desc: '7b: Move L&N home city to Decatur - Nashville becomes off board hex' },
       ].freeze
 
       include CompanyPrice50To150Percent
@@ -57,6 +58,7 @@ module Engine
 
             @log << " * #{o_r[:desc]})"
           end
+          move_ln_corporation if @optional_rules.include?(:LN_home_city_moved)
         end if @optional_rules
 
         @corporations.each do |corporation|
@@ -173,6 +175,16 @@ module Engine
         route.corporation.abilities(type).sum do |ability|
           ability.hexes == (ability.hexes & route.hexes.map(&:name)) ? ability.amount : 0
         end
+      end
+
+      def move_ln_corporation
+        ln = corporation_by_id('L&N')
+        previous_hex = @hexes.find { |h| h.name == 'A4' }
+        old_tile = previous_hex.tile
+        tile_string = 'offboard=revenue:yellow_40|brown_50;path=a:0,b:_0;path=a:1,b:_0'
+        previous_hex.tile = Tile.from_code(old_tile.name, old_tile.color, tile_string)
+
+        ln.coordinates = 'C4'
       end
     end
   end
