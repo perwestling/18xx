@@ -33,6 +33,9 @@ module Engine
 
       ROUTE_BONUSES = %i[atlanta_birmingham mobile_nashville].freeze
 
+      OPTIONAL_RULES = [
+      ].freeze
+
       include CompanyPrice50To150Percent
       include Revenue4D
       include TerminusCheck
@@ -43,6 +46,15 @@ module Engine
 
       def setup
         setup_company_price_50_to_150_percent
+
+        begin
+          @log << 'Optional rule used in this game:'
+          OPTIONAL_RULES.each do |o_r|
+            next unless o_r[:sym] == optional_rules
+
+            @log << " * #{o_r[:desc]})"
+          end
+        end if @optional_rules
 
         @corporations.each do |corporation|
           corporation.abilities(:assign_hexes) do |ability|
