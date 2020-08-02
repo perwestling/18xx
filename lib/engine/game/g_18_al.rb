@@ -34,6 +34,7 @@ module Engine
       ROUTE_BONUSES = %i[atlanta_birmingham mobile_nashville].freeze
 
       OPTIONAL_RULES = [
+        { sym: :double_yellow_first_or, desc: '7a: Allow corporation to lay 2 yellows its first OR' },
       ].freeze
 
       include CompanyPrice50To150Percent
@@ -45,6 +46,8 @@ module Engine
       end
 
       def setup
+        @recently_floated = []
+
         setup_company_price_50_to_150_percent
 
         begin
@@ -79,6 +82,10 @@ module Engine
           Step::SingleDepotTrainBuyBeforePhase4,
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
+      end
+
+      def or_round_finished
+        @recently_floated = []
       end
 
       def stock_round
@@ -145,6 +152,19 @@ module Engine
         @hexes
           .select { |hex| hexes_to_clear.include?(hex.name) && exclude != hex.name }
           .each { |hex| hex.tile.icons = [] }
+      end
+
+      def float_corporation(corporation)
+        @recently_floated << corporation
+
+        super
+      end
+
+      def tile_lays(entity)
+        return super if !@optional_rules&.include?(:double_yellow_first_or) ||
+          !@recently_floated&.include?(entity)
+
+        [{ lay: true, upgrade: true }, { lay: :not_if_upgraded, upgrade: false }]
       end
 
       private
