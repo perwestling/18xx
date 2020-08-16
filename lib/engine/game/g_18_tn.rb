@@ -34,9 +34,15 @@ module Engine
         'civil_war' => ['Civil War', 'Companies with trains lose revenue of one train its next OR']
       ).freeze
 
+      OPTIONAL_RULES = [
+        { sym: :triple_yellow_first_or, desc: '8a: Allow corporation to lay 3 yellows its first OR' },
+      ].freeze
+
       include CompanyPrice50To150Percent
 
       def setup
+        @recently_floated = []
+
         setup_company_price_50_to_150_percent
 
         # Illinois Central has a 30% presidency share
@@ -70,6 +76,10 @@ module Engine
           Step::SingleDepotTrainBuyBeforePhase4,
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
+      end
+
+      def or_round_finished
+        @recently_floated = []
       end
 
       def routes_revenue(routes)
@@ -112,6 +122,19 @@ module Engine
         #   Chattanooga (H15) has C label. Only P label is OK.
         #   Nashville (F11) has N label. Only P label is OK.
         from.color == :green && HEX_WITH_P_LABEL.include?(from.hex.name) && to.color == :brown && to.label.to_s == 'P'
+      end
+
+      def float_corporation(corporation)
+        @recently_floated << corporation
+
+        super
+      end
+
+      def tile_lays(entity)
+        return super if !@optional_rules&.include?(:triple_yellow_first_or) ||
+          !@recently_floated&.include?(entity)
+
+        TILE_LAYS << { lay: :not_if_upgraded, upgrade: false }
       end
     end
   end
