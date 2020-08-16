@@ -36,6 +36,7 @@ module Engine
 
       OPTIONAL_RULES = [
         { sym: :triple_yellow_first_or, desc: '8a: Allow corporation to lay 3 yellows its first OR' },
+        { sym: :salvage_3_train, desc: '8c: Owning company get $50 salvage pay when 3 trains rusted' },
       ].freeze
 
       include CompanyPrice50To150Percent
@@ -94,6 +95,12 @@ module Engine
 
       def init_share_pool
         Engine::G18TN::SharePool.new(self)
+      end
+
+      def init_phase
+        return super if @optional_rules&.include?(:salvage_3_train)
+
+        Engine::G18TN::Phase.new(self.class::PHASES, self)
       end
 
       def event_civil_war!
