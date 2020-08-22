@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../config/game/g_18_tn'
+require_relative '../g_18_tn/phase'
 require_relative '../g_18_tn/share_pool'
 require_relative 'base'
 require_relative 'company_price_50_to_150_percent'
@@ -98,9 +99,9 @@ module Engine
       end
 
       def init_phase
-        return super if @optional_rules&.include?(:salvage_3_train)
+        return super unless @optional_rules&.include?(:salvage_3_train)
 
-        Engine::G18TN::Phase.new(self.class::PHASES, self)
+        Engine::G18TN::Phase.new(PHASES, self)
       end
 
       def event_civil_war!
