@@ -17,25 +17,44 @@ module View
 
     def render_notification
       message = <<~MESSAGE
-        <p>18Carolinas (prototype from All-Aboard Games) is now in alpha. 1836jr56 and 1893 is now in beta</p>
-        <p>18SJ prototype now updated to version 0.8 - and two variants added, including a 2 player variant.</p>
-        <p>1830 now supports 2-player games.</p>
-
-        <p>We now support Slack/Discord notifications. Learn how to use them <a href='https://github.com/tobymao/18xx/wiki/Notifications'>here</a>.</p>
-        <p>Please submit problem reports and make suggestions for improvements on
-        <a href='https://github.com/tobymao/18xx/issues'>GitHub</a>.</p>
-        <p>The <a href='https://github.com/tobymao/18xx/wiki'>18xx.games Wiki</a> has rules, maps,
-        and other information about all the games, along with an FAQ.</p>
-
-        <p>Support our publishers: #{Lib::Publisher.link_list.join}.</p>
-        <p>You can support this project on <a href='https://www.patreon.com/18xxgames'>Patreon</a>.</p>
-
-        <p>Join the
-        <a href='https://join.slack.com/t/18xxgames/shared_invite/zt-8ksy028m-CSZC~G5QtiFv60_jdqqulQ'>18xx Slack</a>.
-        Chat about 18xx in the <a href='https://18xxgames.slack.com/archives/C68J3MK2A'>#general</a> channel.
-        Discussion of the 18xx.games site is in the
-        <a href='https://18xxgames.slack.com/archives/CV3R3HPUZ'>#18xxgames</a> channel and the developers can be
-        found in the <a href='https://18xxgames.slack.com/archives/C012K0CNY5C'>#18xxgamesdev</a> channel.</p>
+        <h1>THIS IS A TEST SITE - NO SUPPORT</h1>
+        <p>Intention is to try out pre-alpha versions of 18xx for 18xx.games.</p>
+        <p>Currently only available games are:</p>
+        <ul>
+         <li><b>1824</b> -- not yet playable pre-alpha test version</li>
+         <li><b>1893</b> -- playable beta test version</li>
+         <li><b>18Rhl</b> -- playable pre-alpha test version</li>
+         <li><b>18SJ</b> -- version 0.8, plus 2 variants</li>
+        </ul>
+        This is a test site, just used to try out features and/or games before considering to push them to the "real" site.
+        Games created here has no guarantee, and might be removed if they bug out.
+        New version might be deployed at unspecified times.
+        <p>
+        Release notes:
+         <ul>
+           <li>2021-08-02:
+            <ul>
+              <li>Latest version of master, which includes fixes 1893 and 18SJ.</li>
+            </ul>
+           </li>
+           <li>2021-07-30:
+            <ul>
+              <li>Latest version of master, which include updated 18Rhl and 18SJ.</li>
+            </ul>
+           </li>
+           <li>2021-07-29:
+             <ul>
+               <li>Latest master versions for 18Rhl and 18SJ.</li>
+             </ul>
+           </li>
+           <li>2021-07-26:
+             <ul>
+               <li>Deployed 1824, 1983, 18Rhl and 18SJ</li>
+             </ul>
+           </li>
+         </ul>
+        </p>
+        <p>For the "real thing", go to <a href="http://18xx.games">18xx.games</a></p>
       MESSAGE
 
       props = {
@@ -54,8 +73,7 @@ module View
 
     def render_introduction
       message = <<~MESSAGE
-        <p>18xx.games is a website where you can play async or real-time 18xx games (based on the system originally devised by the brilliant Francis Tresham)!
-        If you are new to 18xx games then 1889, 18Chesapeake, or 18MS are good games to begin with.</p>
+        <p>18xx.games is a website where you can play async or real-time 18xx games (based on the system originally devised by the brilliant Francis Tresham)!</p>
 
         <p>You can play locally with hot seat mode without an account. If you want to play multiplayer, you'll need to create an account.</p>
 
