@@ -17,23 +17,27 @@ module View
 
     def render_notification
       message = <<~MESSAGE
-        <p>We now support Slack/Discord notifications. Learn how to use them <a href='https://github.com/tobymao/18xx/wiki/Notifications'>here</a>.</p>
-        <p>1862, 18Ireland and 18ZOO are now in alpha. 18FL, Hazbahn 1873 and 1870 are now in beta.</p>
-        <p>Prototype games are now more clearly labelled, 1849: Kingdom of the Two Sicilies is production.</p>
-        <p>Please submit problem reports and make suggestions for improvements on
-        <a href='https://github.com/tobymao/18xx/issues'>GitHub</a>.</p>
-        <p>The <a href='https://github.com/tobymao/18xx/wiki'>18xx.games Wiki</a> has rules, maps,
-        and other information about all the games, along with an FAQ.</p>
-
-        <p>Support our publishers: #{Lib::Publisher.link_list.join}.</p>
-        <p>You can support this project on <a href='https://www.patreon.com/18xxgames'>Patreon</a>.</p>
-
-        <p>Join the
-        <a href='https://join.slack.com/t/18xxgames/shared_invite/zt-8ksy028m-CSZC~G5QtiFv60_jdqqulQ'>18xx Slack</a>.
-        Chat about 18xx in the <a href='https://18xxgames.slack.com/archives/C68J3MK2A'>#general</a> channel.
-        Discussion of the 18xx.games site is in the
-        <a href='https://18xxgames.slack.com/archives/CV3R3HPUZ'>#18xxgames</a> channel and the developers can be
-        found in the <a href='https://18xxgames.slack.com/archives/C012K0CNY5C'>#18xxgamesdev</a> channel.</p>
+        <h1>THIS IS AN 18SJ TEST SITE - NO SUPPORT</h1>
+        <p>Intention is to try out pre-alpha versions of 18xx for 18xx.games.</p>
+        <p>Currently only available games are:</p>
+        <ul>
+         <li><b>1824</b> -- not yet playable pre-alpha test version</li>
+         <li><b>1893</b> -- playable pre-alpha test version</li>
+        </ul>
+        This is a test site, just used to try out features and/or games before considering to push them to the "real" site.
+        Games created here has no guarantee, and might be removed if the bug out.
+        New version might be deployed at unspecified times.
+        <p>
+        Release notes:
+         <ul>
+           <li>2021-05-23 17:00 CET:
+             <ul>
+               <li>New version of 1893 Cologne for pre-alpha play test</li>
+             </ul>
+           </li>
+         </ul>
+        </p>
+        <p>For the "real thing", go to <a href="http://18xx.games">18xx.games</a></p>
       MESSAGE
 
       props = {
@@ -52,8 +56,7 @@ module View
 
     def render_introduction
       message = <<~MESSAGE
-        <p>18xx.games is a website where you can play async or real-time 18xx games (based on the system originally devised by the brilliant Francis Tresham)!
-        If you are new to 18xx games then 1889, 18Chesapeake, or 18MS are good games to begin with.</p>
+        <p>18xx.games is a website where you can play async or real-time 18xx games (based on the system originally devised by the brilliant Francis Tresham)!</p>
 
         <p>You can play locally with hot seat mode without an account. If you want to play multiplayer, you'll need to create an account.</p>
 

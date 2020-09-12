@@ -332,6 +332,7 @@ module View
 
     def visible_games
       @visible_games ||= (@production ? Engine::VISIBLE_GAMES : Engine::GAME_METAS).sort
+      @visible_games.select { |g| g.title == '1893' || g.title == '1824' }.reverse
     end
 
     def selected_game
