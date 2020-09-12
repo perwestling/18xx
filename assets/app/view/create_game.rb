@@ -333,6 +333,8 @@ module View
 
     def visible_games
       @visible_games ||= (@production ? Engine::VISIBLE_GAMES : Engine::GAME_METAS).sort
+      supported_titles = %w[18SJ 18Rhl 1893 1824]
+      @visible_games.select { |g| supported_titles.include?(g.title) }.reverse
     end
 
     def selected_game
