@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../config/game/g_18_mex'
+require_relative '../g_18_mex/share_pool'
 require_relative 'base'
 require_relative 'company_price_50_to_150_percent'
 require_relative 'revenue_4d'
@@ -128,6 +129,10 @@ module Engine
 
         # Remember the price for the last token; exchange tokens have the same.
         @ndm_exchange_token_price = ndm.tokens.last.price
+      end
+
+      def init_share_pool
+        Engine::G18MEX::SharePool.new(self)
       end
 
       def operating_round(round_num)
