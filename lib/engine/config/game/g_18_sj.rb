@@ -656,16 +656,16 @@ module Engine
   ],
   "hexes": {
     "red": {
-      "city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0;path=a:5,b:_0;label=K": [
+      "city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0;path=a:5,b:_0;icon=image:18_sj/Vb,sticky:1": [
         "A2"
       ],
-      "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0;path=a:5,b:_0;path=a:0,b:_0;label=Vb": [
+      "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0;path=a:5,b:_0;path=a:0,b:_0;icon=image:18_sj/Vb,sticky:1": [
         "A10"
       ],
-      "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;label=Nm;border=edge:0,type:mountain,cost:150": [
+      "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/Nm,sticky:1;border=edge:0,type:mountain,cost:150": [
         "B31"
       ],
-      "offboard=revenue:green_30|brown_40;path=a:3,b:_0;label=Öb": [
+      "offboard=revenue:green_30|brown_40;path=a:3,b:_0;icon=image:18_sj/Öb,sticky:1": [
         "H9"
       ]
     },
@@ -685,7 +685,7 @@ module Engine
       "city=revenue:20;path=a:2,b:_0;path=a:3,b:_0;icon=image:port;icon=image:port": [
         "F23"
       ],
-      "city=revenue:20,slots:2;path=a:2,b:_0;path=a:3,b:_0;label=m;icon=image:port": [
+      "city=revenue:20,slots:2;path=a:2,b:_0;path=a:3,b:_0;icon=image:18_sj/m,sticky:1;icon=image:port": [
         "G26"
       ]
     },
@@ -814,7 +814,7 @@ module Engine
       "city=revenue:20;path=a:5,b:_0;path=a:0,b:_0;icon=image:18_sj/B,sticky:1": [
         "D19"
       ],
-      "city=revenue:20;city=revenue:20;city=revenue:20;city=revenue:20;path=a:1,b:_0;path=a:2,b:_1;path=a:3,b:_2;path=a:4,b:_3;label=S": [
+      "city=revenue:20;city=revenue:20;city=revenue:20;city=revenue:20;path=a:1,b:_0;path=a:2,b:_1;path=a:3,b:_2;path=a:4,b:_3;label=S;icon=image:18_sj/S,sticky:1": [
         "G10"
       ]
     }
