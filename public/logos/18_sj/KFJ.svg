@@ -7,66 +7,66 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   sodipodi:docname="KFJ.svg"
-   inkscape:version="1.0 (1.0+r73+1)"
-   id="svg37137"
-   version="1.1"
-   viewBox="0 0 14.308668 14.308667"
+   width="14.308668mm"
    height="14.308667mm"
-   width="14.308668mm">
+   viewBox="0 0 14.308668 14.308667"
+   version="1.1"
+   id="svg37137"
+   inkscape:version="1.0 (1.0+r73+1)"
+   sodipodi:docname="KFJ.svg">
   <defs
      id="defs37131">
     <clipPath
-       id="clipPath4771"
-       clipPathUnits="userSpaceOnUse">
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath4771">
       <path
-         style="clip-rule:evenodd"
-         inkscape:connector-curvature="0"
+         d="m 258.41,348.53 h 27.12 v 27.144 h -27.12 z"
          id="path4769"
-         d="m 258.41,348.53 h 27.12 v 27.144 h -27.12 z" />
+         inkscape:connector-curvature="0"
+         style="clip-rule:evenodd" />
     </clipPath>
     <clipPath
-       id="clipPath4779"
-       clipPathUnits="userSpaceOnUse">
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath4779">
       <path
-         style="clip-rule:evenodd"
-         inkscape:connector-curvature="0"
+         d="m 258.41,348.53 h 27.12 v 27.144 h -27.12 z"
          id="path4777"
-         d="m 258.41,348.53 h 27.12 v 27.144 h -27.12 z" />
+         inkscape:connector-curvature="0"
+         style="clip-rule:evenodd" />
     </clipPath>
     <clipPath
-       id="clipPath4791"
-       clipPathUnits="userSpaceOnUse">
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath4791">
       <path
-         style="clip-rule:evenodd"
-         inkscape:connector-curvature="0"
+         d="m 258.41,348.53 h 27.12 v 27.144 h -27.12 z"
          id="path4789"
-         d="m 258.41,348.53 h 27.12 v 27.144 h -27.12 z" />
+         inkscape:connector-curvature="0"
+         style="clip-rule:evenodd" />
     </clipPath>
   </defs>
   <sodipodi:namedview
-     inkscape:window-maximized="0"
-     inkscape:window-y="0"
-     inkscape:window-x="213"
-     inkscape:window-height="1025"
-     inkscape:window-width="1474"
-     fit-margin-bottom="0"
-     fit-margin-right="0"
-     fit-margin-left="0"
-     fit-margin-top="0"
-     showgrid="false"
-     inkscape:document-rotation="0"
-     inkscape:current-layer="layer1"
-     inkscape:document-units="mm"
-     inkscape:cy="-118.6743"
-     inkscape:cx="-67.245701"
-     inkscape:zoom="0.35"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     borderopacity="1.0"
-     bordercolor="#666666"
+     id="base"
      pagecolor="#ffffff"
-     id="base" />
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="5.6"
+     inkscape:cx="1.0619795"
+     inkscape:cy="32.955295"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1474"
+     inkscape:window-height="1025"
+     inkscape:window-x="213"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0" />
   <metadata
      id="metadata37134">
     <rdf:RDF>
@@ -75,58 +75,65 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
-     transform="translate(-123.62543,-179.5659)"
-     id="layer1"
+     inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     inkscape:label="Layer 1">
+     id="layer1"
+     transform="translate(-123.62543,-179.5659)">
     <g
-       transform="translate(33.899932,10.073908)"
-       id="g37104">
+       style="fill:#ffaaaa"
+       id="g37104"
+       transform="translate(33.899932,10.073908)">
       <path
-         inkscape:connector-curvature="0"
+         d="m 89.894829,176.64633 c 0,-3.85939 3.125612,-6.985 6.985,-6.985 3.859391,0 6.985001,3.12561 6.985001,6.985 0,3.85939 -3.12561,6.985 -6.985001,6.985 -3.859388,0 -6.985,-3.12561 -6.985,-6.985 z"
+         style="fill:#ffaaaa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.352778"
          id="path4761"
-         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.352778"
-         d="m 89.894829,176.64633 c 0,-3.85939 3.125612,-6.985 6.985,-6.985 3.859391,0 6.985001,3.12561 6.985001,6.985 0,3.85939 -3.12561,6.985 -6.985001,6.985 -3.859388,0 -6.985,-3.12561 -6.985,-6.985 z" />
+         inkscape:connector-curvature="0" />
       <path
-         inkscape:connector-curvature="0"
+         d="m 89.894829,176.64633 c 0,-3.85939 3.125612,-6.985 6.985,-6.985 3.859391,0 6.985001,3.12561 6.985001,6.985 0,3.85939 -3.12561,6.985 -6.985001,6.985 -3.859388,0 -6.985,-3.12561 -6.985,-6.985 z"
+         style="fill:#ffaaaa;stroke:#000000;stroke-width:0.338667;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
          id="path4763"
-         style="fill:none;stroke:#000000;stroke-width:0.338667;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
-         d="m 89.894829,176.64633 c 0,-3.85939 3.125612,-6.985 6.985,-6.985 3.859391,0 6.985001,3.12561 6.985001,6.985 0,3.85939 -3.12561,6.985 -6.985001,6.985 -3.859388,0 -6.985,-3.12561 -6.985,-6.985 z" />
+         inkscape:connector-curvature="0" />
       <g
-         transform="matrix(0.35277777,0,0,-0.35277777,0.9524981,304.40833)"
-         id="g4765">
+         style="fill:#ffaaaa"
+         id="g4765"
+         transform="matrix(0.35277777,0,0,-0.35277777,0.9524981,304.40833)">
         <g
-           clip-path="url(#clipPath4771)"
-           id="g4767">
+           style="fill:#ffaaaa"
+           id="g4767"
+           clip-path="url(#clipPath4771)">
           <g
+             style="fill:#ffaaaa"
              id="g4773">
             <g
-               clip-path="url(#clipPath4779)"
-               id="g4775">
-              <text
-                 y="0"
-                 id="text4783"
-                 style="font-variant:normal;font-weight:normal;font-size:14.04px;font-family:'Segoe UI';-inkscape-font-specification:SegoeUI;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
-                 transform="matrix(1,0,0,-1,259.73,357.05)"><tspan
-                   y="0"
-                   x="0"
-                   id="tspan4781"
-                   sodipodi:role="line">KFJ</tspan></text>
-            </g>
+               style="fill:#ffaaaa"
+               id="g4775"
+               clip-path="url(#clipPath4779)" />
           </g>
           <g
+             style="fill:#ffaaaa"
              id="g4785">
             <g
-               clip-path="url(#clipPath4791)"
-               id="g4787" />
+               style="fill:#ffaaaa"
+               id="g4787"
+               clip-path="url(#clipPath4791)" />
           </g>
         </g>
       </g>
     </g>
+    <text
+       x="127.05319"
+       y="188.34572"
+       id="text4783"
+       style="font-variant:normal;font-weight:normal;font-size:4.953px;font-family:'Segoe UI';-inkscape-font-specification:SegoeUI;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.352777"><tspan
+         style="stroke-width:0.352777"
+         y="188.34572"
+         x="127.05319"
+         id="tspan4781"
+         sodipodi:role="line">KFJ</tspan></text>
   </g>
 </svg>

@@ -656,16 +656,16 @@ module Engine
   ],
   "hexes": {
     "red": {
-      "city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0;path=a:5,b:_0;icon=image:18_sj/Vb,sticky:1": [
+      "city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0;path=a:5,b:_0;icon=image:18_sj/V,sticky:1": [
         "A2"
       ],
-      "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0;path=a:5,b:_0;path=a:0,b:_0;icon=image:18_sj/Vb,sticky:1": [
+      "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0;path=a:5,b:_0;path=a:0,b:_0;icon=image:18_sj/V,sticky:1;icon=image:18_sj/b,sticky:1": [
         "A10"
       ],
-      "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/Nm,sticky:1;border=edge:0,type:mountain,cost:150": [
+      "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/N,sticky:1;icon=image:18_sj/m,sticky:1;border=edge:0,type:mountain,cost:150": [
         "B31"
       ],
-      "offboard=revenue:green_30|brown_40;path=a:3,b:_0;icon=image:18_sj/Öb,sticky:1": [
+      "offboard=revenue:green_30|brown_40;path=a:3,b:_0;icon=image:18_sj/O,sticky:1;icon=image:18_sj/b,sticky:1": [
         "H9"
       ]
     },
@@ -720,7 +720,9 @@ module Engine
         "G12"
       ],
       "city=revenue:0;icon=image:18_sj/M-S,sticky:1": [
-        "B5",
+        "B5"
+      ],
+      "city=revenue:0;icon=image:18_sj/M-S,sticky:1;icon=image:18_sj/GKB,sticky:1": [
         "E8"
       ],
       "city=revenue:0;icon=image:18_sj/G-S,sticky:1": [
@@ -784,9 +786,11 @@ module Engine
         "F27"
       ],
       "city=revenue:0": [
-        "C16",
         "C24",
         "D21"
+      ],
+      "city=revenue:0;icon=image:18_sj/GKB,sticky:1": [
+        "C16"
       ],
       "city=revenue:0;border=edge:2,type:impassable": [
           "D11"
@@ -805,7 +809,7 @@ module Engine
       "city=revenue:20;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;label=Y;icon=image:port": [
         "C2"
       ],
-      "city=revenue:20;path=a:1,b:_0;path=a:2,b:_0": [
+      "city=revenue:20;path=a:1,b:_0;path=a:2,b:_0;icon=image:18_sj/GKB,sticky:1": [
         "C8"
       ],
       "city=revenue:20;path=a:1,b:_0;path=a:5,b:_0": [
