@@ -113,15 +113,16 @@ module Engine
 
       def random
         seed = @id.to_s.scan(/\d+/).first.to_i
-        Random.new seed
+        Random.new(seed)
       end
 
       def select(rnd, collection)
-        collection[rnd.rand(collection.length - 1)]
+        collection[rnd.rand(collection.length)]
       end
 
       def find_company(companies, rnd, collection)
-        sym = collection[rnd.rand(collection.length - 1)]
+        index = rnd.rand(collection.length)
+        sym = collection[index]
         to_find = companies.find { |comp| comp.sym == sym }
         @log << "Could not find company with sym='#{sym}' in #{@companies}" if to_find.nil?
         to_find
@@ -155,7 +156,7 @@ module Engine
         nils_ericsson&.add_ability(Ability::Close.new(
           type: :close,
           when: :train,
-          corporation: nils_ericsson.abilities(:share).share.corporation.name,
+          corporation: nils_ericsson.abilities(:shares).shares.first.corporation.name,
         ))
 
         @main_line_hexes = @hexes.select { |h| main_line_hex?(h) }
