@@ -29,7 +29,10 @@ module Engine
       GAME_DESIGNER = 'Örjan Wennman'
       GAME_PUBLISHER = :self
 
-      SELL_BUY_ORDER = :sell_buy
+      # Stock market 350 triggers end of game in same OR, but bank full OR set
+      GAME_END_CHECK = { bankrupt: :immediate, stock_market: :current_or, bank: :full_or }.freeze
+
+      SELL_BUY_ORDER = :sell_buy_sell
 
       # At most a corporation/minor can do two tile lay / upgrades but two is
       # only allowed if one improves main line situation. This means a 2nd
@@ -192,7 +195,7 @@ module Engine
       def stock_round
         Round::Stock.new(self, [
           Step::DiscardTrain,
-          Step::BuySellParShares,
+          Step::G18SJ::BuySellParShares,
         ])
       end
 
@@ -202,6 +205,7 @@ module Engine
           Step::DiscardTrain,
           Step::SpecialTrack,
           Step::G18SJ::BuyCompany,
+          Step::G18SJ::IssueShares,
           Step::HomeToken,
           Step::Track,
           Step::Token,
@@ -220,6 +224,18 @@ module Engine
         super
       end
 
+      def redeemable_shares(entity)
+        return [] unless entity.corporation?
+        return [] unless round.steps.find { |step| step.class == Step::G18SJ::IssueShares }.active?
+
+        share_price = stock_market.find_share_price(entity, :right).price
+
+        bundles_for_corporation(share_pool, entity)
+          .each { |bundle| bundle.share_price = share_price }
+          .reject { |bundle| bundle.shares.size > 1 }
+          .reject { |bundle| entity.cash < bundle.price }
+      end
+
       def clean_up_after_entity
         # Remove fulfilled main line hexes
         @tile_lays.each { |action| remove_main_line_bonus(action) }
@@ -234,12 +250,25 @@ module Engine
         @sj.tokens.each { |t| t.type = type }
       end
 
+      def event_close_companies!
+        super
+
+        return if minor_khj.closed?
+
+        @log << "Minor #{minor_khj.name} closes and the home token is removed"
+        minor_khj.tokens.first.remove!
+        minor_khj.close!
+      end
+
       def event_full_cap!
         @corporations
           .select { |c| c.percent_of(c) == 100 }
+          .reject(&:closed?)
           .each do |c|
             @log << "#{c.name} becomes full capitalization as not pared"
             c.capitalization = :full
+            # IPO price should be used
+            c.always_market_price = false
           end
       end
 

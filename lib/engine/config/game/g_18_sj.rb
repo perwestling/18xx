@@ -145,9 +145,9 @@ module Engine
       "275",
       "300",
       "325",
-      "350",
-      "375",
-      "400"
+      "350e",
+      "375e",
+      "400e"
     ],
     [
       "53y",
@@ -450,7 +450,8 @@ module Engine
         100
       ],
       "coordinates": "A10",
-      "color": "brown"
+      "color": "brown",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -464,7 +465,8 @@ module Engine
       ],
       "coordinates": "C16",
       "color": "pink",
-      "text_color":"black"
+      "text_color":"black",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -478,7 +480,8 @@ module Engine
       ],
       "coordinates": "A2",
       "color": "yellow",
-      "text_color":"black"
+      "text_color":"black",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -491,7 +494,8 @@ module Engine
       ],
       "coordinates": "E8",
       "color": "turquoise",
-      "text_color":"black"
+      "text_color":"black",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -505,7 +509,8 @@ module Engine
         100
       ],
       "coordinates": "G26",
-      "color": "blue"
+      "color": "blue",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -519,7 +524,8 @@ module Engine
         100
       ],
       "coordinates": "F19",
-      "color": "black"
+      "color": "black",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -532,7 +538,8 @@ module Engine
       ],
       "coordinates": "G10",
       "city": 2,
-      "color": "green"
+      "color": "green",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -546,7 +553,8 @@ module Engine
         100
       ],
       "coordinates": "D19",
-      "color": "orange"
+      "color": "orange",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -560,7 +568,8 @@ module Engine
       ],
       "coordinates": "F13",
       "color": "lime",
-      "text_color":"black"
+      "text_color":"black",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -572,7 +581,8 @@ module Engine
         40
       ],
       "coordinates": "C12",
-      "color": "purple"
+      "color": "purple",
+      "always_market_price": true
     },
     {
       "float_percent": 60,
@@ -585,7 +595,8 @@ module Engine
         100
       ],
       "coordinates": "C2",
-      "color": "red"
+      "color": "red",
+      "always_market_price": true
     }
   ],
   "trains": [
@@ -762,7 +773,6 @@ module Engine
         "B9",
         "B15",
         "C4",
-        "C10",
         "C18",
         "C20",
         "C22",
@@ -784,6 +794,9 @@ module Engine
         "G14",
         "G28",
         "F27"
+      ],
+      "border=edge:0,type:impassable;border=edge:5,type:impassable": [
+        "C10"
       ],
       "city=revenue:0": [
         "C24",
@@ -809,7 +822,7 @@ module Engine
       "city=revenue:20;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;label=Y;icon=image:port": [
         "C2"
       ],
-      "city=revenue:20;path=a:1,b:_0;path=a:2,b:_0;icon=image:18_sj/GKB,sticky:1": [
+      "city=revenue:20;path=a:1,b:_0;path=a:2,b:_0;border=edge:5,type:impassable;icon=image:18_sj/GKB,sticky:1": [
         "C8"
       ],
       "city=revenue:20;path=a:1,b:_0;path=a:5,b:_0": [

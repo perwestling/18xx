@@ -26,7 +26,7 @@ module Engine
 
     attr_accessor :ipoed, :par_via_exchange, :max_ownership_percent, :float_percent, :capitalization, :max_share_price
     attr_reader :companies, :min_price, :name, :full_name, :fraction_shares, :type
-    attr_writer :par_price, :share_price
+    attr_writer :par_price, :share_price, :always_market_price
 
     SHARES = ([20] + Array.new(8, 10)).freeze
 
