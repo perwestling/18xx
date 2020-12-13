@@ -89,6 +89,8 @@ module Engine
         'F25' => [2, 5],
       }.freeze
 
+      BONUS_ICONS = %w[N S O V M m B b].freeze
+
       def init_corporations(stock_market)
         corporations = super
         prng = random
@@ -234,6 +236,38 @@ module Engine
           .each { |bundle| bundle.share_price = share_price }
           .reject { |bundle| bundle.shares.size > 1 }
           .reject { |bundle| entity.cash < bundle.price }
+      end
+
+      def revenue_for(route, stops)
+        revenue = super
+
+        icons = visited_icons(stops)
+
+        [lapplandspilen_bonus(icons),
+         stockholm_goteborg_bonus(icons, stops),
+         stockholm_malmo_bonus(icons, stops),
+         bergslagen_bonus(icons),
+         orefields_bonus(icons)].map { |b| b[:revenue] }.each { |r| revenue += r }
+
+        revenue
+      end
+
+      def revenue_str(route)
+        stops = route.stops
+        stop_hexes = stops.map(&:hex)
+        str = route.hexes.map do |h|
+          stop_hexes.include?(h) ? h&.name : "(#{h&.name})"
+        end.join('-')
+
+        icons = visited_icons(stops)
+
+        [lapplandspilen_bonus(icons),
+         stockholm_goteborg_bonus(icons, stops),
+         stockholm_malmo_bonus(icons, stops),
+         bergslagen_bonus(icons),
+         orefields_bonus(icons)].map { |b| b[:description] }.compact.each { |d| str += " + #{d}" }
+
+        str
       end
 
       def clean_up_after_entity
@@ -446,6 +480,79 @@ module Engine
         @log << "#{merged.name}'s token in #{city.hex.name} is replaced with an #{target.name} token"
         token.remove!
         city.place_token(target, replacement_token, check_tokenable: false)
+      end
+
+      def visited_icons(stops)
+        icons = []
+        stops.each do |s|
+          icons.concat(s.hex.tile.icons.map(&:name).select { |n| BONUS_ICONS.include?(n) })
+        end
+        icons.sort!
+      end
+
+      def lapplandspilen_bonus(icons)
+        bonus = { revenue: 0 }
+
+        if icons.include?('N') && icons.include?('S')
+          bonus[:revenue] += 100
+          bonus[:description] = 'N/S'
+        end
+
+        bonus
+      end
+
+      def stockholm_goteborg_bonus(icons, stops)
+        bonus = { revenue: 0 }
+        hexes = stops.map { |s| s.hex.id }
+
+        if icons.include?('O') && icons.include?('V') && hexes.include?('G10') && hexes.include?('A10')
+          bonus[:revenue] += 120
+          bonus[:description] = 'Ö/V[S/G]'
+        end
+
+        bonus
+      end
+
+      def stockholm_malmo_bonus(icons, stops)
+        bonus = { revenue: 0 }
+        hexes = stops.map { |s| s.hex.id }
+
+        if icons.include?('O') && icons.include?('V') && hexes.include?('G10') && hexes.include?('A2')
+          bonus[:revenue] += 100
+          bonus[:description] = 'Ö/V[S/M]'
+        end
+
+        bonus
+      end
+
+      def bergslagen_bonus(icons)
+        bonus = { revenue: 0 }
+
+        if icons.include?('B') && icons.count('b') == 1
+          bonus[:revenue] += 50
+          bonus[:description] = 'b/B'
+        end
+        if icons.include?('B') && icons.count('b') > 1
+          bonus[:revenue] += 80
+          bonus[:description] = 'b/B/b'
+        end
+
+        bonus
+      end
+
+      def orefields_bonus(icons)
+        bonus = { revenue: 0 }
+
+        if icons.include?('M') && icons.count('m') == 1
+          bonus[:revenue] += 50
+          bonus[:description] = 'm/M'
+        end
+        if icons.include?('M') && icons.count('m') > 1
+          bonus[:revenue] += 100
+          bonus[:description] = 'm/M/m'
+        end
+
+        bonus
       end
     end
   end
