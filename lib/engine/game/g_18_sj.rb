@@ -91,6 +91,10 @@ module Engine
 
       BONUS_ICONS = %w[N S O V M m B b].freeze
 
+      ASSIGNMENT_TOKENS = {
+        'SB' => '/icons/18_sj/sb_token.svg',
+      }.freeze
+
       def init_corporations(stock_market)
         corporations = super
         prng = random
@@ -141,6 +145,10 @@ module Engine
 
       def nils_ericsson
         @nils_ericsson ||= company_by_id('NE')
+      end
+
+      def sveabolaget
+        @sveabolaget ||= company_by_id('SB')
       end
 
       def ipo_name(entity)
@@ -206,6 +214,7 @@ module Engine
         Round::G18SJ::Operating.new(self, [
           Step::Bankrupt,
           Step::DiscardTrain,
+          Step::G18SJ::Assign,
           Step::SpecialTrack,
           Step::G18SJ::BuyCompany,
           Step::G18SJ::IssueShares,
@@ -250,6 +259,12 @@ module Engine
          bergslagen_bonus(icons),
          orefields_bonus(icons)].map { |b| b[:revenue] }.each { |r| revenue += r }
 
+        return revenue unless sveabolaget
+
+        steam = sveabolaget.id
+        if route.corporation == sveabolaget.owner && (port = stops.map(&:hex).find { |hex| hex.assigned?(steam) })
+          revenue += 30 * port.tile.icons.select { |icon| icon.name == 'port' }.size
+        end
         revenue
       end
 
@@ -267,6 +282,11 @@ module Engine
          stockholm_malmo_bonus(icons, stops),
          bergslagen_bonus(icons),
          orefields_bonus(icons)].map { |b| b[:description] }.compact.each { |d| str += " + #{d}" }
+
+        steam = sveabolaget&.id
+        if steam && route.corporation == sveabolaget.owner && (stops.map(&:hex).find { |hex| hex.assigned?(steam) })
+          str += ' + Port'
+        end
 
         str
       end
@@ -557,6 +577,17 @@ module Engine
         bonus
       end
 
+      def sveabolaget_bonus(icons)
+        bonus = { revenue: 0 }
+
+        if icons.include?('sb_token')
+          bonus[:revenue] += 50
+          bonus[:description] = 'SB'
+        end
+
+        bonus
+      end
+
       def close_cleanup(company)
         cleanup_gkb(company) if company.sym == 'GKB'
         cleanup_sb(company) if company.sym == 'SB'
@@ -564,20 +595,22 @@ module Engine
 
       def cleanup_gkb(company)
         @log << "Removes icons for #{company.name}"
-        remove_icons(%w[C8 C16 E8], 'GKB')
+        remove_icons(%w[C8 C16 E8], %w[GKB])
       end
 
       def cleanup_sb(company)
-        @log << "Removes icons for #{company.name}"
-        remove_icons(%w[A6 C2 D5 F19 F23 G26], 'port')
+        @log << "Removes icons and token for #{company.name}"
+        remove_icons(%w[A6 C2 D5 F19 F23 G26], %w[port sb_token])
+        steam = sveabolaget.id
+        @hexes.select { |hex| hex.assigned?(steam) }.each { |h| h.remove_assignment!(sveabolaget.id) }
       end
 
-      def remove_icons(to_be_cleaned, icon_name)
+      def remove_icons(to_be_cleaned, icon_names)
         @hexes
           .select { |hex| to_be_cleaned.include?(hex.name) }
           .each do |hex|
             icons = hex.tile.icons
-            icons.reject! { |i| i.name == icon_name }
+            icons.reject! { |i| icon_names.include?(i.name) }
             hex.tile.icons = icons
           end
       end

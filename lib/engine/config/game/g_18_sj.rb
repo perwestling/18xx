@@ -322,7 +322,22 @@ module Engine
       "value": 45,
       "revenue": 15,
       "desc": "May lay or shift port token in hexes A6, D5, F19, F23, and G26.  Add 25 kr/symbol to all routes run to this location by owning company.",
-      "sym": "SB"
+      "sym": "SB",
+      "abilities": [
+        {
+          "type": "assign_hexes",
+          "when": "owning_corp_or_turn",
+          "hexes": [
+            "A6",
+            "C2",
+            "D5",
+            "F19",
+            "F23",
+            "G26"
+          ],
+          "owner_type": "corporation"
+        }
+      ]
     },
     {
       "name": "The Gellivare Company",
