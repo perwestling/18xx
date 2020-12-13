@@ -104,15 +104,13 @@ module Engine
       def init_companies(players)
         companies = super
         prng = random
-        removed_a = find_company(companies, prng, OPTIONAL_PRIVATE_A)
-        companies.delete(removed_a)
-        removed_b = find_company(companies, prng, OPTIONAL_PRIVATE_B)
-        companies.delete(removed_b)
-        removed_c = find_company(companies, prng, OPTIONAL_PRIVATE_C)
-        companies.delete(removed_c)
-        removed_d = find_company(companies, prng, OPTIONAL_PRIVATE_D)
-        companies.delete(removed_d)
-        @log << "Removed companies: #{removed_a.name}, #{removed_b.name}, #{removed_c.name}, #{removed_d.name}"
+        @removed_companies = []
+        [OPTIONAL_PRIVATE_A, OPTIONAL_PRIVATE_B, OPTIONAL_PRIVATE_C, OPTIONAL_PRIVATE_D].each do |optionals|
+          to_remove = find_company(companies, prng, optionals)
+          companies.delete(to_remove)
+          @removed_companies << to_remove
+        end
+        @log << "Removed companies: #{@removed_companies.map(&:name).join(', ')}"
         companies
       end
 
@@ -150,6 +148,9 @@ module Engine
       end
 
       def setup
+        # Possibly remove from map icons belonging to closed companies
+        @removed_companies.each { |c| close_cleanup(c) }
+
         @minors.each do |minor|
           train = @depot.upcoming[0]
           train.buyable = false
@@ -285,6 +286,7 @@ module Engine
       end
 
       def event_close_companies!
+        @companies.each { |c| close_cleanup(c) }
         super
 
         return if minor_khj.closed?
@@ -553,6 +555,31 @@ module Engine
         end
 
         bonus
+      end
+
+      def close_cleanup(company)
+        cleanup_gkb(company) if company.sym == 'GKB'
+        cleanup_sb(company) if company.sym == 'SB'
+      end
+
+      def cleanup_gkb(company)
+        @log << "Removes icons for #{company.name}"
+        remove_icons(%w[C8 C16 E8], 'GKB')
+      end
+
+      def cleanup_sb(company)
+        @log << "Removes icons for #{company.name}"
+        remove_icons(%w[A6 C2 D5 F19 F23 G26], 'port')
+      end
+
+      def remove_icons(to_be_cleaned, icon_name)
+        @hexes
+          .select { |hex| to_be_cleaned.include?(hex.name) }
+          .each do |hex|
+            icons = hex.tile.icons
+            icons.reject! { |i| i.name == icon_name }
+            hex.tile.icons = icons
+          end
       end
     end
   end
