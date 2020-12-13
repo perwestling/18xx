@@ -378,7 +378,21 @@ module Engine
       "value": 90,
       "revenue": 20,
       "desc": "May buy one train at half price (one time during the game).",
-      "sym": "NOHAB"
+      "sym": "NOHAB",
+      "abilities": [
+        {
+          "type": "train_discount",
+          "discount": 0.50,
+          "owner_type": "corporation",
+          "trains": [
+             "3",
+             "4",
+             "5"
+          ],
+          "count": 1,
+          "when": "train"
+        }
+     ]
     },
     {
       "name": "Köping-Hults järnväg",
