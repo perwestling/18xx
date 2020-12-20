@@ -696,10 +696,10 @@ module Engine
   ],
   "hexes": {
     "red": {
-      "city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0;path=a:5,b:_0;icon=image:18_sj/V,sticky:1": [
+      "city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0,terminal:1;path=a:5,b:_0,terminal:1;icon=image:18_sj/V,sticky:1": [
         "A2"
       ],
-      "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0;path=a:5,b:_0;path=a:0,b:_0;icon=image:18_sj/V,sticky:1;icon=image:18_sj/b,sticky:1": [
+      "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0,terminal:1;path=a:5,b:_0,terminal:1;path=a:0,b:_0,terminal:1;icon=image:18_sj/V,sticky:1;icon=image:18_sj/b,sticky:1": [
         "A10"
       ],
       "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/N,sticky:1;icon=image:18_sj/m,sticky:1;border=edge:0,type:mountain,cost:150": [
