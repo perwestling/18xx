@@ -265,7 +265,13 @@ module Engine
         if route.corporation == sveabolaget.owner && (port = stops.map(&:hex).find { |hex| hex.assigned?(steam) })
           revenue += 30 * port.tile.icons.select { |icon| icon.name == 'port' }.size
         end
-        revenue
+
+        return revenue unless route.train.name == 'E'
+
+        # E trains double any city revenue if corporation's token (or SJ) is present
+        revenue + stops.sum do |stop|
+          friendly_city?(route, stop) ? stop.route_revenue(route.phase, route.train) : 0
+        end
       end
 
       def revenue_str(route)
@@ -613,6 +619,11 @@ module Engine
             icons.reject! { |i| icon_names.include?(i.name) }
             hex.tile.icons = icons
           end
+      end
+
+      def friendly_city?(route, stop)
+        corp = route.train.owner
+        stop.hex.tile.cities.any? { |c| c.tokened_by?(corp) || c.tokened_by?(@sj)}
       end
     end
   end
