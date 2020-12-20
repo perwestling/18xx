@@ -37,7 +37,7 @@ module Engine
         end
 
         def sveabolaget_assignable_to_hex?
-          return false unless @sveabolaget.abilities(:assign_hexes)
+          return false unless @game.abilities(@sveabolaget, :assign_hexes)
           return true if sveabolaget_assigned_corp
 
           sveabolaget_assignable_to_corp?
@@ -88,7 +88,7 @@ module Engine
         def process_pass(action)
           @game.game_error("Not #{action.entity.name}'s turn: #{action.to_h}") unless action.entity == @sveabolaget
 
-          if (ability = @sveabolaget.abilities(:assign_hexes))
+          if (ability = @game.abilities(@sveabolaget, :assign_hexes))
             ability.use!
             @log <<
               if (hex = sveabolaget_assigned_hex)

@@ -170,7 +170,7 @@ module Engine
         nils_ericsson&.add_ability(Ability::Close.new(
           type: :close,
           when: :train,
-          corporation: nils_ericsson.abilities(:shares).shares.first.corporation.name,
+          corporation: abilities(nils_ericsson, :shares).shares.first.corporation.name,
         ))
 
         @main_line_hexes = @hexes.select { |h| main_line_hex?(h) }
