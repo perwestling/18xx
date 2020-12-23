@@ -342,7 +342,7 @@ module Engine
     {
       "name": "The Gellivare Company",
       "value": 70,
-      "revenue": 30,
+      "revenue": 15,
       "desc": "Two extra track lays in hex E28 and F27.  Blocks hexes E28 and F27 if owned by a player. Reduce mountain terrain cost by 50 kr",
       "sym": "GC",
       "abilities": [
