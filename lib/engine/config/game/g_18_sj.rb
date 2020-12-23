@@ -429,6 +429,9 @@ module Engine
         },
         {
            "type":"no_buy"
+        },
+        { "type": "base",
+          "description": "Priority deal"
         }
       ]
     },

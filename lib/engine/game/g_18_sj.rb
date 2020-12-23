@@ -111,6 +111,7 @@ module Engine
         @removed_companies = []
         [OPTIONAL_PRIVATE_A, OPTIONAL_PRIVATE_B, OPTIONAL_PRIVATE_C, OPTIONAL_PRIVATE_D].each do |optionals|
           to_remove = find_company(companies, prng, optionals)
+          to_remove.close!
           companies.delete(to_remove)
           @removed_companies << to_remove
         end
@@ -167,11 +168,11 @@ module Engine
           hex.tile.cities[0].place_token(minor, minor.next_token)
         end
 
-        nils_ericsson&.add_ability(Ability::Close.new(
+        nils_ericsson.add_ability(Ability::Close.new(
           type: :close,
           when: :train,
           corporation: abilities(nils_ericsson, :shares).shares.first.corporation.name,
-        ))
+        )) if nils_ericsson && !nils_ericsson.closed?
 
         @main_line_hexes = @hexes.select { |h| main_line_hex?(h) }
 
@@ -206,6 +207,7 @@ module Engine
       def stock_round
         Round::Stock.new(self, [
           Step::DiscardTrain,
+          Step::G18SJ::ChoosePriority,
           Step::G18SJ::BuySellParShares,
         ])
       end
@@ -623,7 +625,7 @@ module Engine
 
       def friendly_city?(route, stop)
         corp = route.train.owner
-        stop.hex.tile.cities.any? { |c| c.tokened_by?(corp) || c.tokened_by?(@sj)}
+        stop.hex.tile.cities.any? { |c| c.tokened_by?(corp) || c.tokened_by?(@sj) }
       end
     end
   end
