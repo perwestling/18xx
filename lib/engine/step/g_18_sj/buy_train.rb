@@ -2,20 +2,19 @@
 
 require_relative '../base'
 require_relative '../buy_train'
+require_relative 'buy_train_action'
 
 module Engine
   module Step
     module G18SJ
       class BuyTrain < BuyTrain
-        def buy_train_action(action, entity = nil)
+        include BuyTrainAction
+
+        def actions(entity)
+          # If this entity has used Motala Verkstad to buy train(s) do not allow any more train buys
+          return [] if @round.respond_to?(:premature_trains_bought) && @round.premature_trains_bought == entity
+
           super
-
-          @game.perform_nationalization if @game.pending_nationalization?
-
-          return if !(exchange = action.exchange) || exchange.name == '4'
-
-          @log << "The exchanged #{exchange.name} is removed from game"
-          @depot.discarded.delete(exchange)
         end
       end
     end

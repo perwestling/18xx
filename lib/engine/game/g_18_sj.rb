@@ -152,6 +152,10 @@ module Engine
         @sveabolaget ||= company_by_id('SB')
       end
 
+      def motala_verkstad
+        @motala_verkstad ||= company_by_id('MV')
+      end
+
       def ipo_name(entity)
         entity&.capitalization == :incremental ? 'Treasury' : 'IPO'
       end
@@ -223,6 +227,7 @@ module Engine
           Step::HomeToken,
           Step::Track,
           Step::Token,
+          Step::G18SJ::BuyTrainBeforeRunRoute,
           Step::Route,
           Step::G18SJ::Dividend,
           Step::G18SJ::BuyTrain,

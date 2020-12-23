@@ -385,8 +385,16 @@ module Engine
       "name": "Motala Verkstad",
       "value": 90,
       "revenue": 15,
-      "desc": "Owning corporation may buy trains at any time during operating rounds.",
-      "sym": "MV"
+      "desc": "Owning corporation may buy trains at any one time during operating rounds. For 18xx.games this means that owning corporation can buy trains before Run Routes.",
+      "sym": "MV",
+      "abilities": [
+        {
+           "type": "train_buy",
+           "description": "Buy train any time during its OR",
+           "owner_type": "corporation",
+           "count": 1
+        }
+      ]
     },
     {
       "name": "Nydqvist och Holm AB",
