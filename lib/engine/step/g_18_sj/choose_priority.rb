@@ -8,10 +8,6 @@ module Engine
       class ChoosePriority < Base
         ACTIONS = %w[choose].freeze
 
-        def setup
-          @chooser = @game.nils_ericsson.owner
-        end
-
         def round_state
           {
             choice_done: false,
@@ -29,13 +25,13 @@ module Engine
         end
 
         def current_entity
-          return @chooser if choice_available?(@chooser)
+          return chooser if choice_available?(chooser)
 
           super
         end
 
         def active_entities
-          [@chooser]
+          [chooser]
         end
 
         def choice_name
@@ -50,17 +46,17 @@ module Engine
         end
 
         def help
-          return super unless choice_available?(@chooser)
+          return super unless choice_available?(chooser)
 
           "Do you want to active the ability of #{@game.nils_ericsson.name} to become priority dealer?"
         end
 
         def active?
-          choice_available?(@chooser)
+          choice_available?(chooser)
         end
 
         def blocking?
-          choice_available?(@chooser)
+          choice_available?(chooser)
         end
 
         def purchasable_companies(_entity = nil)
@@ -71,25 +67,30 @@ module Engine
           @round.choice_done = true
           return if action.choice == 'wait'
 
-          @log << "#{@chooser.name} becomes the new priority dealer by using #{@game.nils_ericsson.name} ability"
-          @round.goto_entity!(@chooser)
+          @log << "#{chooser.name} becomes the new priority dealer by using #{@game.nils_ericsson.name} ability"
+          @round.goto_entity!(chooser)
           @game.abilities(@game.nils_ericsson, :base) do |ability|
             @game.nils_ericsson.remove_ability(ability)
           end
         end
 
         def choice_available?(entity)
-          return false unless entity == @chooser
+          return false unless entity == chooser
 
           # Make this active if:
           #  1. Nils Ericsson still open
           #  2. Priority Deal ability not used
           #  3. ability to choose not used this round
           !@round.choice_done &&
-          @game.nils_ericsson &&
+          chooser&.player? &&
           !@game.nils_ericsson.closed? &&
-          @chooser.player? &&
           @game.abilities(@game.nils_ericsson, :base)
+        end
+
+        private
+
+        def chooser
+          @chooser ||= @game.nils_ericsson&.owner
         end
       end
     end
