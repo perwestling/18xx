@@ -63,30 +63,45 @@ module Engine
 
       MAIN_LINE_ICON_NAMES = %w[M-S G-S L-S].freeze
 
-      MAIN_LINE_ORIENTATION = {
+      MAIN_LINE_INFO = {
         # Stockholm-Malmo main line
-        'F9' => [2, 5],
-        'E8' => [2, 5],
-        'D7' => [2, 5],
-        'C6' => [2, 5],
-        'B5' => [2, 5],
-        'A4' => [1, 5],
+        'F9' => { orientation: [2, 5], main_line: 'M-S' },
+        'E8' => { orientation: [2, 5], main_line: 'M-S' },
+        'D7' => { orientation: [2, 5], main_line: 'M-S' },
+        'C6' => { orientation: [2, 5], main_line: 'M-S' },
+        'B5' => { orientation: [2, 5], main_line: 'M-S' },
+        'A4' => { orientation: [1, 5], main_line: 'M-S' },
         # Stockholm-Goteborg main line
-        'F11' => [0, 3],
-        'E12' => [0, 3],
-        'D13' => [0, 2],
-        'C12' => [2, 5],
-        'B11' => [2, 5],
+        'F11' => { orientation: [0, 3], main_line: 'G-S' },
+        'E12' => { orientation: [0, 3], main_line: 'G-S' },
+        'D13' => { orientation: [0, 2], main_line: 'G-S' },
+        'C12' => { orientation: [2, 5], main_line: 'G-S' },
+        'B11' => { orientation: [2, 5], main_line: 'G-S' },
         # Stockholm-Lulea main line
-        'G12' => [1, 3],
-        'F13' => [0, 3],
-        'E14' => [0, 4],
-        'E16' => [1, 4],
-        'E18' => [1, 4],
-        'E20' => [1, 4],
-        'E22' => [1, 4],
-        'E24' => [1, 5],
-        'F25' => [2, 5],
+        'G12' => { orientation: [1, 3], main_line: 'L-S' },
+        'F13' => { orientation: [0, 3], main_line: 'L-S' },
+        'E14' => { orientation: [0, 4], main_line: 'L-S' },
+        'E16' => { orientation: [1, 4], main_line: 'L-S' },
+        'E18' => { orientation: [1, 4], main_line: 'L-S' },
+        'E20' => { orientation: [1, 4], main_line: 'L-S' },
+        'E22' => { orientation: [1, 4], main_line: 'L-S' },
+        'E24' => { orientation: [1, 5], main_line: 'L-S' },
+        'F25' => { orientation: [2, 5], main_line: 'L-S' },
+      }.freeze
+      MAIN_LINE_COUNT = {
+        'M-S' => 6,
+        'G-S' => 5,
+        'L-S' => 9,
+      }.freeze
+      MAIN_LINE_BUILT = {
+        'M-S' => [],
+        'G-S' => [],
+        'L-S' => [],
+      }.freeze
+      MAIN_LINE_DESCRIPTION = {
+        'M-S' => 'Stockholm-Malmö',
+        'G-S' => 'Stockholm-Göteborg',
+        'L-S' => 'Stochholm-Luleå',
       }.freeze
 
       BONUS_ICONS = %w[N S O V M m B b].freeze
@@ -429,9 +444,10 @@ module Engine
       end
 
       def connects_main_line?(hex)
-        orientation = MAIN_LINE_ORIENTATION[hex.name]
-        return unless orientation
+        info = MAIN_LINE_INFO[hex.name]
+        return unless info
 
+        orientation = info[:orientation]
         edge1 = "#{hex.name}_#{orientation[0]}_0"
         edge2 = "#{hex.name}_#{orientation[1]}_0"
         edges = hex.tile.paths.flat_map(&:edges).map(&:id)
@@ -439,7 +455,17 @@ module Engine
       end
 
       def remove_main_line_bonus(action)
-        @fulfilled_main_line_hexes << action.hex if main_line_lay?(action)
+        return unless main_line_lay?(action)
+
+        info = MAIN_LINE_INFO[action.hex.name]
+        @fulfilled_main_line_hexes << action.hex
+        main_line = info[:main_line]
+        MAIN_LINE_BUILT[main_line] = (MAIN_LINE_BUILT[main_line] << action.hex.name)
+        return if MAIN_LINE_BUILT[main_line].size < MAIN_LINE_COUNT[main_line]
+
+        @log << "-- Main line #{MAIN_LINE_DESCRIPTION[main_line]} completed!"
+        @log << 'Removes icons for main line'
+        remove_icons(MAIN_LINE_BUILT[main_line], [main_line])
       end
 
       def update_cert_limit!
