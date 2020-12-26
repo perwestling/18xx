@@ -382,8 +382,23 @@ module Engine
           "terrain": "mountain",
           "owner_type": "corporation",
           "hexes": [
-            "C29",
-            "D30"
+            "B19",
+            "B21",
+            "B23",
+            "B25",
+            "B27",
+            "B29",
+            "C30",
+            "D29"
+          ]
+        },
+        {
+          "type": "tile_discount",
+          "discount" : 100,
+          "terrain": "water",
+          "owner_type": "corporation",
+          "hexes": [
+            "C30"
           ]
         }
       ]
@@ -720,7 +735,7 @@ module Engine
       "city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0,terminal:1;path=a:5,b:_0,terminal:1;path=a:0,b:_0,terminal:1;icon=image:18_sj/V,sticky:1;icon=image:18_sj/b,sticky:1": [
         "A10"
       ],
-      "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/N,sticky:1;icon=image:18_sj/m,sticky:1;border=edge:0,type:mountain,cost:150": [
+      "offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/N,sticky:1;icon=image:18_sj/m,sticky:1;border=edge:0,type:water,cost:150": [
         "B31"
       ],
       "offboard=revenue:green_30|brown_40;path=a:3,b:_0;icon=image:18_sj/O,sticky:1;icon=image:18_sj/b,sticky:1": [
@@ -805,7 +820,7 @@ module Engine
         "B27",
         "B29"
       ],
-      "upgrade=cost:75,terrain:mountain;border=edge:3,type:mountain,cost:150": [
+      "upgrade=cost:75,terrain:mountain;border=edge:3,type:water,cost:150": [
         "C30"
       ],
       "border=edge:2,type:impassable;border=edge:3,type:impassable": [

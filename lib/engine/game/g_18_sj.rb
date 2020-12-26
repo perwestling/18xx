@@ -176,6 +176,10 @@ module Engine
         @gkb ||= company_by_id('GKB')
       end
 
+      def gc
+        @gc ||= company_by_id('GC')
+      end
+
       def ipo_name(entity)
         entity&.capitalization == :incremental ? 'Treasury' : 'IPO'
       end
@@ -201,6 +205,7 @@ module Engine
         @main_line_hexes = @hexes.select { |h| main_line_hex?(h) }
 
         @tile_lays = []
+        @special_tile_lays = []
         @fulfilled_main_line_hexes = []
 
         update_cert_limit!
@@ -242,7 +247,7 @@ module Engine
           Step::Bankrupt,
           Step::DiscardTrain,
           Step::G18SJ::Assign,
-          Step::SpecialTrack,
+          Step::G18SJ::SpecialTrack,
           Step::G18SJ::BuyCompany,
           Step::G18SJ::IssueShares,
           Step::HomeToken,
@@ -259,14 +264,22 @@ module Engine
 
       def action_processed(action)
         is_tile_lay = action.is_a?(Action::LayTile)
-        check_second_lay(action) if is_tile_lay && @tile_lays.any?
+        check_second_lay(action) if is_tile_lay && @tile_lays.any? && !special_tile_lay?(action)
 
         super
 
-        return unless is_tile_lay
+        return if !is_tile_lay || special_tile_lay?(action)
 
         remove_main_line_bonus(action)
         @tile_lays << action
+      end
+
+      def special_tile_lay(action)
+        @special_tile_lays << action.hex.name
+      end
+
+      def special_tile_lay?(action)
+        @special_tile_lays.include?(action.hex.name)
       end
 
       def redeemable_shares(entity)
@@ -339,6 +352,13 @@ module Engine
 
         # Reset possible gkb bonus
         @gkb_bonus = 0
+
+        # Remove Gellivare Company tile lay ability if it has been used this OR
+        abilities(gc, :tile_lay) do |ability|
+          company.remove_ability(ability)
+          @log << "#{gc.name} tile lay ability removed"
+        end unless @special_tile_lays.empty?
+        @special_tile_lays = []
 
         return unless @round.current_entity
 
