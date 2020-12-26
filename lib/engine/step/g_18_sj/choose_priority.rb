@@ -48,7 +48,7 @@ module Engine
         def help
           return super unless choice_available?(chooser)
 
-          "Do you want to active the ability of #{@game.nils_ericsson.name} to become priority dealer?"
+          "Do you want to activate the ability of #{@game.nils_ericsson.name} to become priority dealer?"
         end
 
         def active?
@@ -76,6 +76,7 @@ module Engine
 
         def choice_available?(entity)
           return false unless entity == chooser
+          return false if entity == @game.players.first
 
           # Make this active if:
           #  1. Nils Ericsson still open

@@ -315,7 +315,14 @@ module Engine
       "value": 40,
       "revenue": 10,
       "desc": "Owning corporation may add +50/30/20 to train runs in hex E8, C8 and C16 in three different ORs",
-      "sym": "GKB"
+      "sym": "GKB",
+      "abilities": [
+        {
+          "type": "base",
+          "count": 3,
+          "owner_type": "corporation"
+        }
+      ]
     },
     {
       "name": "Sveabolaget",
@@ -421,14 +428,14 @@ module Engine
       "name": "Köping-Hults järnväg",
       "value": 140,
       "revenue": 0,
-      "desc": "Owner receives a 50 kr loan.  Owner must pay loan back if hexes F13, E14 and C16 do not have tiles at the start of phase 4.  Private receives a 2T and a token.  Splits revenue evenly with owner.",
+      "desc": "Buy gives control to minor corporation with same name. The minor starts with a 2 train and a home token and splits revenue evenly with owner. The minor may never buy or sell trains.",
       "sym": "KHJ"
     },
     {
       "name": "Nils Ericson",
       "value": 220,
       "revenue": 25,
-      "desc": "Receive president's share in a corporation randomly determined before auction.  Owning player may take the priority deal at the beginning of one stock round. Cannot be bought by any corporation. Closes when the connected corporation buys its first train.",
+      "desc": "Receive president's share in a corporation randomly determined before auction. Owning player may take the priority deal at the beginning of one stock round. Cannot be bought by any corporation. Closes when the connected corporation buys its first train.",
       "sym": "NE",
       "abilities": [
         {
@@ -846,7 +853,7 @@ module Engine
         "C16"
       ],
       "city=revenue:0;border=edge:2,type:impassable": [
-          "D11"
+        "D11"
       ],
       "city=revenue:0;upgrade=cost:75,terrain:mountain;icon=image:18_sj/M,sticky:1": [
         "D29"

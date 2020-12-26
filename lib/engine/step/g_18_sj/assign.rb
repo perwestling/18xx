@@ -14,7 +14,7 @@ module Engine
 
         def blocking_for_sveabolaget?
           return false unless @round.operating?
-          return false unless @sveabolaget.owned_by_player?
+          return false unless @sveabolaget&.owned_by_player?
           return true if sveabolaget_assignable_to_hex?
 
           false
