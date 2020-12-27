@@ -305,13 +305,6 @@ module Engine
          sveabolaget_bonus(route, stops),
          gkb_bonus(stops)].map { |b| b[:revenue] }.each { |r| revenue += r }
 
-        return revenue unless sveabolaget
-
-        steam = sveabolaget.id
-        if route.corporation == sveabolaget.owner && (port = stops.map(&:hex).find { |hex| hex.assigned?(steam) })
-          revenue += 30 * port.tile.icons.select { |icon| icon.name == 'port' }.size
-        end
-
         return revenue unless route.train.name == 'E'
 
         # E trains double any city revenue if corporation's token (or SJ) is present
@@ -336,11 +329,6 @@ module Engine
          orefields_bonus(icons),
          sveabolaget_bonus(route, stops),
          gkb_bonus(stops)].map { |b| b[:description] }.compact.each { |d| str += " + #{d}" }
-
-        steam = sveabolaget&.id
-        if steam && route.corporation == sveabolaget.owner && (stops.map(&:hex).find { |hex| hex.assigned?(steam) })
-          str += ' + Port'
-        end
 
         str
       end
