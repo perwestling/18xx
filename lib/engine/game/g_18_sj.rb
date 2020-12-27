@@ -208,8 +208,6 @@ module Engine
         @special_tile_lays = []
         @fulfilled_main_line_hexes = []
 
-        update_cert_limit!
-
         # Create virtual SJ corporation
         @sj = Corporation.new(
           sym: 'SJ',
@@ -224,7 +222,7 @@ module Engine
       end
 
       def cert_limit
-        @set_cert_limit
+        current_cert_limit
       end
 
       def new_auction_round
@@ -518,7 +516,7 @@ module Engine
         { hex_name: action.hex.name, tile_name: action.tile.name }
       end
 
-      def update_cert_limit!
+      def current_cert_limit
         certs_per_player =
           case @corporations.reject(&:closed?).size
           when 10
@@ -532,8 +530,9 @@ module Engine
           else
             game_error("No cert limit defined for #{@corporations.length} corporations")
           end.freeze
-        @set_cert_limit = certs_per_player[@players.size]
-        game_error("No cert limit defined for #{@players.size} player") unless @cert_limit
+        set_cert_limit = certs_per_player[@players.size]
+        game_error("No cert limit defined for #{@players.size} players") unless set_cert_limit
+        set_cert_limit
       end
 
       def nationalize_major(major)
@@ -580,7 +579,6 @@ module Engine
         @log << "#{major.name} closes and its tokens becomes #{@sj.name} tokens"
 
         # Cert limit changes as the number of corporations decrease
-        update_cert_limit!
         @log << "Certificate limit is now #{cert_limit}"
       end
 
