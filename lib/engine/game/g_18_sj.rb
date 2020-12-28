@@ -130,7 +130,6 @@ module Engine
         [OPTIONAL_PRIVATE_A, OPTIONAL_PRIVATE_B, OPTIONAL_PRIVATE_C, OPTIONAL_PRIVATE_D].each do |optionals|
           to_remove = find_company(companies, prng, optionals)
           to_remove.close!
-          companies.delete(to_remove)
           @removed_companies << to_remove
         end
         @log << "Removed companies: #{@removed_companies.map(&:name).join(', ')}"

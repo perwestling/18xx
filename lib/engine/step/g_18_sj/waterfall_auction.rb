@@ -8,6 +8,10 @@ module Engine
       class WaterfallAuction < WaterfallAuction
         protected
 
+        def available
+          @companies.reject(&:closed?)
+        end
+
         def buy_company(player, company, price)
           super
 
