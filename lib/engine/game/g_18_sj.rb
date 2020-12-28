@@ -6,6 +6,8 @@ require_relative 'base'
 module Engine
   module Game
     class G18SJ < Base
+      attr_accessor :priority_deal_chooser
+
       register_colors(
         black: '#0a0a0a', # STJ
         brightGreen: '#7bb137', # UGJ

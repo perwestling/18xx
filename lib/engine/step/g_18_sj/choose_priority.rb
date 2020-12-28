@@ -14,8 +14,8 @@ module Engine
           }
         end
 
-        def actions(_entity)
-          return [] unless choice_available?(@chooser)
+        def actions(entity)
+          return [] unless choice_available?(entity)
 
           ACTIONS
         end
@@ -69,29 +69,17 @@ module Engine
 
           @log << "#{chooser.name} becomes the new priority dealer by using #{@game.nils_ericsson.name} ability"
           @round.goto_entity!(chooser)
-          @game.abilities(@game.nils_ericsson, :base) do |ability|
-            @game.nils_ericsson.remove_ability(ability)
-          end
+          @game.priority_deal_chooser = nil
         end
 
         def choice_available?(entity)
-          return false unless entity == chooser
-          return false if entity == @game.players.first
-
-          # Make this active if:
-          #  1. Nils Ericsson still open
-          #  2. Priority Deal ability not used
-          #  3. ability to choose not used this round
-          !@round.choice_done &&
-          chooser&.player? &&
-          !@game.nils_ericsson.closed? &&
-          @game.abilities(@game.nils_ericsson, :base)
+          !@round.choice_done && entity&.player? && entity == chooser && entity != @game.players.first
         end
 
         private
 
         def chooser
-          @chooser ||= @game.nils_ericsson&.owner
+          @game.priority_deal_chooser
         end
       end
     end

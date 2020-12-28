@@ -450,7 +450,7 @@ module Engine
       "name": "Nils Ericson",
       "value": 220,
       "revenue": 25,
-      "desc": "Receive president's share in a corporation randomly determined before auction. Owning player may take the priority deal at the beginning of one stock round. Cannot be bought by any corporation. Closes when the connected corporation buys its first train.",
+      "desc": "Receive president's share in a corporation randomly determined before auction. Buying player may once during the game take the priority deal at the beginning of one stock round. Cannot be bought by any corporation. Closes when the connected corporation buys its first train. The priority deal overtake remains until it is used, even if this company is closed.",
       "sym": "NE",
       "abilities": [
         {
@@ -459,9 +459,6 @@ module Engine
         },
         {
            "type":"no_buy"
-        },
-        { "type": "base",
-          "description": "Priority deal"
         }
       ]
     },

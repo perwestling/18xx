@@ -111,6 +111,8 @@ module Engine
       end
 
       def try_take_loan(entity, price); end
+
+      def choice_available?(entity); end
     end
   end
 end
