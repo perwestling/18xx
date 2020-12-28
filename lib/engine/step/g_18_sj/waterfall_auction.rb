@@ -6,13 +6,6 @@ module Engine
   module Step
     module G18SJ
       class WaterfallAuction < WaterfallAuction
-        def setup
-          super
-
-          @companies.reject!(&:closed?)
-          @cheapest = @companies.first
-        end
-
         def buy_company(player, company, price)
           super
 

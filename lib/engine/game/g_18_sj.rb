@@ -115,8 +115,7 @@ module Engine
 
       def init_corporations(stock_market)
         corporations = super
-        prng = random
-        removed_corporation = select(prng, OPTIONAL_PUBLIC)
+        removed_corporation = select(OPTIONAL_PUBLIC)
         to_close = corporations.find { |corp| corp.name == removed_corporation }
         corporations.delete(to_close)
         @log << "Removed corporation: #{to_close.full_name} (#{to_close.name})"
@@ -125,29 +124,23 @@ module Engine
 
       def init_companies(players)
         companies = super
-        prng = random
         @removed_companies = []
         [OPTIONAL_PRIVATE_A, OPTIONAL_PRIVATE_B, OPTIONAL_PRIVATE_C, OPTIONAL_PRIVATE_D].each do |optionals|
-          to_remove = find_company(companies, prng, optionals)
+          to_remove = find_company(companies, optionals)
           to_remove.close!
+          # companies.delete(to_remove)
           @removed_companies << to_remove
         end
         @log << "Removed companies: #{@removed_companies.map(&:name).join(', ')}"
-        companies
+        companies - @removed_companies
       end
 
-      def random
-        seed = @id.to_s.scan(/\d+/).first.to_i
-        Random.new(seed)
+      def select(collection)
+        collection[rand % collection.length]
       end
 
-      def select(rnd, collection)
-        collection[rnd.rand(collection.length)]
-      end
-
-      def find_company(companies, rnd, collection)
-        index = rnd.rand(collection.length)
-        sym = collection[index]
+      def find_company(companies, collection)
+        sym = collection[rand % collection.length]
         to_find = companies.find { |comp| comp.sym == sym }
         @log << "Could not find company with sym='#{sym}' in #{@companies}" if to_find.nil?
         to_find
