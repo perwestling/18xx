@@ -328,7 +328,7 @@ module Engine
       "name": "Sveabolaget",
       "value": 45,
       "revenue": 15,
-      "desc": "May lay or shift port token in hexes A6, D5, F19, F23, and G26.  Add 25 kr/symbol to all routes run to this location by owning company.",
+      "desc": "May lay or shift port token in Halmstad (A6), Ystad(C2), Göteborg (D5), Sundsvall (F19), Umeå (F23), and Luleå (G26).  Add 30 kr/symbol to all routes run to this location by owning company.",
       "sym": "SB",
       "abilities": [
         {
@@ -350,7 +350,7 @@ module Engine
       "name": "The Gellivare Company",
       "value": 70,
       "revenue": 15,
-      "desc": "Two extra track lays in hex E28 and F27.  Blocks hexes E28 and F27 if owned by a player. Reduce mountain terrain cost by 50 kr",
+      "desc": "Two extra track lays in hex E28 and F27.  Blocks hexes E28 and F27 if owned by a player. Reduce terrain cost in D29 and C30 to 25 kr for mountains and 50 kr for the Narvik border.",
       "sym": "GC",
       "abilities": [
         {
@@ -382,12 +382,6 @@ module Engine
           "terrain": "mountain",
           "owner_type": "corporation",
           "hexes": [
-            "B19",
-            "B21",
-            "B23",
-            "B25",
-            "B27",
-            "B29",
             "C30",
             "D29"
           ]
