@@ -570,13 +570,19 @@ module Engine
         @log << "Certificate limit is now #{cert_limit}"
       end
 
-      def transfer_token(token, merged, target)
-        replacement_token = Engine::Token.new(target)
-
+      def transfer_token(token, merged, target_corporation)
         city = token.city
-        @log << "#{merged.name}'s token in #{city.hex.name} is replaced with an #{target.name} token"
-        token.remove!
-        city.place_token(target, replacement_token, check_tokenable: false)
+
+        if city.tokens.any? { |t| t.corporation == target_corporation }
+          @log << "#{merged.name}'s token in #{city.hex.name} is replaced with an #{target_corporation.name} token"
+          token.remove!
+          replacement_token = Engine::Token.new(target_corporation)
+          city.place_token(target_corporation, replacement_token, check_tokenable: false)
+        else
+          @log << "#{merged.name}'s token in #{city.hex.name} is removed "\
+                  "as there is already a #{target_corporation.name} token there"
+          token.remove!
+        end
       end
 
       def visited_icons(stops)
