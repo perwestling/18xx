@@ -6,8 +6,6 @@ module Engine
   module Step
     module G18SJ
       class WaterfallAuction < WaterfallAuction
-        protected
-
         def setup
           super
 
