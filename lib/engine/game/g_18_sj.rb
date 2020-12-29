@@ -93,11 +93,6 @@ module Engine
         'G-S' => 5,
         'L-S' => 9,
       }.freeze
-      MAIN_LINE_BUILT = {
-        'M-S' => [],
-        'G-S' => [],
-        'L-S' => [],
-      }.freeze
       MAIN_LINE_DESCRIPTION = {
         'M-S' => 'Stockholm-Malmö',
         'G-S' => 'Stockholm-Göteborg',
@@ -201,6 +196,11 @@ module Engine
         @tile_lays = []
         @special_tile_lays = []
         @fulfilled_main_line_hexes = []
+        @main_line_built = {
+          'M-S' => [],
+          'G-S' => [],
+          'L-S' => [],
+        }
 
         # Create virtual SJ corporation
         @sj = Corporation.new(
@@ -486,12 +486,12 @@ module Engine
         info = MAIN_LINE_INFO[action.hex.name]
         @fulfilled_main_line_hexes << lay
         main_line = info[:main_line]
-        MAIN_LINE_BUILT[main_line] = (MAIN_LINE_BUILT[main_line] << action.hex.name)
-        return if MAIN_LINE_BUILT[main_line].size < MAIN_LINE_COUNT[main_line]
+        @main_line_built[main_line] = (@main_line_built[main_line] << action.hex.name)
+        return if @main_line_built[main_line].size < MAIN_LINE_COUNT[main_line]
 
         @log << "-- Main line #{MAIN_LINE_DESCRIPTION[main_line]} completed!"
         @log << 'Removes icons for main line'
-        remove_icons(MAIN_LINE_BUILT[main_line], [main_line])
+        remove_icons(@main_line_built[main_line], [main_line])
       end
 
       def main_line_lay(action)
