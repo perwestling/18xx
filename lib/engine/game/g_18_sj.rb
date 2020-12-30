@@ -356,7 +356,8 @@ module Engine
 
         return if minor_khj.closed?
 
-        @log << "Minor #{minor_khj.name} closes and the home token is removed"
+        @log << "Minor #{minor_khj.name} closes and its home token is removed"
+        minor_khj.spend(minor_khj.cash, p)
         minor_khj.tokens.first.remove!
         minor_khj.close!
       end
@@ -572,6 +573,7 @@ module Engine
           @log << "#{merged.name}'s token in #{city.hex.name} is replaced with an #{target_corporation.name} token"
           token.remove!
           replacement_token = Engine::Token.new(target_corporation)
+          target_corporation.tokens << replacement_token
           city.place_token(target_corporation, replacement_token, check_tokenable: false)
         else
           @log << "#{merged.name}'s token in #{city.hex.name} is removed "\
