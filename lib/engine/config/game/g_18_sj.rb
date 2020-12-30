@@ -429,6 +429,7 @@ module Engine
              "5"
           ],
           "count": 1,
+          "closed_when_used_up": false,
           "when": "train"
         }
      ]
