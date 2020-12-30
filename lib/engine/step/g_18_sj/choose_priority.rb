@@ -65,7 +65,10 @@ module Engine
 
         def process_choose(action)
           @round.choice_done = true
-          return if action.choice == 'wait'
+          if action.choice == 'wait'
+            @log << "#{chooser.name} declines to use the #{@game.nils_ericsson.name} ability for now"
+            return
+          end
 
           @log << "#{chooser.name} becomes the new priority dealer by using #{@game.nils_ericsson.name} ability"
           @round.goto_entity!(chooser)
