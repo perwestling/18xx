@@ -568,7 +568,7 @@ module Engine
       def transfer_token(token, merged, target_corporation)
         city = token.city
 
-        if city.tokens.any? { |t| t.corporation == target_corporation }
+        if city.tokens.any? { |t| t.corporation == merged }
           @log << "#{merged.name}'s token in #{city.hex.name} is replaced with an #{target_corporation.name} token"
           token.remove!
           replacement_token = Engine::Token.new(target_corporation)
