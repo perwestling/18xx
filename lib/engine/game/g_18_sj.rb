@@ -356,7 +356,6 @@ module Engine
       end
 
       def make_sj_tokens_impassable
-        type = @round.current_entity.trains.any? { |t| t.name == 'E' } ? :neutral : :blocking
         @sj.tokens.each { |t| t.type = :blocking }
       end
 
