@@ -569,16 +569,16 @@ module Engine
       def transfer_token(token, merged, target_corporation)
         city = token.city
 
-        if city.tokens.any? { |t| t.corporation == merged }
+        if tokened_hex_by(city.hex, target_corporation)
+          @log << "#{merged.name}'s token in #{token.city.hex.name} is removed "\
+                  "as there is already a #{target_corporation.name} token there"
+          token.remove!
+        else
           @log << "#{merged.name}'s token in #{city.hex.name} is replaced with an #{target_corporation.name} token"
           token.remove!
           replacement_token = Engine::Token.new(target_corporation)
           target_corporation.tokens << replacement_token
           city.place_token(target_corporation, replacement_token, check_tokenable: false)
-        else
-          @log << "#{merged.name}'s token in #{city.hex.name} is removed "\
-                  "as there is already a #{target_corporation.name} token there"
-          token.remove!
         end
       end
 
@@ -720,7 +720,11 @@ module Engine
 
       def friendly_city?(route, stop)
         corp = route.train.owner
-        stop.hex.tile.cities.any? { |c| c.tokened_by?(corp) || c.tokened_by?(@sj) }
+        tokened_hex_by(stop.hex, corp) || tokened_hex_by(stop.hex, @sj)
+      end
+
+      def tokened_hex_by(hex, corporation)
+        hex.tile.cities.any? { |c| c.tokened_by?(corporation) }
       end
     end
   end
