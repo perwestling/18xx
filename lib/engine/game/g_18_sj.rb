@@ -247,7 +247,7 @@ module Engine
           Step::Token,
           Step::G18SJ::BuyTrainBeforeRunRoute,
           Step::G18SJ::BuySpecial,
-          Step::Route,
+          Step::G18SJ::Route,
           Step::G18SJ::Dividend,
           Step::SpecialBuyTrain,
           Step::G18SJ::BuyTrain,
@@ -343,11 +343,21 @@ module Engine
 
         return unless @round.current_entity
 
-        # Make SJ passable if current corporation has E train
-        # This is a workaround that is not perfect in case a
-        # corporation has E train + other train, but very unlikely
+        make_sj_tokens_impassable
+      end
+
+      # Make SJ passable if current corporation has E train
+      # This is a workaround that is not perfect in case a
+      # corporation has E train + other train, but very unlikely
+      def make_sj_tokens_passable_for_electric_trains(entity)
+        return unless entity.trains.any? { |t| t.name == 'E' }
+
+        @sj.tokens.each { |t| t.type = :neutral }
+      end
+
+      def make_sj_tokens_impassable
         type = @round.current_entity.trains.any? { |t| t.name == 'E' } ? :neutral : :blocking
-        @sj.tokens.each { |t| t.type = type }
+        @sj.tokens.each { |t| t.type = :blocking }
       end
 
       def event_close_companies!
