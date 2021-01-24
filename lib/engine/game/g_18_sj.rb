@@ -35,6 +35,13 @@ module Engine
 
       SELL_BUY_ORDER = :sell_buy_sell
 
+      # 18SJ specific constant - if true pay revenue to shares in share pool to bank
+      # if false pay to corporation
+      SHARE_POOL_TO_BANK = true
+
+      # 18SJ specific constant - if E trains should double some tokens
+      E_TRAIN_DOUBLE_SOME_TOKENS = true
+
       # At most a corporation/minor can do two tile lay / upgrades but two is
       # only allowed if one improves main line situation. This means a 2nd
       # tile lay/upgrade might not be allowed.
@@ -320,7 +327,7 @@ module Engine
          sveabolaget_bonus(route),
          gkb_bonus(route)].map { |b| b[:revenue] }.each { |r| revenue += r }
 
-        return revenue unless route.train.name == 'E'
+        return revenue if !E_TRAIN_DOUBLE_SOME_TOKENS || route.train.name != 'E'
 
         # E trains double any city revenue if corporation's token (or SJ) is present
         revenue + stops.sum do |stop|

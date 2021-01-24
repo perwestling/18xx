@@ -26,7 +26,7 @@ module Engine
 
         # In 18SJ, full cap corporations does not receive any dividends for pool shares (see rule 15.2 step 5)
         def dividends_for_entity(entity, holder, per_share)
-          return 0 if entity.corporation? && entity.capitalization == :full && holder == @game.share_pool
+          return 0 if SHARE_POOL_TO_BANK && entity.corporation? && entity.capitalization == :full && holder == @game.share_pool
 
           super
         end
