@@ -327,7 +327,7 @@ module Engine
          sveabolaget_bonus(route),
          gkb_bonus(route)].map { |b| b[:revenue] }.each { |r| revenue += r }
 
-        return revenue if !E_TRAIN_DOUBLE_SOME_TOKENS || route.train.name != 'E'
+        return revenue if !self.class::E_TRAIN_DOUBLE_SOME_TOKENS || route.train.name != 'E'
 
         # E trains double any city revenue if corporation's token (or SJ) is present
         revenue + stops.sum do |stop|
