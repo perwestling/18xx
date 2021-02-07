@@ -23,7 +23,9 @@ module Engine
       STATUS_TEXT = {
       }.merge(Base::STATUS_TEXT).freeze
 
-      MARKET = [%w[82 90 100p 110 125 140 160 180 200 225 250 275 300 325 350e],
+      BANK_CASH = 10_000
+
+      MARKET = [%w[82 90 100 110 125 140 160 180 200 225 250 275 300 325 350e],
                 %w[76 82 90p 100 110 125 140 160 180 200 220 240 260 280 300],
                 %w[71 76 82p 90 100 110 125 140 155 170 185 200],
                 %w[67 71 76p 82 90 100 110 120 130],
@@ -45,6 +47,7 @@ module Engine
         corporations = super
         corporations.each do |c|
             c.capitalization = :full
+            c.always_market_price = false
         end
         corporations
       end
@@ -58,22 +61,21 @@ module Engine
         end
       end
 
-      def init_train_handler
-        trains = self.class::TRAINS.flat_map do |train|
-          t = train
-          if t['name'] == 'D'
-            t['price'] = 900
-            t['discount'] = {'4' => 200, '5' => 200, '6' => 200 }
-            t['variants'] = [{ 'name' => 'E', 'price' => 1100 }]
-          end
-          (train[:num] || num_trains(train)).times.map do |index|
-            Train.new(**train, index: index)
-          end
-        end
+      # def init_train_handler
+      #   trains = self.class::TRAINS.flat_map do |train|
+      #     t = train
+      #     if t['name'] == 'D'
+      #       t['price'] = 900
+      #       t['discount'] = {'4' => 200, '5' => 200, '6' => 200 }
+      #       t['variants'] = [{ 'name' => 'E', 'price' => 1100 }]
+      #     end
+      #     (train[:num] || num_trains(train)).times.map do |index|
+      #       Train.new(**train, index: index)
+      #     end
+      #   end
 
-        Depot.new(trains, self)
-      end
-
+      #   Depot.new(trains, self)
+      # end
     end
   end
 end

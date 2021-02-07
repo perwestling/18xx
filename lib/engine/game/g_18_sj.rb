@@ -401,6 +401,7 @@ module Engine
           .each do |c|
             @log << "#{c.name} becomes full capitalization corporation as it has not been parred"
             c.capitalization = :full
+            c.always_market_price = false
           end
       end
 
