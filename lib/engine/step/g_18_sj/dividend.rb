@@ -25,8 +25,9 @@ module Engine
         end
 
         # In 18SJ, full cap corporations does not receive any dividends for pool shares (see rule 15.2 step 5)
+        # But Oscarian Era variant use normal rules
         def dividends_for_entity(entity, holder, per_share)
-          return 0 if @game.class::SHARE_POOL_TO_BANK && entity.corporation? && entity.capitalization == :full && holder == @game.share_pool
+          return 0 if !@game.option_oscarian_era && entity.corporation? && entity.capitalization == :full && holder == @game.share_pool
 
           super
         end

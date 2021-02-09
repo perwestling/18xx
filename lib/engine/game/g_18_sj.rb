@@ -24,7 +24,7 @@ module Engine
 
       DEV_STAGE = :alpha
 
-      GAME_LOCATION = 'Sweden'
+      GAME_LOCATION = 'Sweden & Norway'
       GAME_RULES_URL = 'https://drive.google.com/file/d/1WgvqSp5HWhrnCAhAlLiTIe5oXfYtnVt9/view?usp=drivesdk'
       GAME_DESIGNER = 'Örjan Wennman'
       GAME_PUBLISHER = :self_published
@@ -34,13 +34,6 @@ module Engine
       GAME_END_CHECK = { bankrupt: :immediate, stock_market: :current_or, bank: :full_or }.freeze
 
       SELL_BUY_ORDER = :sell_buy_sell
-
-      # 18SJ specific constant - if true pay revenue to shares in share pool to bank
-      # if false pay to corporation
-      SHARE_POOL_TO_BANK = true
-
-      # 18SJ specific constant - if E trains should double some tokens
-      E_TRAIN_DOUBLE_SOME_TOKENS = true
 
       # At most a corporation/minor can do two tile lay / upgrades but two is
       # only allowed if one improves main line situation. This means a 2nd
@@ -62,6 +55,18 @@ module Engine
           'New corporations will be capitalized for 10 x par price when 60% of the IPO is sold',
         ],
       }.merge(Base::STATUS_TEXT).freeze
+
+      OPTIONAL_RULES = [
+        {
+          sym: :oscarian_era,
+          short_name: 'Oscarian Era',
+          desc: 'A group of changes that affect play (https://github.com/tobymao/18xx/wiki/1893#variants-and-optional-rules)',
+        },
+      ]
+
+      def option_oscarian_era
+        @optional_rules&.include?(:oscarian_era)
+      end
 
       OPTIONAL_PRIVATE_A = %w[NE AEvR].freeze
       OPTIONAL_PRIVATE_B = %w[NOJ FRY].freeze
@@ -117,12 +122,26 @@ module Engine
 
       GKB_HEXES = %w[C8 C16 E8].freeze
 
+      def init_bank
+        cash = option_oscarian_era ? 10_000 : 12_000
+        cash = cash[players.size] if cash.is_a?(Hash)
+
+        Bank.new(cash, log: @log)
+      end
+
       def init_corporations(stock_market)
         corporations = super
         removed_corporation = select(OPTIONAL_PUBLIC)
         to_close = corporations.find { |corp| corp.name == removed_corporation }
         corporations.delete(to_close)
         @log << "Removed corporation: #{to_close.full_name} (#{to_close.name})"
+        return corporations unless option_oscarian_era
+
+        # Make all corporations full cap
+        corporations.each do |c|
+          c.capitalization = :full
+          c.always_market_price = false
+        end
         corporations
       end
 
@@ -149,6 +168,37 @@ module Engine
         end
 
         companies - @removed_companies
+      end
+
+      def init_train_handler
+        trains = self.class::TRAINS.flat_map do |train|
+          t = train
+          if t['name'] == '5' && option_oscarian_era
+            t['price'] = 530
+          end
+          (train[:num] || num_trains(train)).times.map do |index|
+            Train.new(**train, index: index)
+          end
+        end
+
+        Depot.new(trains, self)
+      end
+
+      def game_market
+        return self.class::MARKET unless option_oscarian_era
+
+        [%w[82 90 100 110 125 140 160 180 200 225 250 275 300 325 350e 375e 400e],
+        %w[76 82 90p 100 110 125 140 160 180 200 220 240 260 280 300],
+        %w[71 76 82p 90 100 110 125 140 155 170 185 200],
+        %w[67 71 76p 82 90 100 110 120 130],
+        %w[65 67 71p 76 82 90 100],
+        %w[63y 65 67p 71 76 82],
+        %w[60y 63 65 67 71],
+        %w[50y 60y 63 65],
+        %w[40o 50y 60y],
+        %w[30b 40o 50y],
+        %w[20b 30b 40o],
+       ]
       end
 
       def select(collection)
@@ -237,6 +287,17 @@ module Engine
 
         @e_train_bought = false
         @sj_tokens_passable = false
+
+        return unless option_oscarian_era
+
+        # Remove full cap event as all corporations are full cap
+        @depot.trains.each do |t|
+          t.events = t.events.reject { |e| e[:type] == 'full_cap' }
+        end
+
+        @phase.phases.each do |p|
+          p[:status] = []
+        end
       end
 
       def cert_limit
@@ -327,9 +388,10 @@ module Engine
          sveabolaget_bonus(route),
          gkb_bonus(route)].map { |b| b[:revenue] }.each { |r| revenue += r }
 
-        return revenue if !self.class::E_TRAIN_DOUBLE_SOME_TOKENS || route.train.name != 'E'
+        return revenue if option_oscarian_era || route.train.name != 'E'
 
         # E trains double any city revenue if corporation's token (or SJ) is present
+        # But not if Oscarian era variant - then E trains have same revenue as D
         revenue + stops.sum do |stop|
           friendly_city?(route, stop) ? stop.route_revenue(route.phase, route.train) : 0
         end
@@ -396,6 +458,8 @@ module Engine
       end
 
       def event_full_cap!
+        return if option_oscarian_era
+
         @corporations
           .select { |c| c.percent_of(c) == 100 && !c.closed? }
           .each do |c|
