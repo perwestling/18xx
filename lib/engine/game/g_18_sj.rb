@@ -60,7 +60,7 @@ module Engine
         {
           sym: :oscarian_era,
           short_name: 'Oscarian Era',
-          desc: 'A group of changes that affect play (https://github.com/tobymao/18xx/wiki/1893#variants-and-optional-rules)',
+          desc: 'A group of changes that affect play (https://github.com/tobymao/18xx/wiki/18SJ#variants-and-optional-rules)',
         },
       ]
 
@@ -187,7 +187,7 @@ module Engine
       def game_market
         return self.class::MARKET unless option_oscarian_era
 
-        [%w[82 90 100 110 125 140 160 180 200 225 250 275 300 325 350e 375e 400e],
+        [%w[82 90 100 110 125 140 160 180 200 225 250 275 300 325 350 375e 400e],
         %w[76 82 90p 100 110 125 140 160 180 200 220 240 260 280 300],
         %w[71 76 82p 90 100 110 125 140 155 170 185 200],
         %w[67 71 76p 82 90 100 110 120 130],
@@ -296,7 +296,7 @@ module Engine
         end
 
         @phase.phases.each do |p|
-          p[:status] = []
+          p[:status].reject! { |s| %i[fullcap incremental].include?(s) }
         end
       end
 
