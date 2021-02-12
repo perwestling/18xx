@@ -187,11 +187,11 @@ module Engine
       def game_market
         return self.class::MARKET unless option_oscarian_era
 
-        [%w[82 90 100 110 125 140 160 180 200 225 250 275 300 325 350 375e 400e],
-        %w[76 82 90p 100 110 125 140 160 180 200 220 240 260 280 300],
-        %w[71 76 82p 90 100 110 125 140 155 170 185 200],
-        %w[67 71 76p 82 90 100 110 120 130],
-        %w[65 67 71p 76 82 90 100],
+        [%w[82 90r 100r 110r 125r 140r 160r 180r 200r 225r 250r 275r 300r 325r 350r 375e 400e],
+        %w[76 82 90p 100r 110r 125r 140r 160r 180r 200r 220r 240r 260r 280r 300r],
+        %w[71 76 82p 90r 100r 110r 125r 140r 155r 170r 185r 200r],
+        %w[67 71 76p 82 90r 100r 110r 120r 130r],
+        %w[65 67 71p 76 82 90r 100r],
         %w[63y 65 67p 71 76 82],
         %w[60y 63 65 67 71],
         %w[50y 60y 63 65],
@@ -200,6 +200,24 @@ module Engine
         %w[20b 30b 40o],
        ]
       end
+
+      STOCKMARKET_COLORS = {
+        par: :red,
+        endgame: :blue,
+        multiple_buy: :brown,
+        unlimited: :orange,
+        no_cert_limit: :yellow,
+        repar: :gray,
+      }.freeze
+
+      MARKET_TEXT = {
+        par: 'Par value',
+        no_cert_limit: 'Corporation shares do not count towards cert limit',
+        unlimited: 'Corporation shares can be held above 60%',
+        multiple_buy: 'Can buy more than one share in the corporation per turn',
+        endgame: 'End game trigger',
+        repar: 'Double jump if double revenue',
+      }.freeze
 
       def select(collection)
         collection[rand % collection.size]
