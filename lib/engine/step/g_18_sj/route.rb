@@ -47,6 +47,19 @@ module Engine
           end
         end
 
+        def chart(_entity)
+          [
+            ['Route', 'Bonus'],
+            ['Lapplandspilen (N-S)', @game.format_currency(100)],
+            ['Öst-Väst 1 (Ö-V, Gbg)', @game.format_currency(120)],
+            ['Öst-Väst 2 (Ö-V, Malmö)', @game.format_currency(100)],
+            ['Malmfälten 1 (M-m)', @game.format_currency(50)],
+            ['Malmfälten 2 (M-m-m)', @game.format_currency(100)],
+            ['Bergslagen 1 (B-b)', @game.format_currency(50)],
+            ['Bergslagen 2 (B-b-b)', @game.format_currency(80)],
+          ]
+        end
+
         private
 
         def can_run_trains?(entity)
