@@ -872,6 +872,7 @@ module Engine
         end
 
         def stock_round
+          @passers_first_stock_round = []
           G1893::Round::Stock.new(self, [
             Engine::Step::DiscardTrain,
             G1893::Step::BuySellParShares,
@@ -1111,6 +1112,7 @@ module Engine
           move_buyable_shares_to_market(agv)
           @agv_mergable = true
           remove_ability(agv, :no_buy)
+          agv.ipoed = true
         end
 
         def event_agv_founded!
@@ -1143,6 +1145,7 @@ module Engine
           move_buyable_shares_to_market(hgk)
           @hgk_mergable = true
           remove_ability(hgk, :no_buy)
+          hgk.ipoed = true
         end
 
         def event_hgk_founded!
