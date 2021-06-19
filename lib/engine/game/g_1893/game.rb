@@ -1016,6 +1016,8 @@ module Engine
 
           [hdsk_reserved_share, ekb_reserved_share, kfbe_reserved_share, ksz_reserved_share,
            kbe_reserved_share, bkb_reserved_share].each { |info| info[:share].buyable = false }
+          kfbe_reserved_share[:share].double_cert = true
+          bkb_reserved_share[:share].double_cert =true
 
           @companies.each do |c|
             c.owner = @bank
