@@ -648,6 +648,17 @@ module Engine
         ].freeze
         NAME_OF_PROXY_COMPANIES = %w[EKB KFBE KSZ KBE BKB].freeze
 
+        ISSUERS = [
+          {
+            name: 'Stadt Köln',
+            sym: 'AdSK',
+            color: :orange,
+            value: 100,
+            revenue: 10,
+            count: 10,
+          },
+        ].freeze
+
         LAYOUT = :flat
 
         AXES = { x: :number, y: :letter }.freeze
@@ -721,21 +732,6 @@ module Engine
           tiles.each do |ot|
             @tiles.reject! { |t| t.id == ot }
             @all_tiles.reject! { |t| t.id == ot }
-          end
-        end
-
-        def game_companies
-          # Companies in 1893 are the private companies, and the 10 AdSK bonds
-          @all_companies ||= COMPANIES + (1..10).map do |x|
-            {
-              sym: "AdSK-#{x}",
-              name: "Anleihen der Stadt Köln #{x}",
-              value: 100,
-              revenue: 10,
-              desc: 'Bond of the City of Cologne. Works like a private company but can be bought '\
-                    'and sold during a SR, in a similar way as shares.',
-              color: 'orange',
-            }
           end
         end
 
@@ -898,10 +894,6 @@ module Engine
           'Corporation'
         end
 
-        def company_header(company)
-          bond?(company) ? 'BOND' : 'PRIVATE COMPANY'
-        end
-
         def agv
           @agv_corporation ||= corporation_by_id('AGV')
         end
@@ -1048,6 +1040,10 @@ module Engine
           @potential_discard_trains = []
 
           @green_leverkusen_tile ||= @tiles.find { |t| t.name == LEVERKUSEN_GREEN_TILE }
+        end
+
+        def available_programmed_actions
+          [Action::ProgramBuyShares, Action::ProgramBuyBonds, Action::ProgramSharePass]
         end
 
         include StubsAreRestricted
@@ -1274,13 +1270,6 @@ module Engine
           eva.close!
         end
 
-        def liquidity(player, emergency: false)
-          value = super
-          return value unless sellable_turn?
-
-          value + 100 * player.companies.count { |c| bond?(c) }
-        end
-
         def buyable?(entity)
           return true unless entity.corporation?
 
@@ -1294,15 +1283,8 @@ module Engine
         def draftables
           # Privates A-C always buyable, minors topmost 2
           privates, minor_proxies = buyable_companies
-            .reject { |c| bond?(c) }
             .partition { |c| private?(c) }
           privates + (minor_proxies.size < 2 ? minor_proxies : minor_proxies[0..1])
-        end
-
-        def bond?(company)
-          return false unless company.company?
-
-          company.sym.start_with?('AdSK')
         end
 
         def minor_proxy?(company)
@@ -1317,7 +1299,6 @@ module Engine
           NAME_OF_PRIVATES.include?(company.sym)
         end
 
-        # TODO: This is a temporary solution - might be removed
         def to_company(entity)
           return entity if entity.company?
 
