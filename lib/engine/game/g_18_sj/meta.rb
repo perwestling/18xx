@@ -11,7 +11,7 @@ module Engine
         DEV_STAGE = :alpha
         PROTOTYPE = true
 
-        GAME_SUBTITLE = 'Let There Be Rail'
+        GAME_SUBTITLE = 'Let There Be Rail (version 0.7)'
         GAME_DESIGNER = 'Örjan Wennman'
         GAME_INFO_URL = 'https://github.com/tobymao/18xx/wiki/18SJ'
         GAME_LOCATION = 'Sweden and Norway'

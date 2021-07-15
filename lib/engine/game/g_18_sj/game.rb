@@ -25,7 +25,7 @@ module Engine
 
         CURRENCY_FORMAT_STR = '%d kr'
 
-        BANK_CASH = 12_000
+        BANK_CASH = 10_000
 
         CERT_LIMIT = { 2 => 28, 3 => 20, 4 => 16, 5 => 13, 6 => 11 }.freeze
 
@@ -36,8 +36,16 @@ module Engine
         MUST_SELL_IN_BLOCKS = false
 
         MARKET_TEXT = Base::MARKET_TEXT.merge(
-          max_price: '90 or more is required for double jump if double revenue',
+          endgame: 'Game end at end of current operating round',
+          max_price: 'Double jump if double revenue if stock price is at least 90 kr',
+          multiple_buy: 'Can buy more than one share in the corporation per turn, redeem all shares at no cost',
+          no_cert_limit: 'Corporation shares do not count towards cert limit, redeem one shares at half cost (rounded down)',
+          par: 'Available par values',
+          unlimited: 'Corporation shares can be held above 60%, redeem all shares at half cost (rounded down)',
         ).freeze
+
+        # New track must be usable, or upgrade city value
+        TRACK_RESTRICTION = :semi_restrictive
 
         TILES = {
           '5' => 4,
@@ -146,17 +154,17 @@ module Engine
         }.freeze
 
         MARKET = [
-          %w[60y 67 71 76 82m 90 100p 112 126 142 160 180 200 225 250 275 300 325 350 375e 400e],
-          %w[53y 60y 66 70 76 82m 90p 100 112 126 142 160 180 200 220 240 260 280 300],
-          %w[46y 55y 60y 65 70 76 82pm 90 100 111 125 140 155 170 185 200],
-          %w[39o 48y 54y 60y 66 71 76p 82m 90 100 110 120 130],
-          %w[32o 41o 48y 55y 62 67 71p 76 82m 90 100],
-          %w[25b 34o 42o 50y 58y 65 67p 71 75 80],
-          %w[18b 27b 36o 45o 54y 63 67 69 70],
-          %w[10b 12b 30b 40o 50y 60y 67 68],
-          ['', '10b', '20b', '30b', '40o', '50y', '60y'],
-          ['', '', '10b', '20b', '30b', '40o', '50y'],
-          ['', '', '', '10b', '20b', '30b', '40o'],
+          %w[82m 90 100p 110 125 140 160 180 200 225 250 275 300 325 350 375e 400e],
+          %w[76 82m 90p 100 110 125 140 160 180 200 220 240 260 280 300],
+          %w[71 76 82pm 90 100 111 125 140 155 170 185 200],
+          %w[67 71 76p 82m 90 100 110 120 140],
+          %w[65 67 71p 76 82m 90 100],
+          %w[63y 65 67p 71 76 82],
+          %w[60y 63y 65 67 71],
+          %w[50o 60y 63y 65],
+          %w[40b 50o 60y],
+          %w[30b 40b 50o],
+          %w[20b 30b 40b],
         ].freeze
 
         PHASES = [
@@ -231,7 +239,7 @@ module Engine
                   {
                     name: '5',
                     distance: 5,
-                    price: 450,
+                    price: 530,
                     num: 3,
                     events: [{ 'type' => 'close_companies' }, { 'type' => 'full_cap' }],
                   },
@@ -564,13 +572,13 @@ module Engine
         HEXES = {
           red: {
             ['A2'] => 'city=revenue:yellow_20|green_40|brown_50;path=a:4,b:_0,terminal:1;path=a:5,b:_0,terminal:1;'\
-                      'icon=image:18_sj/V,sticky:1',
+                      'icon=image:18_sj/V,sticky:1;icon=image:18_sj/b_lower_case,sticky:1',
             ['A10'] => 'city=revenue:yellow_20|green_40|brown_70;path=a:4,b:_0,terminal:1;path=a:5,b:_0,terminal:1;'\
                        'path=a:0,b:_0,terminal:1;icon=image:18_sj/V,sticky:1;icon=image:18_sj/b_lower_case,sticky:1',
             ['B31'] => 'offboard=revenue:yellow_20|green_30|brown_70;path=a:0,b:_0;icon=image:18_sj/N,sticky:1;'\
                        'icon=image:18_sj/m_lower_case,sticky:1;border=edge:0,type:water,cost:150',
             ['H9'] => 'offboard=revenue:green_30|brown_40;path=a:3,b:_0;icon=image:18_sj/O,sticky:1;'\
-                      'icon=image:18_sj/b_lower_case,sticky:1',
+                      'icon=image:18_sj/b_lower_case,sticky:1;label=S;icon=image:18_sj/S,sticky:1',
           },
           gray: {
             ['A6'] => 'city=revenue:20;path=a:5,b:_0;path=a:0,b:_0;icon=image:port;icon=image:port',
@@ -589,8 +597,9 @@ module Engine
           white: {
             %w[A4 C6 D7] => 'icon=image:18_sj/M-S,sticky:1',
             ['D13'] => 'icon=image:18_sj/G-S,sticky:1',
-            %w[E14 E16 E18 E22 E24 F25 G12] =>
+            %w[E14 E16 E18 E24 F25 G12] =>
               'icon=image:18_sj/L-S,sticky:1',
+            ['E22'] => 'upgrade=cost:75,terrain:mountain;icon=image:18_sj/L-S,sticky:1',
             ['B5'] => 'city=revenue:0;icon=image:18_sj/M-S,sticky:1',
             ['E8'] =>
               'city=revenue:0;icon=image:18_sj/M-S,sticky:1;icon=image:18_sj/GKB,sticky:1',
@@ -626,7 +635,7 @@ module Engine
             ['G10'] =>
               'city=revenue:20,groups:Stockholm;city=revenue:20,groups:Stockholm;'\
               'city=revenue:20,groups:Stockholm;city=revenue:20,groups:Stockholm;path=a:1,b:_0;path=a:2,b:_1;'\
-              'path=a:3,b:_2;path=a:4,b:_3;label=S;icon=image:18_sj/S,sticky:1',
+              'path=a:3,b:_2;path=a:4,b:_3',
           },
         }.freeze
 
@@ -938,12 +947,31 @@ module Engine
           return [] unless entity.corporation?
           return [] unless round.steps.find { |step| step.instance_of?(G18SJ::Step::IssueShares) }.active?
 
+          type = @corporation.share_price.type
+
           share_price = stock_market.find_share_price(entity, :right).price
+          share_price = 0 if brown?(type)
+          share_price /= 2 if orange?(type) || yellow?(type)
+
+          bundle_max_size = 1
+          bundle_max_size = 10 if orange?(type) || yellow?(type)
 
           bundles_for_corporation(share_pool, entity)
             .each { |bundle| bundle.share_price = share_price }
-            .reject { |bundle| bundle.shares.size > 1 }
+            .reject { |bundle| bundle.shares.size > bundle_max_size }
             .reject { |bundle| entity.cash < bundle.price }
+        end
+
+        def orange?(type)
+          type == :unlimited
+        end
+
+        def yellow?(type)
+          type == :no_cert_limit
+        end
+
+        def brown?(type)
+          type == :multiple_buy
         end
 
         def revenue_for(route, stops)
@@ -952,8 +980,7 @@ module Engine
           icons = visited_icons(stops)
 
           [lapplandspilen_bonus(icons),
-           stockholm_goteborg_bonus(icons, stops),
-           stockholm_malmo_bonus(icons, stops),
+           east_west_bonus(icons, stops),
            bergslagen_bonus(icons),
            orefields_bonus(icons),
            sveabolaget_bonus(route),
@@ -977,8 +1004,7 @@ module Engine
           icons = visited_icons(stops)
 
           [lapplandspilen_bonus(icons),
-           stockholm_goteborg_bonus(icons, stops),
-           stockholm_malmo_bonus(icons, stops),
+           east_west_bonus(icons, stops),
            bergslagen_bonus(icons),
            orefields_bonus(icons),
            sveabolaget_bonus(route),
@@ -1062,12 +1088,18 @@ module Engine
 
         # If there are 2 station markers on the same city the
         # merged corporation must remove one and return it to its charter.
+        # Return number of duplications.
         def remove_duplicate_tokens(target, merged)
           merged_tokens = merged.tokens.map(&:city).compact
+          duplicate_count = 0
           target.tokens.each do |token|
             city = token.city
-            token.remove! if merged_tokens.include?(city)
+            if merged_tokens.include?(city)
+              token.remove!
+              duplicate_count += 1
+            end
           end
+          duplicate_count
         end
 
         def remove_reservation(merged)
@@ -1222,25 +1254,13 @@ module Engine
           bonus
         end
 
-        def stockholm_goteborg_bonus(icons, stops)
+        def east_west_bonus(icons, stops)
           bonus = { revenue: 0 }
           hexes = stops.map { |s| s.hex.id }
 
-          if icons.include?('O') && icons.include?('V') && hexes.include?('G10') && hexes.include?('A10')
+          if icons.include?('O') && icons.include?('V') && hexes.include?('H9') && (hexes.include?('A2') || hexes.include?('A10'))
             bonus[:revenue] += 120
-            bonus[:description] = 'Ö/V[S/G]'
-          end
-
-          bonus
-        end
-
-        def stockholm_malmo_bonus(icons, stops)
-          bonus = { revenue: 0 }
-          hexes = stops.map { |s| s.hex.id }
-
-          if icons.include?('O') && icons.include?('V') && hexes.include?('G10') && hexes.include?('A2')
-            bonus[:revenue] += 100
-            bonus[:description] = 'Ö/V[S/M]'
+            bonus[:description] = 'Ö/V'
           end
 
           bonus
@@ -1254,7 +1274,7 @@ module Engine
             bonus[:description] = 'b/B'
           end
           if icons.include?('B') && icons.count('b_lower_case') > 1
-            bonus[:revenue] += 80
+            bonus[:revenue] += 100
             bonus[:description] = 'b/B/b'
           end
 
@@ -1351,7 +1371,7 @@ module Engine
 
         def friendly_city?(route, stop)
           corp = route.train.owner
-          tokened_hex_by(stop.hex, corp) || tokened_hex_by(stop.hex, @sj)
+          tokened_hex_by(stop.hex, corp)
         end
 
         def tokened_hex_by(hex, corporation)
