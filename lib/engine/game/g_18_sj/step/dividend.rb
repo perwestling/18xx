@@ -10,11 +10,13 @@ module Engine
         class Dividend < Engine::Step::Dividend
           include Engine::Step::MinorHalfPay
 
+          ONLY_PAYOUT = %i[payout].freeze
+
           def share_price_change(entity, revenue = 0)
             return {} if entity.minor?
 
             price = entity.share_price.price
-            return { share_direction: :left, share_times: 1 } unless revenue.positive?
+            return { share_direction: :left, share_times: 1 } if revenue.zero? && entity.player != @game.edelsward
 
             times = 0
             times = 1 if revenue >= price
@@ -40,7 +42,13 @@ module Engine
             super
 
             # Do some clean up for the entity in the OR
-            @game.clean_up_after_dividend
+            @game.clean_up_after_dividend(action.entity)
+          end
+
+          def dividend_types
+            return ONLY_PAYOUT if current_entity.player == @game.edelsward && !current_entity.trains.empty?
+
+            super
           end
         end
       end

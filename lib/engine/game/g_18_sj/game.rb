@@ -9,6 +9,9 @@ module Engine
       class Game < Game::Base
         include_meta(G18SJ::Meta)
 
+        attr_reader :edelsward
+        attr_accessor :requisition_turn
+
         register_colors(
           black: '#0a0a0a', # STJ
           brightGreen: '#7bb137', # UGJ
@@ -27,7 +30,12 @@ module Engine
 
         BANK_CASH = 12_000
 
-        CERT_LIMIT = { 2 => 28, 3 => 20, 4 => 16, 5 => 13, 6 => 11 }.freeze
+        CERT_LIMIT = {
+          10 => { 2 => 39, 3 => 26, 4 => 20, 5 => 16, 6 => 13 },
+          9 => { 2 => 35, 3 => 23, 4 => 18, 5 => 14, 6 => 12 },
+          8 => { 2 => 30, 3 => 20, 4 => 15, 5 => 12, 6 => 10 },
+          7 => { 2 => 26, 3 => 17, 4 => 13, 5 => 11, 6 => 9 },
+        }.freeze
 
         STARTING_CASH = { 2 => 1200, 3 => 800, 4 => 600, 5 => 480, 6 => 400 }.freeze
 
@@ -717,6 +725,10 @@ module Engine
           @optional_rules&.include?(:oscarian_era)
         end
 
+        def two_player_variant
+          @optional_rules&.include?(:two_player_variant) && @players.size == 2
+        end
+
         def init_corporations(stock_market)
           corporations = super
           removed_corporation = select(OPTIONAL_PUBLIC)
@@ -773,6 +785,15 @@ module Engine
           end
         end
 
+        def init_starting_cash(players, bank)
+          cash = self.class::STARTING_CASH
+          cash = cash[player_count]
+
+          players.each do |player|
+            bank.spend(cash, player)
+          end
+        end
+
         def select(collection)
           collection[rand % collection.size]
         end
@@ -806,6 +827,10 @@ module Engine
 
         def motala_verkstad
           @motala_verkstad ||= company_by_id('MV')
+        end
+
+        def nydqvist_och_holm
+          @nydqvist_och_holm ||= company_by_id('NOHAB')
         end
 
         def gkb
@@ -862,6 +887,12 @@ module Engine
 
           @e_train_bought = false
           @sj_tokens_passable = false
+          @requisition_turn = 0
+
+          if two_player_variant && @players.size == 2
+            @edelsward = Player.new(-1, 'A.W. Edelswärd')
+            @players << @edelsward
+          end
 
           return unless oscarian_era
 
@@ -881,15 +912,53 @@ module Engine
           count
         end
 
+        def next_round!
+          @round =
+            case @round
+            when G18SJ::Round::Choices
+              @requisition_turn = @turn
+              switch_to_new_or_set
+            when Engine::Round::Stock
+              if two_player_variant && @turn.even? && @requisition_turn < turn
+                puts 'New Choices round!'
+                G18SJ::Round::Choices.new(self, [
+                  G18SJ::Step::Requisition,
+                ], round_num: @round.round_num)
+              else
+                switch_to_new_or_set
+              end
+            when Engine::Round::Operating
+              if @round.round_num < @operating_rounds
+                or_round_finished
+                new_operating_round(@round.round_num + 1)
+              else
+                @turn += 1
+                or_round_finished
+                or_set_finished
+                new_stock_round
+              end
+            when init_round.class
+              init_round_finished
+              reorder_players
+              new_stock_round
+            end
+        end
+
+        def switch_to_new_or_set
+          @operating_rounds = @phase.operating_rounds
+          reorder_players
+          new_operating_round
+        end
+
         def new_auction_round
-          Engine::Round::Auction.new(self, [
+          G18SJ::Round::Auction.new(self, [
             Engine::Step::CompanyPendingPar,
             G18SJ::Step::WaterfallAuction,
           ])
         end
 
         def stock_round
-          Engine::Round::Stock.new(self, [
+          G18SJ::Round::Stock.new(self, [
             Engine::Step::DiscardTrain,
             G18SJ::Step::ChoosePriority,
             G18SJ::Step::BuySellParShares,
@@ -906,7 +975,7 @@ module Engine
             G18SJ::Step::IssueShares,
             Engine::Step::HomeToken,
             G18SJ::Step::Track,
-            Engine::Step::Token,
+            G18SJ::Step::Token,
             G18SJ::Step::BuyTrainBeforeRunRoute,
             G18SJ::Step::Route,
             G18SJ::Step::Dividend,
@@ -914,6 +983,15 @@ module Engine
             G18SJ::Step::BuyTrain,
             [Engine::Step::BuyCompany, { blocks: true }],
           ], round_num: round_num)
+        end
+
+        def reorder_players(order = nil, log_player_order: false)
+          return super unless two_player_variant
+
+          player = @players[@round.entity_index]
+          player = @players[0] if player == @edelsward
+          @players.rotate!(@players.index(player))
+          @log << "#{@players.first.name} has priority deal"
         end
 
         # Check if tile lay action improves a main line hex
@@ -987,7 +1065,7 @@ module Engine
           str
         end
 
-        def clean_up_after_dividend
+        def clean_up_after_dividend(entity)
           # Remove Gellivare Company tile lay ability if it has been used this OR
           unless @special_tile_lays.empty?
             abilities(gc, :tile_lay) do |ability|
@@ -998,6 +1076,8 @@ module Engine
           @special_tile_lays = []
 
           make_sj_tokens_impassable
+
+          require_automa_trains(entity) if entity.player == @edelsward
         end
 
         # Make SJ passable if current corporation has E train
@@ -1015,6 +1095,33 @@ module Engine
 
           @sj.tokens.each { |t| t.type = :blocking }
           @sj_tokens_passable = false
+        end
+
+        def require_automa_trains(entity)
+          return unless automa_needs_to_require_trains?(entity)
+
+          train = @depot.depot_trains.first
+
+          # Require first train
+          @log << "#{entity.name} requisition a #{train.name} train from #{train.owner.name}"
+          buy_train(entity, train, :free)
+          @phase.buying_train!(entity, train)
+          perform_nationalization if pending_nationalization?
+
+          require_automa_trains(entity)
+        end
+
+        def buying_power(entity, **)
+          return 999 if entity.player == @edelsward
+
+          super
+        end
+
+        def automa_needs_to_require_trains?(entity)
+          return false if entity.trains.size >= 2
+          return true if entity.trains.empty?
+
+          entity.trains.first.rusts_on
         end
 
         def event_close_companies!
@@ -1097,6 +1204,57 @@ module Engine
           @e_train_bought = true
         end
 
+        def acquire_corporation(name)
+          acquired = corporation_by_id(name)
+          shares = acquired.shares_of(acquired)
+          @share_pool.transfer_shares(Engine::ShareBundle.new(shares), @edelsward, price: 0)
+          @stock_market.set_par(acquired, @stock_market.par_prices.find { |p| p.price == 67 })
+
+          # Give the company free tile lays.
+          ability = Engine::Ability::TileLay.new(type: 'tile_lay', tiles: [], hexes: [], closed_when_used_up: false,
+                                                 reachable: true, free: true, special: false, when: 'track')
+          acquired.add_ability(ability)
+          ability = Ability::Token.new(type: 'token', hexes: [], extra_slot: false, from_owner: true, price: 0)
+          acquired.add_ability(ability)
+        end
+
+        def sold_out_increase?(corporation)
+          corporation.player != @edelsward
+        end
+
+        def operating_order
+          floated, floated_edelsward = @corporations.select(&:floated?).partition { |c| c.player != @edelsward }
+          @minors.select(&:floated?) + floated.sort + floated_edelsward.sort_by(&:name)
+        end
+
+        def purchasable_companies(entity)
+          return [] if entity&.player == @edelsward
+
+          super
+        end
+
+        def entity_can_use_company?(entity, company)
+          return false if entity.player == @edelsward || (company == nydqvist_och_holm && company.owner != entity)
+
+          super
+        end
+
+        def player_value(player)
+          return 0 if player == @edelsward
+
+          super
+        end
+
+        def result
+          return super unless @edelsward
+
+          @players.reject { |p| p == @edelsward }
+            .map { |p| [p.name, player_value(p)] }
+            .sort_by { |_, v| v }
+            .reverse
+            .to_h
+        end
+
         private
 
         def main_line_hex?(hex)
@@ -1121,21 +1279,14 @@ module Engine
           @main_line_built[main_line_icon_name] == MAIN_LINE_COUNT[main_line_icon_name]
         end
 
-        CERT_LIMITS = {
-          10 => { 2 => 39, 3 => 26, 4 => 20, 5 => 16, 6 => 13 },
-          9 => { 2 => 35, 3 => 23, 4 => 18, 5 => 14, 6 => 12 },
-          8 => { 2 => 30, 3 => 20, 4 => 15, 5 => 12, 6 => 10 },
-          7 => { 2 => 26, 3 => 17, 4 => 13, 5 => 11, 6 => 9 },
-        }.freeze
-
         def current_cert_limit
           available_corporations = @corporations.count { |c| !c.closed? }
           available_corporations = 10 if available_corporations > 10
 
-          certs_per_player = CERT_LIMITS[available_corporations]
+          certs_per_player = CERT_LIMIT[available_corporations]
           raise GameError, "No cert limit defined for #{available_corporations} corporations" unless certs_per_player
 
-          set_cert_limit = certs_per_player[@players.size]
+          set_cert_limit = certs_per_player[player_count]
           raise GameError, "No cert limit defined for #{@players.size} players" unless set_cert_limit
 
           set_cert_limit
@@ -1360,6 +1511,10 @@ module Engine
 
         def owns_electric_train?(entity)
           entity.trains.any? { |t| t.name == 'E' }
+        end
+
+        def player_count
+          two_player_variant ? 3 : @players.size
         end
       end
     end
