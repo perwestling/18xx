@@ -25,6 +25,12 @@ module Engine
             short_name: 'The Oscarian Era',
             desc: 'Full cap only, sell even if not floated, no par at 100',
           },
+          {
+            sym: :two_player_variant,
+            short_name: 'A.W. Edelswärds 2 Player Variant',
+            desc: 'A.W. Edelswärd "automa" plays the 3rd player',
+            players: [2],
+          },
         ].freeze
       end
     end
