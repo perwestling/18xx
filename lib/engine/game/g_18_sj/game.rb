@@ -914,7 +914,7 @@ module Engine
           return [] unless entity.corporation?
           return [] unless round.steps.find { |step| step.instance_of?(G18SJ::Step::IssueShares) }.active?
 
-          type = @corporation.share_price.type
+          type = entity.share_price.type
 
           share_price = stock_market.find_share_price(entity, :right).price
           share_price = 0 if brown?(type)
