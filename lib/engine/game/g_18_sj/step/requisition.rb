@@ -34,6 +34,7 @@ module Engine
             @choices = {}
             @game.corporations
               .reject(&:closed?)
+              .reject(&:minor?)
               .reject(&:share_price)
               .each do |c|
                 @choices[c.name] = c.full_name

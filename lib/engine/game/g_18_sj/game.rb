@@ -929,7 +929,6 @@ module Engine
               switch_to_new_or_set
             when Engine::Round::Stock
               if two_player_variant && @turn.even? && @requisition_turn < turn
-                puts 'New Choices round!'
                 G18SJ::Round::Choices.new(self, [
                   G18SJ::Step::Requisition,
                 ], round_num: @round.round_num)
