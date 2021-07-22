@@ -88,7 +88,7 @@ module Engine
             'count' => 1,
             'color' => 'gray',
             'code' =>
-            'city=revenue:90,slots:4;path=a:1,b:_0;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;path=a:5,b:_0;label=S',
+            'city=revenue:90,slots:4;path=a:1,b:_0;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;path=a:5,b:_0',
           },
           '172' => 2,
           '298SJ' =>
@@ -97,7 +97,7 @@ module Engine
             'color' => 'green',
             'code' => 'city=revenue:40,groups:Stockholm;city=revenue:40,groups:Stockholm;'\
                       'city=revenue:40,groups:Stockholm;city=revenue:40,groups:Stockholm;path=a:0,b:_0;path=a:_0,b:2;'\
-                      'path=a:3,b:_1;path=a:_1,b:2;path=a:4,b:_2;path=a:_2,b:2;path=a:5,b:_3;path=a:_3,b:2;label=S',
+                      'path=a:3,b:_1;path=a:_1,b:2;path=a:4,b:_2;path=a:_2,b:2;path=a:5,b:_3;path=a:_3,b:2',
           },
           '299SJ' =>
           {
@@ -105,7 +105,7 @@ module Engine
             'color' => 'brown',
             'code' => 'city=revenue:70,groups:Stockholm;city=revenue:70,groups:Stockholm;'\
                       'city=revenue:70,groups:Stockholm;city=revenue:70,groups:Stockholm;path=a:0,b:_0;path=a:_0,b:2;'\
-                      'path=a:3,b:_1;path=a:_1,b:2;path=a:4,b:_2;path=a:_2,b:2;path=a:5,b:_3;path=a:_3,b:2;label=S',
+                      'path=a:3,b:_1;path=a:_1,b:2;path=a:4,b:_2;path=a:_2,b:2;path=a:5,b:_3;path=a:_3,b:2',
           },
           '440' =>
           {
@@ -845,6 +845,8 @@ module Engine
 
           @e_train_bought = false
           @sj_tokens_passable = false
+
+          @stockholm_tile_gray ||= @tiles.find { |t| t.name == '131' }
         end
 
         def cert_limit
@@ -1094,6 +1096,25 @@ module Engine
 
         def buy_electric_train
           @e_train_bought = true
+        end
+
+        def upgrades_to?(from, to, _special = false, selected_company: nil)
+          # Handle upgrade to Stockholm gray tile
+          return to.name == '131' if from.color == :brown && from.hex.name == 'G10'
+          return false if to.name == '131'
+
+          super
+        end
+
+        def all_potential_upgrades(tile, tile_manifest: false, selected_company: nil)
+          upgrades = super
+
+          return upgrades unless tile_manifest
+
+          # Handle Stockholm tile manifest
+          upgrades |= [@stockholm_tile_gray] if @stockholm_tile_gray && tile.name == '299SJ'
+
+          upgrades
         end
 
         private
