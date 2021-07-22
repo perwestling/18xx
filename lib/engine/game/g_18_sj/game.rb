@@ -992,6 +992,35 @@ module Engine
           ], round_num: round_num)
         end
 
+        class WithNameAdapter
+          def initialize(host, receivership)
+            @host = host
+            @receivership = receivership
+          end
+
+          def name
+            "Bot:#{@receivership.name}"
+          end
+        end
+
+        def acting_for_entity(entity)
+          return super if !two_player_variant || entity.player? || entity.player != @edelsward
+
+          WithNameAdapter.new(@edelsward, operator_for_edelsward_corporation)
+        end
+
+        def place_home_token(entity)
+          return super if !two_player_variant || entity.player != @edelsward
+
+          entity_or_order = @round.entities.index(entity)
+          return super if @round.entities.find { |e| e.player == @edelsward && @round.entities.index(e) < entity_or_order }
+
+          operator = operator_for_edelsward_corporation.name
+          @log << "-- #{operator_for_edelsward_corporation.name} has the highest value at the moment, and should use "\
+                  "Master Mode to make actions for any of #{@edelsward.name}'s corporations"
+          @log << "Refer to the 2 player rules for the appropriate actions and choices"
+          super
+        end
         def reorder_players(order = nil, log_player_order: false)
           return super unless two_player_variant
 
@@ -1235,18 +1264,19 @@ module Engine
           @e_train_bought = true
         end
 
-        def acquire_corporation(name)
-          acquired = corporation_by_id(name)
-          shares = acquired.shares_of(acquired)
+        def requisit_corporation(name)
+          requisited = corporation_by_id(name)
+          @log << "#{operator_for_edelsward_requisition.name} selects #{requisited.name} to be requisited by #{@edelsward.name}"
+          shares = requisited.shares_of(requisited)
           @share_pool.transfer_shares(Engine::ShareBundle.new(shares), @edelsward, price: 0)
-          @stock_market.set_par(acquired, @stock_market.par_prices.find { |p| p.price == 67 })
+          @stock_market.set_par(requisited, @stock_market.par_prices.find { |p| p.price == 67 })
 
           # Give the company free tile lays.
           ability = Engine::Ability::TileLay.new(type: 'tile_lay', tiles: [], hexes: [], closed_when_used_up: false,
                                                  reachable: true, free: true, special: false, when: 'track')
-          acquired.add_ability(ability)
+          requisited.add_ability(ability)
           ability = Ability::Token.new(type: 'token', hexes: [], extra_slot: false, from_owner: true, price: 0)
-          acquired.add_ability(ability)
+          requisited.add_ability(ability)
         end
 
         def sold_out_increase?(corporation)
@@ -1536,6 +1566,16 @@ module Engine
           # Two player variant will add a third player during setup but we need
           # to handle setup of cash and cert limit so that it includes the bot.
           two_player_variant ? 3 : @players.size
+        end
+
+        def operator_for_edelsward_corporation
+          # The player to act as bot during OR has the highest value (with nearest to PD as tie breaker)
+          @players.reject { |p| p == @edelsward }.sort_by { |p| [-p.value, @players.index(p)] }.first
+        end
+
+        def operator_for_edelsward_requisition
+          # The player to select requisition has the lowest value (with nearest to PD as tie breaker)
+          @players.reject { |p| p == @edelsward }.sort_by { |p| [p.value, @players.index(p)] }.first
         end
       end
     end

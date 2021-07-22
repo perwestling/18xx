@@ -9,7 +9,7 @@ module Engine
         class Choices < Engine::Round::Choices
           def select_entities
             # The player of lowest worth is the chooser
-            [@game.players.reject { |p| p == @game.edelsward }.min_by(&:value)]
+            [@game.operator_for_edelsward_requisition]
           end
         end
       end
