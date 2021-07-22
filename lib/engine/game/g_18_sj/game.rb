@@ -1284,6 +1284,16 @@ module Engine
             .to_h
         end
 
+        def operator_for_edelsward_corporation
+          # The player to act as bot during OR has the highest value (with nearest to PD as tie breaker)
+          @players.reject { |p| p == @edelsward }.sort_by { |p| [-p.value, @players.index(p)] }.first
+        end
+
+        def operator_for_edelsward_requisition
+          # The player to select requisition has the lowest value (with nearest to PD as tie breaker)
+          @players.reject { |p| p == @edelsward }.sort_by { |p| [p.value, @players.index(p)] }.first
+        end
+
         private
 
         def main_line_hex?(hex)
@@ -1546,16 +1556,6 @@ module Engine
           # Two player variant will add a third player during setup but we need
           # to handle setup of cash and cert limit so that it includes the bot.
           two_player_variant ? 3 : @players.size
-        end
-
-        def operator_for_edelsward_corporation
-          # The player to act as bot during OR has the highest value (with nearest to PD as tie breaker)
-          @players.reject { |p| p == @edelsward }.sort_by { |p| [-p.value, @players.index(p)] }.first
-        end
-
-        def operator_for_edelsward_requisition
-          # The player to select requisition has the lowest value (with nearest to PD as tie breaker)
-          @players.reject { |p| p == @edelsward }.sort_by { |p| [p.value, @players.index(p)] }.first
         end
       end
     end
