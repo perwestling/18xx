@@ -735,7 +735,9 @@ module Engine
         end
 
         def two_player_variant
-          @optional_rules&.include?(:two_player_variant) && @players.size == 2
+          # The two player variant will add a third, bot, so need to remember original player count
+          @original_player_count ||= @players.size
+          @optional_rules&.include?(:two_player_variant) && @original_player_count == 2
         end
 
         def init_corporations(stock_market)
@@ -926,14 +928,17 @@ module Engine
             case @round
             when G18SJ::Round::Choices
               @requisition_turn = @turn
-              switch_to_new_or_set
+              @operating_rounds = @phase.operating_rounds
+              new_operating_round
             when Engine::Round::Stock
+              reorder_players
               if two_player_variant && @turn.even? && @requisition_turn < turn
                 G18SJ::Round::Choices.new(self, [
                   G18SJ::Step::Requisition,
                 ], round_num: @round.round_num)
               else
-                switch_to_new_or_set
+                @operating_rounds = @phase.operating_rounds
+                new_operating_round
               end
             when Engine::Round::Operating
               if @round.round_num < @operating_rounds
@@ -950,12 +955,6 @@ module Engine
               reorder_players
               new_stock_round
             end
-        end
-
-        def switch_to_new_or_set
-          @operating_rounds = @phase.operating_rounds
-          reorder_players
-          new_operating_round
         end
 
         def new_auction_round
@@ -996,8 +995,7 @@ module Engine
         def reorder_players(order = nil, log_player_order: false)
           return super unless two_player_variant
 
-          player = @players[@round.entity_index]
-          player = @players[0] if player == @edelsward
+          player = @round.entities[@round.entity_index]
           @players.rotate!(@players.index(player))
           @log << "#{@players.first.name} has priority deal"
         end
@@ -1533,6 +1531,8 @@ module Engine
         end
 
         def player_count
+          # Two player variant will add a third player during setup but we need
+          # to handle setup of cash and cert limit so that it includes the bot.
           two_player_variant ? 3 : @players.size
         end
       end
