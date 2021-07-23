@@ -46,13 +46,22 @@ module Engine
           end
 
           def dividend_types
-            return ONLY_PAYOUT if current_entity.player == @game.edelsward && !current_entity.trains.empty?
+            if @game.two_player_variant && current_entity.player == @game.edelsward &&
+              !current_entity.trains.empty? && @game.routes_revenue(routes).positive?
+              return ONLY_PAYOUT
+            end
 
             super
           end
 
           def change_share_price(entity, payout)
             return if @game.two_player_variant && entity.player == @game.edelsward
+
+            super
+          end
+
+          def share_price_change(entity, revenue)
+            return {} if @game.two_player_variant && current_entity.player == @game.edelsward
 
             super
           end
