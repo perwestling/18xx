@@ -1210,7 +1210,7 @@ module Engine
         def perform_nationalization
           @pending_nationalization = false
           candidates = @corporations.select { |c| !c.closed? && c.operated? && c.trains.empty? }
-          candidates.reject! { c.player == @edelsward } if two_player_variant
+          candidates.reject! { |c| c.player == @edelsward } if two_player_variant
           if candidates.empty?
             extra = two_player_variant ? " (excluding any run by #{@edelsward.name})" : ''
             @log << "Nationalization skipped as no trainless floated corporations#{extra}"

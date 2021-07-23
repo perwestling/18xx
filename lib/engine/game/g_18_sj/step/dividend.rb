@@ -50,6 +50,12 @@ module Engine
 
             super
           end
+
+          def change_share_price(entity, payout)
+            return if @game.two_player_variant && entity.player == @game.edelsward
+
+            super
+          end
         end
       end
     end
