@@ -13,7 +13,7 @@ module Engine
           ONLY_PAYOUT = %i[payout].freeze
 
           def share_price_change(entity, revenue = 0)
-            return {} if entity.minor?
+            return {} if entity.minor? || (@game.two_player_variant && current_entity.player == @game.edelsward)
 
             price = entity.share_price.price
             return { share_direction: :left, share_times: 1 } if revenue.zero? && entity.player != @game.edelsward
@@ -56,12 +56,6 @@ module Engine
 
           def change_share_price(entity, payout)
             return if @game.two_player_variant && entity.player == @game.edelsward
-
-            super
-          end
-
-          def share_price_change(entity, revenue)
-            return {} if @game.two_player_variant && current_entity.player == @game.edelsward
 
             super
           end
