@@ -887,7 +887,6 @@ module Engine
 
           @pending_nationalization = false
 
-          @e_train_bought = false
           @sj_tokens_passable = false
           @requisition_turn = 0
 
@@ -1110,14 +1109,14 @@ module Engine
         # This is a workaround that is not perfect in case a
         # corporation has E train + other train, but very unlikely
         def make_sj_tokens_passable_for_electric_trains(entity)
-          return if !@e_train_bought || !owns_electric_train?(entity)
+          return if !owns_electric_train?(entity)
 
           @sj.tokens.each { |t| t.type = :neutral }
           @sj_tokens_passable = true
         end
 
         def make_sj_tokens_impassable
-          return if !@e_train_bought || !@sj_tokens_passable
+          return if !@sj_tokens_passable
 
           @sj.tokens.each { |t| t.type = :blocking }
           @sj_tokens_passable = false
@@ -1229,10 +1228,6 @@ module Engine
 
             transfer_token(token, merged, target)
           end
-        end
-
-        def buy_electric_train
-          @e_train_bought = true
         end
 
         def requisit_corporation(name)
