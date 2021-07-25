@@ -1156,6 +1156,9 @@ module Engine
 
           train = @depot.depot_trains.first
 
+          # Automa prefer E train before D, as it depletes the bank quicker
+          train.name = 'E' if train.name == 'D'
+
           # Require first train
           @log << "#{entity.name} requisition a #{train.name} train from #{train.owner.name}"
           buy_train(entity, train, :free)
