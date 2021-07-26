@@ -22,12 +22,12 @@ module View
         <p>Currently only available games are:</p>
         <ul>
          <li><b>1824</b> -- not yet playable pre-alpha test version</li>
-         <li><b>1893</b> -- playable alpha test version - now Bond concept</li>
+         <li><b>1893</b> -- playable pre-beta (ie alpha) test version</li>
          <li><b>18Rhl</b> -- playable pre-alpha test version</li>
          <li><b>18SJ</b> -- version 0.8, plus 2 variants</li>
         </ul>
         This is a test site, just used to try out features and/or games before considering to push them to the "real" site.
-        Games created here has no guarantee, and might be removed if the bug out.
+        Games created here has no guarantee, and might be removed if they bug out.
         New version might be deployed at unspecified times.
         <p>
         Release notes:
