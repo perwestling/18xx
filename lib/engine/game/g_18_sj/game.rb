@@ -1013,9 +1013,10 @@ module Engine
           operator = operator_for_edelsward_corporation.name
           @log << "-- #{operator_for_edelsward_corporation.name} has the highest value at the moment, and should use "\
                   "Master Mode to make actions for any of #{@edelsward.name}'s corporations"
-          @log << "Refer to the 2 player rules for the appropriate actions and choices"
+          @log << 'Refer to the 2 player rules for the appropriate actions and choices'
           super
         end
+
         def reorder_players(order = nil, log_player_order: false)
           return super unless two_player_variant
 
@@ -1331,12 +1332,12 @@ module Engine
 
         def operator_for_edelsward_corporation
           # The player to act as bot during OR has the highest value (with nearest to PD as tie breaker)
-          @players.reject { |p| p == @edelsward }.sort_by { |p| [-p.value, @players.index(p)] }.first
+          @players.reject { |p| p == @edelsward }.min_by { |p| [-p.value, @players.index(p)] }
         end
 
         def operator_for_edelsward_requisition
           # The player to select requisition has the lowest value (with nearest to PD as tie breaker)
-          @players.reject { |p| p == @edelsward }.sort_by { |p| [p.value, @players.index(p)] }.first
+          @players.reject { |p| p == @edelsward }.min_by { |p| [p.value, @players.index(p)] }
         end
 
         private
