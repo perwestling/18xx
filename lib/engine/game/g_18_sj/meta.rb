@@ -8,10 +8,10 @@ module Engine
       module Meta
         include Game::Meta
 
-        DEV_STAGE = :production
-        PROTOTYPE = true
+        DEV_STAGE = :alpha
+        PROTOTYPE = false
 
-        GAME_SUBTITLE = 'Railways in the Frozen North (version 0.92)'
+        GAME_SUBTITLE = 'Railways in the Frozen North'
         GAME_DESIGNER = 'Örjan Wennman'
         GAME_INFO_URL = 'https://github.com/tobymao/18xx/wiki/18SJ'
         GAME_LOCATION = 'Sweden'
@@ -24,12 +24,6 @@ module Engine
             sym: :oscarian_era,
             short_name: 'The Oscarian Era',
             desc: 'Full cap only, sell even if not floated',
-          },
-          {
-            sym: :two_player_variant,
-            short_name: 'A.W. Edelswärds 2 Player Variant',
-            desc: 'A.W. Edelswärd "bot" plays the 3rd player',
-            players: [2],
           },
         ].freeze
       end
