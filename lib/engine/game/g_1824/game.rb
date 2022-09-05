@@ -16,7 +16,7 @@ module Engine
         include G1824::Entities
         include G1824::Map
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :buy_to_complete
 
         register_colors(
           gray70: '#B3B3B3',
@@ -229,6 +229,31 @@ module Engine
                   },
                   { name: '10', distance: 10, num: 20, price: 950, discount: { '8' => 400 } }].freeze
 
+        TRAIN_NUMS_2_PLAYERS_CISLETHANIA = { '2' => 6,
+                                             '1g' => 3,
+                                             '3' => 5,
+                                             '2g' => 2,
+                                             '4' => 4,
+                                             '3g' => 2,
+                                             '5' => 2,
+                                             '6' => 2,
+                                             '4g' => 1,
+                                             '8' => 1,
+                                             '5g' => 2,
+                                             '10' => 20 }.freeze
+        TRAIN_NUMS_3_PLAYERS_CISLETHANIA = { '2' => 8,
+                                             '1g' => 5,
+                                             '3' => 6,
+                                             '2g' => 4,
+                                             '4' => 4,
+                                             '3g' => 3,
+                                             '5' => 3,
+                                             '6' => 3,
+                                             '4g' => 1,
+                                             '8' => 2,
+                                             '5g' => 2,
+                                             '10' => 20 }.freeze
+  
         GAME_END_CHECK = { bank: :full_or }.freeze
 
         # Move down one step for a whole block, not per share
@@ -300,12 +325,20 @@ module Engine
 
         def init_train_handler
           trains = self.class::TRAINS.flat_map do |train|
-            Array.new((train[:num] || num_trains(train))) do |index|
+            Array.new((num_trains(train))) do |index|
               Train.new(**train, index: index)
             end
           end
 
           G1824::Depot.new(trains, self)
+        end
+
+        def num_trains(train)
+          return train[:num] unless option_cisleithania
+
+          train_nums = two_player? ? TRAIN_NUMS_2_PLAYERS_CISLETHANIA : TRAIN_NUMS_3_PLAYERS_CISLETHANIA
+
+          train_nums[train[:name]]
         end
 
         def init_corporations(stock_market)
@@ -322,13 +355,15 @@ module Engine
           if option_cisleithania
             # Some corporations need to be removed, but they need to exists (for implementation reasons)
             # So set them as closed and removed so that they do not appear
-            # Affected: Coal Railway C4 (SPB), Regional Railway BH and SB, and possibly UG
+            # Affected: Regional Railway BH and SB, and possibly UG
             corporations.each do |c|
               if %w[SB BH].include?(c.name) || (two_player? && c.name == 'UG')
                 c.close!
                 c.removed = true
               end
             end
+            selection = corporations.reject { |c| c.removed }
+            @log << "Available Corporations: #{selection.map(&:name).sort.join(', ')}"
           end
 
           corporations
@@ -357,6 +392,11 @@ module Engine
           minors.map { |minor| G1824::Minor.new(**minor) }
         end
 
+        def show_available(type, source)
+          selection = source.select { |s| s[:type] == type }
+          @log << "Available #{type}s: #{selection.map { |s| s[:sym] }.sort.join(', ')}"
+        end
+
         def init_companies(players)
           companies = COMPANIES.dup
 
@@ -374,12 +414,31 @@ module Engine
           mountain_railway_count.times { |index| companies << mountain_railway_definition(index) }
 
           if option_cisleithania
-            # Remove Pre-Staatsbahn U2 and possibly U1
-            p2 = players.size == 2
-            companies.reject! { |m| m['sym'] == 'U2' || (p2 && m['sym'] == 'U1') }
+            # Remove Coal minor C4 (SPB), Pre-Staatsbahn U2 and possibly U1
+            companies.reject! { |c| %w[U2 SPB].include?(c[:sym]) || (two_player? && c['sym'] == 'U1') }
+            show_available('Mountain Railway', companies)
+            show_available('PreStaatsbahn', companies)
+            show_available('Coal Railway', companies)
+
+            if two_player?
+              selected_stack_1 = %w[S3 EOD] # TODO: Randomly select 1 "small" prestaatsbahn, and 1 coal railway
+              companies.each do |c|
+                sym = c[:sym]
+                if selected_stack_1.include?(sym)
+                  c[:stack] = 1
+                  # Make these construction railway
+                elsif %w[S1 K1].include?(sym)
+                  c[:stack] = 2
+                elsif c[:type] == 'PreStaatsbahn'
+                  c[:stack] = 3
+                elsif c[:type] == 'Coal Railway'
+                  c[:stack] = 4
+                end
+              end
+            end
           end
 
-          companies.map { |company| Company.new(**company) }
+          companies.map { |company| G1824::Company.new(**company) }
         end
 
         def init_tiles
@@ -412,6 +471,16 @@ module Engine
           @optional_rules&.include?(:goods_time)
         end
 
+        def game_cert_limit
+          return super unless option_cisleithania
+
+          CERT_LIMIT
+        end
+
+        def num_certs(entity)
+          super + @minors.count { |m| !m.closed? && m.owner == entity }
+        end
+
         def location_name(coord)
           return super unless option_cisleithania
 
@@ -442,12 +511,58 @@ module Engine
           ], round_num: round_num)
         end
 
+        def next_round!
+          # return super if !two_player? || @draft_finished
+
+          @round =
+            case @round
+            when Engine::Round::Draft
+              puts "#### Go for Choice"
+              # @draft_finished = true
+              # @turn = 1
+              buy_coal_railway_round
+            when G1824::Round::BuyCoalRailway2p
+              puts "#### Go for Choice2"
+              buy_mountain_railway_round
+            when G1824::Round::BuyCoalRailway2p
+              puts "#### Go for SR"
+              # @draft_finished = true
+              @turn = 1
+              initial_stock_round
+            else
+              super
+            end
+
+          @round
+        end
+
         def init_round
+          puts "#### Init round"
+          two_player? ? initial_draft_round : initial_stock_round
+        end
+
+        def initial_draft_round
+          puts "INITIAL DR"
+          @log << '-- Draft Round --'
+          draft_step = G1824::Step::Draft2pDistribution
+          Engine::Round::Draft.new(self, [draft_step], snake_order: true)
+        end
+
+        def initial_stock_round
+          puts "INITIAL SR"
           @log << '-- First Stock Round --'
           @log << 'Player order is reversed during the first turn'
           G1824::Round::FirstStock.new(self, [
             G1824::Step::BuySellParSharesFirstSr,
-          ])
+            ])
+        end
+
+        def buy_coal_railway_round
+          G1824::Round::BuyCoalRailway2p.new(self, [G1824::Step::BuyCoalRailway2p])
+        end
+
+        def buy_mountain_railway_round
+          G1824::Round::BuyMountainRailway2p.new(self, [G1824::Step::BuyMountainRailway2p])
         end
 
         def stock_round
@@ -455,6 +570,13 @@ module Engine
             Engine::Step::DiscardTrain,
             G1824::Step::BuySellParExchangeShares,
           ])
+        end
+
+        def round_description(name, _round_num = nil)
+          return "Draft Coal Railway" if name == "BuyCoalRailway2p"
+          return "Draft Mountain Railway" if name == "BuyMountainRailway2p"
+
+          super
         end
 
         def or_set_finished
@@ -508,6 +630,7 @@ module Engine
         def setup
           @two_train_bought = false
           @forced_mountain_railway_exchange = []
+          @draft_finished = false
 
           @companies.each do |c|
             c.owner = @bank
@@ -542,8 +665,8 @@ module Engine
             'Staatsbahn'
           elsif regional?(entity)
             str = 'Regional Railway'
-            if (coal = associated_coal_railway(entity)) && !coal.closed?
-              str += " - Presidency reserved (#{coal.name})"
+            if (regional = associated_coal_railway(entity)) && !regional.closed?
+              str += " - Presidency reserved (#{regional.name}), no float until exchanged"
             end
             str
           end
@@ -675,7 +798,7 @@ module Engine
           case entity.id
           when 'BK', 'MS', 'CL', 'SB'
             needed = entity.percent_to_float
-            needed.positive? ? "#{entity.percent_to_float}% (including exchange) to float" : 'Exchange to float'
+            needed.positive? ? "#{entity.percent_to_float}% to float" : 'Exchange to float'
           when 'UG'
             'U1 exchange floats'
           when 'KK'
@@ -789,6 +912,7 @@ module Engine
         MOUNTAIN_RAILWAY_DEFINITION = {
           sym: 'B%1$d',
           name: 'B%1$d %2$s',
+          type: 'Mountain Railway',
           value: 120,
           revenue: 25,
           desc: 'Moutain railway (B%1$d). Cannot be sold but can be exchanged for a 10 percent share in a '\

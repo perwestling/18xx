@@ -393,6 +393,7 @@ module View
         end
 
         def create_bid(target, input)
+          puts "create_bid for target #{target} and input #{input}"
           hide!
           price = input.JS['elm'].JS['value'].to_i
           process_action(Engine::Action::Bid.new(

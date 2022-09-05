@@ -23,11 +23,13 @@ module Engine
             sym: :cisleithania,
             short_name: 'Cisleithania',
             desc: 'Use the smaller Cislethania map, with some reduction of components - 2-3 players',
+            players: [2, 3],
           },
           {
             sym: :goods_time,
             short_name: 'Goods Time',
             desc: 'Use the Goods Time Variant (3-6 players) - pre-set scenario',
+            players: [3, 4, 5, 6],
           },
         ].freeze
       end

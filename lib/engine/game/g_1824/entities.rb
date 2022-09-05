@@ -8,6 +8,7 @@ module Engine
           {
             sym: 'EPP',
             name: 'C1 Eisenbahn Pilsen - Priesen',
+            type: 'Coal Railway',
             value: 200,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
@@ -20,6 +21,7 @@ module Engine
           {
             sym: 'EOD',
             name: 'C2 Eisenbahn Oderberg - Dombran',
+            type: 'Coal Railway',
             value: 200,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
@@ -32,6 +34,7 @@ module Engine
           {
             sym: 'MLB',
             name: 'C3 Mosty - Lemberg Bahn',
+            type: 'Coal Railway',
             value: 200,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
@@ -44,6 +47,7 @@ module Engine
           {
             sym: 'SPB',
             name: 'C4 Simeria-Petrosani Bahn',
+            type: 'Coal Railway',
             value: 200,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
@@ -56,6 +60,7 @@ module Engine
           {
             sym: 'S1',
             name: 'S1 Wien-Gloggnitzer Eisenbahngesellschaft',
+            type: 'PreStaatsbahn',
             value: 240,
             revenue: 0,
             desc: "Buyer take control of pre-staatsbahn S1, which will be exchanged for the Director's certificate "\
@@ -66,6 +71,7 @@ module Engine
           {
             sym: 'S2',
             name: 'S2 Kärntner Bahn',
+            type: 'PreStaatsbahn',
             value: 120,
             revenue: 0,
             desc: 'Buyer take control of pre-staatsbahn S2, which will be exchanged for a 10% share of SD when the '\
@@ -76,6 +82,7 @@ module Engine
           {
             sym: 'S3',
             name: 'S3 Nordtiroler Staatsbahn',
+            type: 'PreStaatsbahn',
             value: 120,
             revenue: 0,
             desc: 'Buyer take control of pre-staatsbahn S3, which will be exchanged for a 10% share of SD when the '\
@@ -86,6 +93,7 @@ module Engine
           {
             sym: 'U1',
             name: 'U1 Eisenbahn Pest - Waitzen',
+            type: 'PreStaatsbahn',
             value: 240,
             revenue: 0,
             desc: "Buyer take control of pre-staatsbahn U1, which will be exchanged for the Director's certificate "\
@@ -97,6 +105,7 @@ module Engine
           {
             sym: 'U2',
             name: 'U2 Mohacs-Fünfkirchner Bahn',
+            type: 'PreStaatsbahn',
             value: 120,
             revenue: 0,
             desc: 'Buyer take control of pre-staatsbahn U2, which will be exchanged for a 10% share of UG when the '\
@@ -107,6 +116,7 @@ module Engine
           {
             sym: 'K1',
             name: 'K1 Kaiserin Elisabeth-Bahn',
+            type: 'PreStaatsbahn',
             value: 240,
             revenue: 0,
             desc: "Buyer take control of pre-staatsbahn K1, which will be exchanged for the Director's certificate "\
@@ -117,6 +127,7 @@ module Engine
           {
             sym: 'K2',
             name: 'K2 Kaiser Franz Joseph-Bahn',
+            type: 'PreStaatsbahn',
             value: 120,
             revenue: 0,
             desc: 'Buyer take control of pre-staatsbahn K2, which will be exchanged for a 10% share of KK when the '\
@@ -253,6 +264,17 @@ module Engine
             coordinates: 'C6',
             city: 0,
             color: '#7F7F7F',
+            abilities: [
+              {
+                type: 'no_buy',
+                description: 'Exchangable to 20% BK cert',
+                desc_detail: "During an SR (phase 3/4) this might be exchanged for the Director's share in the BK "\
+                             'regional railway. This exchange is in place of a normal share stock round action. '\
+                             'When exchange takes place all assets are transfered to BK. EPP home station is removed. '\
+                             'If exchange has not taken place before the 1st 5 train is bought, the exchange takes '\
+                             'place directly, and BK can (if floated) operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'EOD',
@@ -263,9 +285,19 @@ module Engine
             coordinates: 'A12',
             city: 0,
             color: '#7F7F7F',
+            abilities: [
+              {
+                type: 'no_buy',
+                description: 'Exchangable to 20% MS cert',
+                desc_detail: "During an SR (phase 3/4) this might be exchanged for the Director's share in the MS "\
+                             'regional railway. This exchange is in place of a normal share stock round action. '\
+                             'When exchange takes place all assets are transfered to MS. EOD home station is removed.'\
+                             ' If exchange has not taken place before the 1st 5 train is bought, the exchange takes '\
+                             'place directly, and MS can (if floated) operate in the next OR.',
+              },
+            ],
           },
           {
-            float_percent: 100,
             sym: 'MLB',
             name: 'C3 Mosty - Lemberg Bahn',
             type: 'Coal',
@@ -274,6 +306,17 @@ module Engine
             coordinates: 'A22',
             city: 0,
             color: '#7F7F7F',
+            abilities: [
+              {
+                type: 'no_buy',
+                description: 'Exchangable to 20% MS cert',
+                desc_detail: "During an SR (phase 3/4) this might be exchanged for the Director's share in the CL "\
+                             'regional railway. This exchange is in place of a normal share stock round action. '\
+                             'When exchange takes place all assets are transfered to CL. MLB home station is removed.'\
+                             ' If exchange has not taken place before the 1st 5 train is bought, the exchange takes '\
+                             'place directly, and CL can (if floated) operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'SPB',
@@ -284,6 +327,17 @@ module Engine
             coordinates: 'H25',
             city: 0,
             color: '#7F7F7F',
+            abilities: [
+              {
+                type: 'no_buy',
+                description: 'Exchangable to 20% SB cert',
+                desc_detail: "During an SR (phase 3/4) this might be exchanged for the Director's share in the SB "\
+                              'regional railway. This exchange is in place of a normal share stock round action. '\
+                              'When exchange takes place all assets are transfered to SB. SPB home station is removed.'\
+                              ' If exchange has not taken place before the 1st 5 train is bought, the exchange takes '\
+                              'place directly, and SB can (if floated) operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'S1',
@@ -294,6 +348,17 @@ module Engine
             coordinates: 'E12',
             city: 0,
             color: :orange,
+            abilities: [
+              {
+                type: 'no_buy',
+                description: '4-train sold: Becomes 20% SD cert',
+                desc_detail: 'When the 1st 4-train is sold, at the end of the current SR, SD starts and this '\
+                              "cert is exchanged for the Director's cert in SD. All assets of S1 is moved to "\
+                              'SD and the S1 home station is replaced with an SD station. Besides the assets of '\
+                              'the pre-staatsbahns, SD also receives 120G per IPO share that was not reserved. '\
+                              'SD will operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'S2',
@@ -304,6 +369,17 @@ module Engine
             coordinates: 'G10',
             city: 0,
             color: :orange,
+            abilities: [
+              {
+                type: 'no_buy',
+                description: '4-train sold: Becomes 10% SD cert',
+                desc_detail: 'When the 1st 4-train is sold, at the end of the current SR, SD starts and this '\
+                              'cert is exchanged for a 10% share in SD. All assets of S2 is moved to '\
+                              'SD and the S2 home station is replaced with an SD station. Besides the assets of '\
+                              'the pre-staatsbahns, SD also receives 120G per IPO share that was not reserved. '\
+                              'SD will operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'S3',
@@ -314,6 +390,17 @@ module Engine
             coordinates: 'G4',
             city: 0,
             color: :orange,
+            abilities: [
+              {
+                type: 'no_buy',
+                description: '4-train sold: Becomes 10% SD cert',
+                desc_detail: 'When the 1st 4-train is sold, at the end of the current SR, SD starts and this '\
+                              'cert is exchanged for a 10% share in SD. All assets of S3 is moved to '\
+                              'SD and the S3 home station is replaced with an SD station. Besides the assets of '\
+                              'the pre-staatsbahns, SD also receives 120G per IPO share that was not reserved. '\
+                              'SD will operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'U1',
@@ -324,6 +411,17 @@ module Engine
             coordinates: 'F17',
             city: 1,
             color: :purple,
+            abilities: [
+              {
+                type: 'no_buy',
+                description: "5-train sold: Becomes 20% UG cert",
+                desc_detail: 'When the 1st 5-train is sold, at the end of the current SR, UG starts and this '\
+                              "cert is exchanged for the Director's cert in UG. All assets of U1 is moved to "\
+                              'UG and the U1 home station is replaced with an UG station. Besides the assets of '\
+                              'the pre-staatsbahns, UG also receives 120G per IPO share that was not reserved. '\
+                              'UG will operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'U2',
@@ -334,6 +432,17 @@ module Engine
             coordinates: 'H15',
             city: 0,
             color: :purple,
+            abilities: [
+              {
+                type: 'no_buy',
+                description: "5-train sold: Becomes 10% UG cert",
+                desc_detail: 'When the 1st 5-train is sold, at the end of the current SR, UG starts and this '\
+                              'cert is exchanged for a 10% share in UG. All assets of U2 is moved to '\
+                              'UG and the U2 home station is replaced with an UG station. Besides the assets of '\
+                              'the pre-staatsbahns, UG also receives 120G per IPO share that was not reserved. '\
+                              'UG will operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'K1',
@@ -344,6 +453,17 @@ module Engine
             city: 1,
             color: :brown,
             logo: '1824/K1',
+            abilities: [
+              {
+                type: 'no_buy',
+                description: "6-train sold: Becomes 20% KK cert",
+                desc_detail: 'When the 1st 6-train is sold, at the end of the current SR, KK starts and this '\
+                              "cert is exchanged for the Director's cert in KK. All assets of K1 is moved to "\
+                              'KK and the K1 home station is replaced with an KK station. Besides the assets of '\
+                              'the pre-staatsbahns, KK also receives 120G per IPO share that was not reserved. '\
+                              'KK will operate in the next OR.',
+              },
+            ],
           },
           {
             sym: 'K2',
@@ -354,6 +474,17 @@ module Engine
             coordinates: 'E12',
             city: 2,
             color: :brown,
+            abilities: [
+              {
+                type: 'no_buy',
+                description: "6-train sold: Becomes 10% KK cert",
+                desc_detail: 'When the 1st 6-train is sold, at the end of the current SR, KK starts and this '\
+                              'cert is exchanged for 10% share in KK. All assets of K2 is moved to '\
+                              'KK and the K2 home station is replaced with an KK station. Besides the assets of '\
+                              'the pre-staatsbahns, KK also receives 120G per IPO share that was not reserved. '\
+                              'KK will operate in the next OR.',
+              },
+            ],
           },
         ].freeze
       end
