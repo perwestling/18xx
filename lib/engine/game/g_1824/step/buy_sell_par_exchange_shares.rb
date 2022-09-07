@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
 require_relative '../../../step/buy_sell_par_shares'
+require_relative 'possibly_buy_bonds'
 
 module Engine
   module Game
     module G1824
       module Step
         class BuySellParExchangeShares < Engine::Step::BuySellParShares
+          include PossiblyBuyBonds
+
           EXCHANGE_ACTIONS = %w[buy_shares].freeze
           BUY_ACTION = %w[special_buy].freeze
 
@@ -37,6 +40,7 @@ module Engine
             return can_gain?(entity.owner, bundle, exchange: true) if bundle
 
             shares = []
+            puts "Can exchange? entity #{entity.name}"
             @game.exchange_corporations(ability).each do |corporation|
               shares << corporation.available_share if ability.from.include?(:ipo)
               shares << @game.share_pool.shares_by_corporation[corporation]&.first if ability.from.include?(:market)

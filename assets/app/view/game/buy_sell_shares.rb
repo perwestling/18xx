@@ -79,7 +79,7 @@ module View
       def render_market_shares
         @pool_shares.map do |share|
           next unless @step.can_buy?(@current_entity, share.to_bundle)
-          if share.to_bundle.presidents_share && @pool_shares.size > 1 && !@game.can_buy_presidents_share_directly_from_market?
+          if share.to_bundle.presidents_share && @pool_shares.size > 1 && !@game.can_buy_presidents_share_directly_from_market?(share.corporation)
             next
           end
 
@@ -218,6 +218,7 @@ module View
 
         source_entities.each do |entity|
           @game.abilities(entity, :exchange) do |ability|
+            puts "Try exchange ability for entity #{entity.name}"
             next unless @game.exchange_corporations(ability).include?(@corporation)
             next unless entity.owner == @current_entity
 

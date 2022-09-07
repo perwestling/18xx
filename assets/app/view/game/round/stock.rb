@@ -150,11 +150,13 @@ module View
 
           merging = @step.respond_to?(:merge_in_progress?) && @step.merge_in_progress?
 
+          puts "Get corporations"
           corporations = if @step.respond_to?(:visible_corporations)
                            @step.visible_corporations
                          else
                            @game.sorted_corporations.reject(&:closed?)
                          end
+          puts "Result: #{corporations}"
 
           corporations.map do |corporation|
             next if @auctioning_corporation && @auctioning_corporation != corporation

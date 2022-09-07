@@ -16,7 +16,7 @@ module Engine
         include G1824::Entities
         include G1824::Map
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :buy_to_complete
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_railways_to_draft
 
         register_colors(
           gray70: '#B3B3B3',
@@ -197,7 +197,7 @@ module Engine
                     num: 3,
                     price: 450,
                     rusts_on: '10',
-                    events: [{ 'type' => 'close_coal_railways' }, { 'type' => 'ug_formation' }],
+                    events: [{ 'type' => 'close_coal_railways' }],
                     discount: { '4' => 140 },
                   },
                   {
@@ -205,7 +205,7 @@ module Engine
                     distance: 6,
                     num: 3,
                     price: 630,
-                    events: [{ 'type' => 'kk_formation' }],
+                    events: [],
                     discount: { '5' => 200 },
                   },
                   {
@@ -270,7 +270,8 @@ module Engine
           'sd_formation' => ['SD formation', 'The Suedbahn is founded at the end of the OR'],
           'close_coal_railways' => ['Coal railways closed', 'Any still open Coal railways are exchanged'],
           'ug_formation' => ['UG formation', 'The Ungarische Staatsbahn is founded at the end of the OR'],
-          'kk_formation' => ['k&k formation', 'k&k Staatsbahn is founded at the end of the OR']
+          'kk_formation' => ['k&k formation', 'k&k Staatsbahn is founded at the end of the OR'],
+          'close_construction_railways' => ['Construction railways close', 'The two construction railways close.'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
@@ -309,6 +310,10 @@ module Engine
           opt_rules
         end
 
+        def init_share_pool
+          G1824::SharePool.new(self)
+        end
+
         def init_bank
           return super unless option_cisleithania
 
@@ -330,7 +335,31 @@ module Engine
             end
           end
 
-          G1824::Depot.new(trains, self)
+          depot = G1824::Depot.new(trains, self)
+
+          # Need to add events that are depending on player count
+
+          if two_player?
+            # First 4 or 5 train wwill close all construction railways.
+            # It depends if which pre-staatbahn used.
+
+            train = depot.upcoming.find { |t| t.name == '4' }
+            train.events << { 'type' => 'close_construction_railways' }
+
+            train = depot.upcoming.find { |t| t.name == '5' }
+            train.events << { 'type' => 'kk_formation' }
+
+          else
+
+            train = depot.upcoming.find { |t| t.name == '5' }
+            train.events << { 'type' => 'ug_formation' }
+
+            train = depot.upcoming.find { |t| t.name == '6' }
+            train.events << { 'type' => 'kk_formation' }
+
+          end
+
+          depot
         end
 
         def num_trains(train)
@@ -344,11 +373,24 @@ module Engine
         def init_corporations(stock_market)
           corporations = CORPORATIONS.dup
 
-          corporations.map! do |corporation|
+          corporations.map! do |c|
+            if c['sym'] == @bond_railway_id
+              # The Regional that is connected to construction railway are
+              # tranformed in a Bond certificate (with a 20% bond, 8 10% bonds)
+              c['type'] = 'Bond Railway'
+              c['max_ownership_percent'] = 100
+              c['always_market_price'] = true
+              c['float_percent'] = 0
+              c['tokens'] = [0, 0, 0]
+              min_price = 50
+            else
+              min_price = stock_market.par_prices.map(&:price).min
+            end
+
             G1824::Corporation.new(
-              min_price: stock_market.par_prices.map(&:price).min,
+              min_price: min_price,
               capitalization: self.class::CAPITALIZATION,
-              **corporation.merge(corporation_opts),
+              **c.merge(corporation_opts),
             )
           end
 
@@ -364,6 +406,7 @@ module Engine
             end
             selection = corporations.reject { |c| c.removed }
             @log << "Available Corporations: #{selection.map(&:name).sort.join(', ')}"
+            corporations = selection
           end
 
           corporations
@@ -421,12 +464,24 @@ module Engine
             show_available('Coal Railway', companies)
 
             if two_player?
-              selected_stack_1 = %w[S3 EOD] # TODO: Randomly select 1 "small" prestaatsbahn, and 1 coal railway
+              pre_staat_candidates = %w[K2 S2 S3]
+              pre_staat_selected = pre_staat_candidates[rand % pre_staat_candidates.size]
+              coal_railway_candidates = %w[EOD EPP MLB]
+              coal_railway_selected = coal_railway_candidates[rand % coal_railway_candidates.size]
+              @bond_railway_id =
+                case coal_railway_selected
+                when 'EOD'
+                  'MS'
+                when 'EPP'
+                  'BK'
+                when 'MLB'
+                  'CL'
+                end
+              selected_stack_1 = [pre_staat_selected, coal_railway_selected]
               companies.each do |c|
                 sym = c[:sym]
                 if selected_stack_1.include?(sym)
                   c[:stack] = 1
-                  # Make these construction railway
                 elsif %w[S1 K1].include?(sym)
                   c[:stack] = 2
                 elsif c[:type] == 'PreStaatsbahn'
@@ -478,7 +533,34 @@ module Engine
         end
 
         def num_certs(entity)
-          super + @minors.count { |m| !m.closed? && m.owner == entity }
+          puts "Num certs for #{entity}"
+          result = super + @minors.count { |m| !m.closed? && m.owner == entity }
+          puts "Got #{result}"
+          result
+        end
+
+        # President share of the Bond railway (used in 2 players) is buyable/sellablecorporation
+        def bundles_for_corporation(player, corporation)
+          return super unless bond_railway?(corporation)
+
+          # Handle bundles with half shares and non-half shares separately.
+          president_shares, regular_shares = player.shares_of(corporation).partition { |s| s.percent > 10 }
+
+          # # Need only one bundle with half shares. Player will have to sell twice if s/he want to sell both.
+          # # This is to simplify other implementation - only handle sell bundles with one half share.
+          # half_shares = [half_shares.first] if half_shares.any?
+
+          regular_bundles = super(player, corporation, shares: regular_shares)
+          puts "regular bundles: #{regular_bundles}"
+          president_bundles = super(player, corporation, shares: president_shares)
+          puts "president bundles: #{president_bundles}"
+          regular_bundles.concat(president_bundles)
+        end
+
+        def can_buy_presidents_share_directly_from_market?(corporation)
+          return super unless bond_railway?(corporation)
+
+          true
         end
 
         def location_name(coord)
@@ -512,21 +594,13 @@ module Engine
         end
 
         def next_round!
-          # return super if !two_player? || @draft_finished
-
           @round =
             case @round
-            when Engine::Round::Draft
-              puts "#### Go for Choice"
-              # @draft_finished = true
-              # @turn = 1
-              buy_coal_railway_round
-            when G1824::Round::BuyCoalRailway2p
-              puts "#### Go for Choice2"
-              buy_mountain_railway_round
-            when G1824::Round::BuyCoalRailway2p
-              puts "#### Go for SR"
-              # @draft_finished = true
+            when G1824::Round::DraftStacks2p
+              draft_coal_railways_round
+            when G1824::Round::DraftCoalRailways2p
+              draft_mountain_railways_round
+            when G1824::Round::DraftMountainRailways2p
               @turn = 1
               initial_stock_round
             else
@@ -537,32 +611,41 @@ module Engine
         end
 
         def init_round
-          puts "#### Init round"
           two_player? ? initial_draft_round : initial_stock_round
         end
 
         def initial_draft_round
-          puts "INITIAL DR"
-          @log << '-- Draft Round --'
-          draft_step = G1824::Step::Draft2pDistribution
-          Engine::Round::Draft.new(self, [draft_step], snake_order: true)
+          @log << '-- Draft Stacks Round --'
+          draft_step = G1824::Step::DraftStacks2p
+          G1824::Round::DraftStacks2p.new(self, [draft_step], snake_order: true)
+        end
+
+        def draft_coal_railways_round
+          @log << '-- Draft Coal Railways Round --'
+          draft_step = G1824::Step::DraftCoalRailways2p
+          G1824::Round::DraftCoalRailways2p.new(self, [draft_step])
+        end
+
+        def draft_mountain_railways_round
+          @log << '-- Draft Mountain Railways Round --'
+          draft_step = G1824::Step::DraftMountainRailways2p
+          G1824::Round::DraftMountainRailways2p.new(self, [draft_step], snake_order: true)
         end
 
         def initial_stock_round
-          puts "INITIAL SR"
           @log << '-- First Stock Round --'
-          @log << 'Player order is reversed during the first turn'
+          @log << 'Player order is reversed during the first turn' unless two_player?
           G1824::Round::FirstStock.new(self, [
             G1824::Step::BuySellParSharesFirstSr,
             ])
         end
 
         def buy_coal_railway_round
-          G1824::Round::BuyCoalRailway2p.new(self, [G1824::Step::BuyCoalRailway2p])
+          G1824::Round::BuyCoalRailway2p.new(self, [G1824::Step::DraftCoalRailways2p])
         end
 
         def buy_mountain_railway_round
-          G1824::Round::BuyMountainRailway2p.new(self, [G1824::Step::BuyMountainRailway2p])
+          G1824::Round::BuyMountainRailway2p.new(self, [G1824::Step::DraftMountainRailways2p])
         end
 
         def stock_round
@@ -573,8 +656,10 @@ module Engine
         end
 
         def round_description(name, _round_num = nil)
-          return "Draft Coal Railway" if name == "BuyCoalRailway2p"
-          return "Draft Mountain Railway" if name == "BuyMountainRailway2p"
+          return "Draft Coal Railways Round" if name == "DraftCoalRailways2p"
+          return "Draft Mountain Railways Round" if name == "DraftMountainRailways2p"
+          return "Draft Stacks Round" if name == "DraftStacks2p"
+          return "First Stock Round" if name == "FirstStock"
 
           super
         end
@@ -627,14 +712,27 @@ module Engine
           @kk ||= corporation_by_id('KK')
         end
 
+        def pre_state_k2
+          @k2 ||= company_by_id('K2')
+        end
+
+        def bond_railway
+          @bond_railway ||= corporation_by_id(@bond_railway_id)
+        end
+
         def setup
           @two_train_bought = false
           @forced_mountain_railway_exchange = []
-          @draft_finished = false
+          @coal_railways_to_draft = []
+
+          kk_corporation_company = two_player? && @companies.any? { |c| c == pre_state_k2 && c.stack == 1 }
 
           @companies.each do |c|
             c.owner = @bank
             @bank.companies << c
+
+            # For 2 player, the two minors in stack 1 are construction railways
+            make_connected_minor_construction_railway(c, kk_corporation_company) if c.stack == 1
           end
 
           @minors.each do |minor|
@@ -644,11 +742,20 @@ module Engine
 
           # Reserve the presidency share to have it as exchange for associated coal railway
           @corporations.each do |c|
+            next if two_player? && c == bond_railway
             next if !regional?(c) && !staatsbahn?(c)
             next if c.id == 'BH'
 
             c.shares.find(&:president).buyable = false
             c.floatable = false
+          end
+
+          if two_player?
+            bond_railway.shares.each do |s|
+              @share_pool.transfer_shares(s.to_bundle, @share_pool, price: 0, allow_president_change: false)
+            end
+  
+            @log << "Bond railway is floated, and has 100% shares in market. One of the shares are a 20% certificate."
           end
         end
 
@@ -657,7 +764,11 @@ module Engine
         end
 
         def status_str(entity)
-          if coal_railway?(entity)
+          if construction_railway?(entity)
+            'Construction Railway'
+          elsif bond_railway?(entity)
+            'Bond Railway'
+          elsif coal_railway?(entity)
             'Coal Railway - may only own g trains'
           elsif pre_staatsbahn?(entity)
             'Pre-Staatsbahn'
@@ -665,6 +776,7 @@ module Engine
             'Staatsbahn'
           elsif regional?(entity)
             str = 'Regional Railway'
+            puts "Get associated coal railway for entity #{entity}"
             if (regional = associated_coal_railway(entity)) && !regional.closed?
               str += " - Presidency reserved (#{regional.name}), no float until exchanged"
             end
@@ -698,6 +810,16 @@ module Engine
           @phase.status.include?('may_exchange_coal_railways')
         end
 
+        def construction_railway?(entity)
+          two_player? && abilities(entity, :tile_discount) { |_| return true }
+
+          false
+        end
+
+        def bond_railway?(entity)
+          two_player? && entity == bond_railway
+        end
+
         def pre_staatsbahn?(entity)
           entity.minor? && entity.type == :PreStaatsbahn
         end
@@ -727,6 +849,13 @@ module Engine
           buyable?(entity)
         end
 
+        def exchange_corporations(exchange_ability)
+          puts "EXCHANGE CORPORATIONS!!: #{exchange_ability.corporations}"
+          candidates = exchange_ability.corporations.map { |c| corporation_by_id(c) }.compact
+          puts "Candidates: #{candidates.map(&:name)}}"
+          candidates.reject(&:closed?)
+        end
+  
         def entity_can_use_company?(_entity, _company)
           # Return false here so that Exchange abilities does not appear in GUI
           false
@@ -793,6 +922,7 @@ module Engine
         end
 
         def float_str(entity)
+          return 'Bond Railway' if bond_railway?(entity)
           return super if !entity.corporation || entity.floatable
 
           case entity.id
@@ -816,12 +946,14 @@ module Engine
 
         def event_close_mountain_railways!
           @log << '-- Any remaining Mountain Railways are either exchanged or discarded'
+          puts "Close MR"
           # If this list contains any companies it will trigger an interrupt exchange/pass step
           @forced_mountain_railway_exchange = @companies.select { |c| mountain_railway?(c) && !c.closed? }
         end
 
         def event_close_coal_railways!
           @log << '-- Exchange any remaining Coal Railway'
+          puts "Close CR"
           @companies.select { |c| coal_railway?(c) }.reject(&:closed?).each do |coal_railway_company|
             exchange_coal_railway(coal_railway_company)
           end
@@ -903,6 +1035,10 @@ module Engine
           @log << "#{corporation.name} receives floating capital of #{format_currency(floating_capital)}"
         end
 
+        def connected_minor(company)
+          minor_by_id(company.id)
+        end
+
         private
 
         def mine_hex?(hex)
@@ -939,6 +1075,44 @@ module Engine
           definition[:name] = format(definition[:name], real_index, MOUNTAIN_RAILWAY_NAMES[real_index])
           definition[:desc] = format(definition[:desc], real_index)
           definition
+        end
+
+        def make_connected_minor_construction_railway(company, kk_is_corporation_company)
+          close_train = kk_is_corporation_company ? '5' : '4'
+          company.value = 120
+          company.desc =
+            'This is a Construction Railway. It does not use any trains and do not have any treasury. '\
+            'During its OR turn the owner may lay or upgrade track according to the normal rules but '\
+            'any terrain costs are ignored. The Construction Corporation cannot be sold, does not pay '\
+            "any revenue, and when the first #{ close_train } train is bought "\
+            'it is closed without any compensationis. It pays no revenue.'
+
+          minor = connected_minor(company)
+
+          # Remove previous abilities
+          minor.all_abilities.dup.each { |ab| minor.remove_ability(ab) }
+
+          # Add free tile laying ability to minor
+          ability = Engine::Ability::TileDiscount.new(
+            type: 'tile_discount',
+            discount: 40,
+            description: 'Construction railway',
+            desc_detail: 'No treasury. Lay tiles without terrain cost.')
+          minor.add_ability(ability)
+
+          # Do not buy trains
+          ability = Engine::Ability::Base.new(
+            type: 'no_train_buy',
+            description: 'Trainless',
+            desc_detail: 'Does not need, buy or use trains.')
+          minor.add_ability(ability)
+
+          # No buy-ins
+          ability = Engine::Ability::Base.new(
+            type: 'no_buy',
+            description: "First #{close_train}-train bought: Closed",
+            desc_detail: 'No compensation.')
+          minor.add_ability(ability)
         end
       end
     end

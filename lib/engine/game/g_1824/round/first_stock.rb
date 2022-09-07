@@ -15,12 +15,12 @@ module Engine
 
           def setup
             @game.log << 'After First Stock Round is finished any unsold Pre-State Railways, Coal Railways, '\
-                         'and Mountain Railways will be removed from the game'
-            @reverse = true
+                         'and Mountain Railways will be removed from the game' if !@game.two_player?
+            @reverse = !@game.two_player?
 
             super
 
-            @entities.reverse!
+            @entities.reverse! unless @game.two_player?
           end
 
           def select_entities
@@ -30,7 +30,7 @@ module Engine
           end
 
           def next_entity_index!
-            if @entity_index == @game.players.size - 1
+            if !@game.two_player? && @entity_index == @game.players.size - 1
               @reverse = false
               @entities = @game.players
               @game.log << 'Player order is from now on normal'
@@ -49,7 +49,7 @@ module Engine
             end
 
             @game.log << 'First stock round is finished - any unsold Pre-State Railways, Coal Railways, ' \
-                         ' and Montain Railways are removed from the game'
+                         ' and Montain Railways are removed from the game' unless @game.two_player?
 
             @game.companies.each do |c|
               next if c.owner&.player? || c.closed?

@@ -2,12 +2,15 @@
 
 require_relative '../../../step/buy_sell_par_shares'
 require_relative 'action_buy_minor'
+require_relative 'possibly_buy_bonds'
+
 module Engine
   module Game
     module G1824
       module Step
         class BuySellParSharesFirstSr < Engine::Step::BuySellParShares
           include ActionBuyMinor
+          include PossiblyBuyBonds
 
           def can_buy_company?(_player, _company)
             !bought?

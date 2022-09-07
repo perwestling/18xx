@@ -5,7 +5,7 @@ module Engine
     module G1824
       module ActionBuyMinor
         def action_buy_minor(entity, connected_company, price)
-          minor = @game.minor_by_id(connected_company.id)
+          minor = @game.connected_minor(connected_company)
           raise GameError, "Has no connected minor: #{connected_company.name}" unless minor
 
           return buy_pre_staatsbahn(minor, entity, price) if @game.pre_staatsbahn?(minor)
@@ -15,6 +15,7 @@ module Engine
 
         def buy_pre_staatsbahn(pre_staatsbahn, buyer, price)
           treasury = price
+          buyer.spend(price, @game.bank)
           @game.log << "Pre-Staatsbahn #{pre_staatsbahn.full_name} floats and receives "\
                         "#{@game.format_currency(treasury)} in treasury"
           pre_staatsbahn.owner = buyer
@@ -28,6 +29,7 @@ module Engine
           coal_railway.owner = buyer
           coal_railway.float!
           @game.bank.spend(price, coal_railway)
+          buyer.spend(price, @game.bank)
           g_train = @game.depot.upcoming.select { |t| @game.g_train?(t) }.shift
           treasury = price - g_train.price
           @game.log << "#{coal_railway.name} floats and buys a #{g_train.name} train from the depot "\
@@ -39,6 +41,13 @@ module Engine
           regional_railway.ipoed = true
           @game.stock_market.set_par(regional_railway, share_price)
           @game.log << "#{buyer.name} pars #{regional_railway.name} at #{@game.format_currency(share_price.price)}"
+        end
+
+        def buy_mountain_railway(player, company, price)
+          company.owner = player
+          player.companies << company
+          player.spend(price, @game.bank)
+          @log << "#{player.name} buys #{company.name} for #{@game.format_currency(price)}"
         end
       end
     end
