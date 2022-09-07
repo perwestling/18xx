@@ -87,6 +87,7 @@ module Engine
       end
 
       def share_price_change(_entity, revenue)
+        @game.log << "SHARE PRICE CHANGE"
         if revenue.positive?
           { share_direction: :right, share_times: 1 }
         else

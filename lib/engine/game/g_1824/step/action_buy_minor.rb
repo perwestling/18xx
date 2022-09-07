@@ -28,6 +28,12 @@ module Engine
 
           coal_railway.owner = buyer
           coal_railway.float!
+
+          if @game.construction_railway?(coal_railway)
+            @game.log << "#{coal_railway.name} floats and becomes a Construction Railway, without treasury and trains"
+            return
+          end
+
           @game.bank.spend(price, coal_railway)
           buyer.spend(price, @game.bank)
           g_train = @game.depot.upcoming.select { |t| @game.g_train?(t) }.shift

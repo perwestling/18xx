@@ -10,6 +10,7 @@ module Engine
       ACTIONS = %w[lay_tile pass].freeze
 
       def actions(entity)
+        puts "Track actions for #{entity.name}"
         return [] unless entity == current_entity
         return [] if entity.company? || !can_lay_tile?(entity)
 

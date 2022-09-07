@@ -7,7 +7,11 @@ module Engine
     module G1824
       module Step
         class Dividend < Engine::Step::Dividend
+          ACTIONS = [].freeze
+
           def actions(entity)
+            return ACTIONS if @game.bond_railway?(entity)
+            # return [] if @game.bond_railway?(entity)
             return [] if entity.minor?
 
             super
@@ -25,10 +29,18 @@ module Engine
 
           def process_dividend(action)
             entity = action.entity
-            mine_revenue = @game.mine_revenue(routes)
-            revenue = @game.routes_revenue(routes) - mine_revenue
             kind = action.kind.to_sym
-            payout = dividend_options(entity)[kind]
+            amount = action.amount
+            if amount
+              mine_revenue = 0
+              revenue = action.amount
+              payout = { corporation: 0, per_share: revenue / 10, share_direction: :right, share_times: 1 }
+            else
+              mine_revenue = @game.mine_revenue(routes)
+              revenue = @game.routes_revenue(routes) - mine_revenue
+              payout = dividend_options(entity)[kind]
+            end            
+            @game.log << "AMOUNT: #{amount}"
 
             entity.operating_history[[@game.turn, @round.round_num]] = OperatingInfo.new(
               routes,
@@ -53,6 +65,9 @@ module Engine
           end
 
           def skip!
+            @game.log << "### SKIP ###"
+            puts "#### SKIP!"
+            return revenue_for_bond_railway(current_entity) if @game.bond_railway?(current_entity)
             return super unless current_entity.minor?
 
             revenue = @game.routes_revenue(routes)
@@ -63,8 +78,19 @@ module Engine
             ))
           end
 
+          def revenue_for_bond_railway(bond_railway)
+            @game.log << "### DO PROCESS DIVIDEND FOR BOND RAILWAY"
+            revenue = bond_railway.share_price.price
+
+            process_dividend(Action::Dividend.new(
+              current_entity,
+              kind: 'payout',
+              amount: revenue,
+            ))
+          end
+
           def share_price_change(entity, revenue = 0)
-            return super unless entity.minor?
+            return super if !entity.minor? || @game.bond_railway?(entity)
 
             {}
           end

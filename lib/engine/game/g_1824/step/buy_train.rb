@@ -7,8 +7,8 @@ module Engine
     module G1824
       module Step
         class BuyTrain < Engine::Step::BuyTrain
-          def can_entity_buy_train?(_entity)
-            true
+          def can_entity_buy_train?(entity)
+            @game.construction_railway?(entity) || @game.bond_railway?(entity) ? false : true
           end
 
           def process_buy_train(action)

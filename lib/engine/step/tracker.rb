@@ -49,6 +49,7 @@ module Engine
       end
 
       def lay_tile_action(action, entity: nil, spender: nil)
+        puts "lay_tile_action"
         tile = action.tile
         old_tile = action.hex.tile
         tile_lay = get_tile_lay(action.entity)
@@ -84,6 +85,7 @@ module Engine
       end
 
       def lay_tile(action, extra_cost: 0, entity: nil, spender: nil)
+        puts "lay_tile"
         entity ||= action.entity
         spender ||= entity
         tile = action.tile

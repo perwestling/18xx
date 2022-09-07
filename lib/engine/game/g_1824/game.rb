@@ -81,8 +81,18 @@ module Engine
           %w[70 80 90p 100 110 125 140 160 180 200 220],
           %w[60 70 80p 90 100 115 130 150 170],
           %w[50 60 70p 80 90 105 120],
-          %w[40 50 60p 70 80],
+          %w[40 50x 60p 70 80],
         ].freeze
+
+        MARKET_TEXT = {
+          par: 'Par values',
+          par_1: 'Par value for Construction Railway (2 player)',
+        }.freeze
+
+        STOCKMARKET_COLORS = Base::STOCKMARKET_COLORS.merge(
+          par: :red,
+          par_1: :orange
+        ).freeze
 
         PHASES = [
           {
@@ -585,7 +595,7 @@ module Engine
             Engine::Step::DiscardTrain,
             Engine::Step::HomeToken,
             G1824::Step::ForcedMountainRailwayExchange,
-            Engine::Step::Track,
+            G1824::Step::Track,
             Engine::Step::Token,
             Engine::Step::Route,
             G1824::Step::Dividend,
@@ -721,6 +731,7 @@ module Engine
         end
 
         def setup
+          puts "SETUP"
           @two_train_bought = false
           @forced_mountain_railway_exchange = []
           @coal_railways_to_draft = []
@@ -742,7 +753,7 @@ module Engine
 
           # Reserve the presidency share to have it as exchange for associated coal railway
           @corporations.each do |c|
-            next if two_player? && c == bond_railway
+            next if two_player? && bond_railway?(c)
             next if !regional?(c) && !staatsbahn?(c)
             next if c.id == 'BH'
 
@@ -754,8 +765,13 @@ module Engine
             bond_railway.shares.each do |s|
               @share_pool.transfer_shares(s.to_bundle, @share_pool, price: 0, allow_president_change: false)
             end
+            bond_price = @stock_market.par_prices.find { |p| p.price == 50 }
+            @stock_market.set_par(bond_railway, bond_price)
+            bond_railway.ipoed = true
+            bond_railway.owner = @share_pool
+            after_par(bond_railway) # Not clear this is needed
   
-            @log << "Bond railway is floated, and has 100% shares in market. One of the shares are a 20% certificate."
+            @log << "Bond railway #{bond_railway.id} is floated, and has 9 certificates in the market, one 20%."
           end
         end
 
@@ -841,6 +857,7 @@ module Engine
 
         def buyable?(entity)
           return true unless entity.corporation?
+          return true if bond_railway?(entity.corporation)
 
           entity.all_abilities.none? { |a| a.type == :no_buy }
         end
