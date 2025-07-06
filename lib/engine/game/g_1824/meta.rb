@@ -17,12 +17,13 @@ module Engine
         GAME_PUBLISHER = :lonny_games
         GAME_RULES_URL = 'https://boardgamegeek.com/filepage/188242/1824-english-rules'
 
-        PLAYER_RANGE = [2, 6].freeze
+        # TODO: During pre-alpha, does not allow 2 players
+        PLAYER_RANGE = [3, 6].freeze
         OPTIONAL_RULES = [
           {
             sym: :cisleithania,
             short_name: 'Cisleithania',
-            desc: 'Use the smaller Cislethania map, with some reduction of components - 2-3 players',
+            desc: 'Use the smaller Cislethania map, with some reduction of components - 2-3 players. For 2 players Cistleithania is always used.',
           },
           {
             sym: :goods_time,
