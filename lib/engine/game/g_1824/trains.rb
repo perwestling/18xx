@@ -4,6 +4,7 @@ module Engine
   module Game
     module G1824
       module Trains
+        # Rule VII.11
         TRAINS_STANDARD = [
           {
             name: '2',
@@ -11,7 +12,6 @@ module Engine
             num: 9,
             price: 80,
             rusts_on: '4',
-            events: [{ 'type' => '1g_available' }],
           },
           {
             name: '1g',
@@ -29,7 +29,6 @@ module Engine
             price: 180,
             rusts_on: '6',
             discount: { '2' => 40 },
-            events: [{ 'type' => '2g_available' }],
           },
           {
             name: '2g',
@@ -47,7 +46,8 @@ module Engine
             num: 4,
             price: 280,
             rusts_on: '8',
-            events: [{ 'type' => 'close_mountain_railways' }, { 'type' => 'sd_formation' }, { 'type' => '3g_available' }],
+            events: [{ 'type' => 'close_mountain_railways' },
+                     { 'type' => 'sd_formation' }],
             discount: { '3' => 90 },
           },
           {
@@ -59,7 +59,6 @@ module Engine
             available_on: '4',
             rusts_on: %w[5g],
             discount: { '2g' => 120 },
-            events: [{ 'type' => '1g_rust' }],
           },
           {
             name: '5',
@@ -67,15 +66,16 @@ module Engine
             num: 3,
             price: 400,
             rusts_on: '10',
-            events: [{ 'type' => 'close_coal_railways' }, { 'type' => 'ug_formation' }],
+            events: [{ 'type' => 'exchange_coal_companies' },
+                     { 'type' => 'ug_formation' }],
             discount: { '4' => 140 },
           },
           {
             name: '6',
             distance: 6,
             num: 3,
-            price: 630,
-            events: [{ 'type' => 'kk_formation' }, { 'type' => '4g_available' }],
+            price: 600,
+            events: [{ 'type' => 'kk_formation' }],
             discount: { '5' => 200 },
           },
           {
@@ -86,7 +86,6 @@ module Engine
             price: 600,
             available_on: '6',
             discount: { '3g' => 180 },
-            events: [{ 'type' => '1g2g_rust' }],
           },
           {
             name: '8',
@@ -94,7 +93,6 @@ module Engine
             num: 3,
             price: 800,
             discount: { '6' => 300 },
-            events: [{ 'type' => '5g_available' }],
           },
           {
             name: '5g',
@@ -104,7 +102,6 @@ module Engine
             price: 800,
             available_on: '8',
             discount: { '4g' => 300 },
-            events: [{ 'type' => '1g2g3g_rust' }],
           },
           {
             name: '10',
@@ -115,7 +112,8 @@ module Engine
           },
         ].freeze
 
-        TRAINS_2_PLAYER = [
+        # Rule X.1
+        TRAINS_2_PLAYER_CISLETHANIA = [
           {
             name: '2',
             distance: 2,
@@ -130,7 +128,7 @@ module Engine
             num: 3,
             price: 120,
             available_on: '2',
-            rusts_on: %w[3g 4g 5g 10],
+            rusts_on: %w[3g 4g 5g],
           },
           {
             name: '3',
@@ -147,7 +145,7 @@ module Engine
             num: 2,
             price: 240,
             available_on: '3',
-            rusts_on: %w[4g 5g 10],
+            rusts_on: %w[4g 5g],
             discount: { '1g' => 60 },
           },
           {
@@ -156,7 +154,8 @@ module Engine
             num: 4,
             price: 280,
             rusts_on: '8',
-            events: [{ 'type' => 'close_mountain_railways' }, { 'type' => 'sd_formation' }],
+            events: [{ 'type' => 'close_mountain_railways' },
+                     { 'type' => 'sd_formation' }],
             discount: { '3' => 90 },
           },
           {
@@ -166,7 +165,7 @@ module Engine
             num: 2,
             price: 360,
             available_on: '4',
-            rusts_on: %w[5g 10],
+            rusts_on: %w[5g],
             discount: { '2g' => 120 },
             events: [{ 'type' => '1g_rust' }],
           },
@@ -176,7 +175,8 @@ module Engine
             num: 2,
             price: 400,
             rusts_on: '10',
-            events: [{ 'type' => 'close_coal_railways' }, { 'type' => 'kk_formation' }],
+            events: [{ 'type' => 'exchange_coal_companies' },
+                     { 'type' => 'kk_formation' }],
             discount: { '4' => 140 },
           },
           {
@@ -195,7 +195,6 @@ module Engine
             price: 600,
             available_on: '6',
             discount: { '3g' => 180 },
-            events: [{ 'type' => '1g2g_rust' }],
           },
           {
             name: '8',
@@ -212,7 +211,6 @@ module Engine
             price: 800,
             available_on: '8',
             discount: { '4g' => 300 },
-            events: [{ 'type' => '1g2g3g_rust' }],
           },
           {
             name: '10',
@@ -220,10 +218,10 @@ module Engine
             num: 20,
             price: 1000,
             discount: { '8' => 400 },
-            events: [{ 'type' => '1g2g3g_rust' }],
           },
         ].freeze
 
+        # Rule XI.1
         TRAINS_3_PLAYER_CISLETHANIA = [
           {
             name: '2',
@@ -256,7 +254,7 @@ module Engine
             num: 4,
             price: 240,
             available_on: '3',
-            rusts_on: %w[4g 5g 10],
+            rusts_on: %w[4g 5g],
             discount: { '1g' => 60 },
           },
           {
@@ -265,7 +263,8 @@ module Engine
             num: 4,
             price: 280,
             rusts_on: '8',
-            events: [{ 'type' => 'close_mountain_railways' }, { 'type' => 'sd_formation' }],
+            events: [{ 'type' => 'close_mountain_railways' },
+                     { 'type' => 'sd_formation' }],
             discount: { '3' => 90 },
           },
           {
@@ -275,9 +274,8 @@ module Engine
             num: 3,
             price: 360,
             available_on: '4',
-            rusts_on: %w[5g 10],
+            rusts_on: %w[5g],
             discount: { '2g' => 120 },
-            events: [{ 'type' => '1g_rust' }],
           },
           {
             name: '5',
@@ -285,7 +283,8 @@ module Engine
             num: 3,
             price: 400,
             rusts_on: '10',
-            events: [{ 'type' => 'close_coal_railways' }, { 'type' => 'ug_formation' }],
+            events: [{ 'type' => 'exchange_coal_companies' },
+                     { 'type' => 'ug_formation' }],
             discount: { '4' => 140 },
           },
           {
@@ -304,7 +303,6 @@ module Engine
             price: 600,
             available_on: '6',
             discount: { '3g' => 180 },
-            events: [{ 'type' => '1g2g_rust' }],
           },
           {
             name: '8',
@@ -321,7 +319,6 @@ module Engine
             price: 800,
             available_on: '8',
             discount: { '4g' => 300 },
-            events: [{ 'type' => '1g2g3g_rust' }],
           },
           {
             name: '10',
@@ -329,7 +326,6 @@ module Engine
             num: 20,
             price: 1000,
             discount: { '8' => 400 },
-            events: [{ 'type' => '1g2g3g_rust' }],
           },
         ].freeze
       end

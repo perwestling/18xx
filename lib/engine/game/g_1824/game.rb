@@ -1,5 +1,7 @@
+
 # frozen_string_literal: true
 
+require_relative '../g_1837/game'
 require_relative 'meta'
 require_relative '../base'
 require_relative 'corporation'
@@ -12,11 +14,14 @@ require_relative 'trains'
 module Engine
   module Game
     module G1824
-      class Game < Game::Base
+      class Game < G1837::Game
         include_meta(G1824::Meta)
         include G1824::Entities
         include G1824::Map
         include G1824::Trains
+
+        CORPORATION_CLASS = G1824::Corporation
+        DEPOT_CLASS = G1824::Depot
 
         attr_accessor :two_train_bought, :forced_mountain_railway_exchange
 
@@ -27,17 +32,31 @@ module Engine
 
         CURRENCY_FORMAT_STR = '%sG'
 
+        # Rule III.3 standard game, X.2 Cislethania 2p, XI.2 Cislethania 3p
+        STARTING_CASH = { 3 => 820, 4 => 680, 5 => 560, 6 => 460 }.freeze
+        # Note! 700 for 3 players is a correction. The rule book has incorrect 680.
+        # Ref: https://boardgamegeek.com/thread/2342047/3-player-cisleithania-starting-treasury-error
+        CASH_CISLEITHANIA = { 2 => 830, 3 => 700 }.freeze
+
+        # Rule III.4 standard game, X.1 Cislethania 2p, XI.1 Cislethania 3p
         BANK_CASH = 12_000
+        BANK_CASH_CISLEITHANIA = { 2 => 4000, 3 => 9000 }.freeze
 
-        CERT_LIMIT = { 2 => 14, 3 => 21, 4 => 16, 5 => 13, 6 => 11 }.freeze
+        # Rule VI.7 standard game, X.2 Cislethania 2p, XI.2 Cislethania 3p
+        CERT_LIMIT = { 3 => 21, 4 => 16, 5 => 13, 6 => 11 }.freeze
+        CERT_LIMIT_CISLEITHANIA = { 2 => 14, 3 => 16 }.freeze
 
-        STARTING_CASH = { 2 => 680, 3 => 820, 4 => 680, 5 => 560, 6 => 460 }.freeze
+        # Rule VII.13, bullet 3
+        DISCARDED_TRAINS = :remove
 
-        CAPITALIZATION = :full
-
-        DISCARDED_TRAINS = :remove # Rule VII.13, bullet 3
+        # SELL_BUY_ORDER, same as 1837 (:sell_buy), see 
+        # SELL_AFTER, same as 1837 (:operate), see Rule VI.8
+        # SELL_MOVEMENT, same as 1837 (:down_block), see Rule VIII.3
 
         MUST_SELL_IN_BLOCKS = false
+
+        # Rule IX. This differ from 1837 as players in 1824 do not go bankrupt.
+        GAME_END_CHECK = { bank: :full_or }.freeze
 
         MARKET = [
           %w[100
@@ -101,9 +120,9 @@ module Engine
             on: '3',
             train_limit: { PreStaatsbahn: 2, Coal: 2, Regional: 4 },
             tiles: %i[yellow green],
-            status: %w[can_buy_trains
-                       may_exchange_coal_railways
-                       may_exchange_mountain_railways],
+            status: %w[may_exchange_coal_railways
+                       may_exchange_mountain_railways
+                       buy_across],
             operating_rounds: 2,
           },
           {
@@ -111,7 +130,8 @@ module Engine
             on: '4',
             train_limit: { PreStaatsbahn: 2, Coal: 2, Regional: 3, Staatsbahn: 4 },
             tiles: %i[yellow green],
-            status: %w[can_buy_trains may_exchange_coal_railways],
+            status: %w[may_exchange_coal_railways
+                       buy_across],
             operating_rounds: 2,
           },
           {
@@ -119,7 +139,7 @@ module Engine
             on: '5',
             train_limit: { PreStaatsbahn: 2, Regional: 3, Staatsbahn: 4 },
             tiles: %i[yellow green brown],
-            status: ['can_buy_trains'],
+            status: ['buy_across'],
             operating_rounds: 3,
           },
           {
@@ -127,7 +147,7 @@ module Engine
             on: '6',
             train_limit: { Regional: 2, Staatsbahn: 3 },
             tiles: %i[yellow green brown],
-            status: ['can_buy_trains'],
+            status: ['buy_across'],
             operating_rounds: 3,
           },
           {
@@ -135,7 +155,7 @@ module Engine
             on: '8',
             train_limit: { Regional: 2, Staatsbahn: 3 },
             tiles: %i[yellow green brown gray],
-            status: ['can_buy_trains'],
+            status: ['buy_across'],
             operating_rounds: 3,
           },
           {
@@ -143,49 +163,24 @@ module Engine
             on: '10',
             train_limit: { Regional: 2, Staatsbahn: 3 },
             tiles: %i[yellow green brown gray],
-            status: ['can_buy_trains'],
+            status: ['buy_across'],
             operating_rounds: 3,
           },
         ].freeze
 
-        GAME_END_CHECK = { bank: :full_or }.freeze
-
-        # Move down one step for a whole block, not per share
-        SELL_MOVEMENT = :down_block
-
-        # Cannot sell until operated
-        SELL_AFTER = :operate
-
-        # Sell zero or more, then Buy zero or one
-        SELL_BUY_ORDER = :sell_buy
-
         EVENTS_TEXT = Base::EVENTS_TEXT.merge(
-          'close_mountain_railways' => ['Mountain railways closed', 'Any still open Montain railways are exchanged'],
-          'sd_formation' => ['SD formation', 'The Suedbahn is founded at the end of the OR'],
-          'close_coal_railways' => ['Coal railways closed', 'Any still open Coal railways are exchanged'],
-          'ug_formation' => ['UG formation', 'The Ungarische Staatsbahn is founded at the end of the OR'],
-          'kk_formation' => ['k&k formation', 'k&k Staatsbahn is founded at the end of the OR'],
-          '1g_available' => ['1g available', '1g trains become available for purchase from the Bank'],
-          '2g_available' => ['2g available', '2g trains become available'],
-          '3g_available' => ['3g available', '3g trains become available'],
-          '4g_available' => ['4g available', '4g trains become available'],
-          '5g_available' => ['5g available', '5g trains become available'],
-          '1g_rust' => ['1g rust', 'Any remaining 1g do rust'],
-          '1g2g_rust' => ['2g or lower rust', 'Any remaining 1g or 2g do rust'],
-          '1g2g3g_rust' => ['3g or lower rust', 'Any remaining 1g, 2g, or 3g do rust']
+          'close_mountain_railways' => ['Mountain Railways Close', 'Any still open Montain railways are exchanged'],
+          'sd_formation' => ['SD formation', 'SD forms at the end of the OR'],
+          'exchange_coal_companies' => ['Exchange Coal Companies', 'All remaining coal companies are exchanged'],
+          'ug_formation' => ['UG formation', 'UG forms at the end of the OR'],
+          'kk_formation' => ['k&k formation', 'KK forms at the end of the OR'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
-          'can_buy_trains' => ['Can Buy trains', 'Can buy trains from other corporations'],
+          'buy_across' => ['Can Buy Across', 'Trains can be bought between different entities'],
           'may_exchange_coal_railways' => ['Coal Railway exchange', 'May exchange Coal Railways during SR'],
           'may_exchange_mountain_railways' => ['Mountain Railway exchange', 'May exchange Mountain Railways during SR']
         ).freeze
-
-        CERT_LIMIT_CISLEITHANIA = { 2 => 14, 3 => 16 }.freeze
-
-        BANK_CASH_CISLEITHANIA = { 2 => 4000, 3 => 9000 }.freeze
-
-        CASH_CISLEITHANIA = { 2 => 830, 3 => 700 }.freeze
 
         MOUNTAIN_RAILWAY_NAMES = {
           1 => 'Semmeringbahn',
@@ -196,8 +191,14 @@ module Engine
           6 => 'Wocheinerbahn',
         }.freeze
 
+        # Standard game has 4 mine hexes, Cislethania has 3
         MINE_HEX_NAMES = %w[C6 A12 A22 H25].freeze
-        MINE_HEX_NAMES_CISLEITHANIA = %w[C6 A12 A22 H25].freeze
+        MINE_HEX_NAMES_CISLEITHANIA = %w[C6 A12 A22].freeze
+
+        # Used for Bukowina bonus on the Cisleithania map
+        # Bukowina bonus is for a route that included Prag/Vienna and one of the 3 green hexes in the East
+        BUKOWINA_SOURCES = %w[E12 B9]
+        BUKOWINA_TARGETS = %w[D25 E24 E26]
 
         def init_optional_rules(optional_rules)
           opt_rules = super
@@ -226,14 +227,14 @@ module Engine
         end
 
         def game_cert_limit
-          return CERT_LIMIT_CISLEITHANIA if option_cisleithania
+          return super unless option_cisleithania
 
-          CERT_LIMIT
+          CERT_LIMIT_CISLEITHANIA[@players.size]
         end
 
         def init_train_handler
           trains = if two_player?
-                     self.class::TRAINS_2_PLAYER
+                     self.class::TRAINS_2_PLAYER_CISLETHANIA
                    elsif @players.size == 3 && option_cisleithania
                      self.class::TRAINS_3_PLAYER_CISLETHANIA
                    else
@@ -279,10 +280,10 @@ module Engine
 
           if option_cisleithania
             if two_player?
-              # Remove Pre-Staatsbahn U1 and U2, and minor SPB
+              # Rule X.1: Remove Pre-Staatsbahn U1 and U2, and minor SPB
               minors.reject! { |m| %w[U1 U2 SPB].include?(m[:sym]) }
             else
-              # Remove Pre-Staatsbahn U2, minor SPB, and move home location for U1
+              # Rule XI.1: Remove Pre-Staatsbahn U2, minor SPB, and move home location for U1
               minors.reject! { |m| %w[U2 SPB].include?(m[:sym]) }
               minors.map! do |m|
                 next m unless m['sym'] == 'U1'
@@ -368,11 +369,77 @@ module Engine
           option_cisleithania ? cisleithania_map : base_map
         end
 
+        def sold_shares_destination(_entity)
+          # Rule VI.8 - 1824 has no bank pool
+          return :corporation unless two_player?
+
+          # Rule X.4, bullet 2 - 2 player 1824 has a bank pool
+          :bank
+        end
+
+        # Copied from 1837 code
+        def next_round!
+          @round =
+            case @round
+            when Engine::Round::Stock
+              @operating_rounds = @phase.operating_rounds
+              reorder_players
+              new_exchange_round(Round::Operating)
+            when Round::Exchange
+              if @round_after_exchange == Engine::Round::Stock
+                new_stock_round
+              else
+                new_operating_round(@round.round_num)
+              end
+            when Round::Operating
+              if @round.round_num < @operating_rounds
+                or_round_finished
+                new_exchange_round(Round::Operating, @round.round_num + 1)
+              else
+                @turn += 1
+                or_round_finished
+                or_set_finished
+                new_exchange_round(Engine::Round::Stock)
+              end
+            when init_round.class
+              init_round_finished
+              reorder_players
+              new_stock_round
+            end
+        end
+
+        def new_auction_round
+          Engine::Round::Auction.new(self, [
+            G1837::Step::SelectionAuction,
+          ])
+        end
+
+        def stock_round
+          Engine::Round::Stock.new(self, [
+            G1837::Step::HomeToken,
+            G1837::Step::DiscardTrain,
+            G1837::Step::BuySellParShares,
+          ])
+        end
+
+#        def operating_round(round_num)
+#          G1837::Round::Operating.new(self, [
+#            G1837::Step::Bankrupt,
+#            G1837::Step::HomeToken,
+#            G1837::Step::DiscardTrain,
+#            G1837::Step::SpecialTrack,
+#            G1837::Step::Track,
+#            G1837::Step::Token,
+#            Engine::Step::Route,
+#            G1837::Step::Dividend,
+#            G1837::Step::BuyTrain,
+#          ], round_num: round_num)
+#        end
         def operating_round(round_num)
-          Engine::Round::Operating.new(self, [
+          G1824::Round::Operating.new(self, [
             Engine::Step::Bankrupt,
-            Engine::Step::DiscardTrain,
             Engine::Step::HomeToken,
+            Engine::Step::DiscardTrain,
             G1824::Step::ForcedMountainRailwayExchange,
             Engine::Step::Track,
             Engine::Step::Token,
@@ -382,19 +449,18 @@ module Engine
           ], round_num: round_num)
         end
 
-        def init_round
-          @log << '-- First Stock Round --'
-          @log << 'Player order is reversed during the first turn'
-          G1824::Round::FirstStock.new(self, [
-            G1824::Step::BuySellParSharesFirstSr,
-          ])
+
+        def new_exchange_round(next_round, round_num = 1)
+          @round_after_exchange = next_round
+          exchange_round(round_num)
         end
 
-        def stock_round
-          Engine::Round::Stock.new(self, [
-            Engine::Step::DiscardTrain,
-            G1824::Step::BuySellParExchangeShares,
-          ])
+        def exchange_round(round_num)
+          G1824::Round::Exchange.new(self, [
+            G1837::Step::DiscardTrain,
+            G1837::Step::CoalExchange,
+            G1837::Step::MinorExchange,
+          ], round_num: round_num)
         end
 
         def or_set_finished
@@ -602,19 +668,15 @@ module Engine
           raise GameError, 'Exactly one mine need to be visited' if g_train?(route.train) && mine_visits != 1
           raise GameError, 'Only g-trains may visit mines' if !g_train?(route.train) && mine_visits.positive?
 
-          # TODO: Implement Bekowina bonus if Cislethania map used
-
-          super
+          super + bukowina_bonus_amount(route, stops)
         end
 
         def revenue_str(route)
-          # TODO: Implement Bukowina bonus if Cislethania map used
+          str = super
 
-          super
-        end
+          str += ' + Bukowina' if bukowina_bonus_amount(route, route.stops).positive?
 
-        def mine_revenue(routes)
-          routes.sum { |r| r.stops.sum { |stop| mine_hex?(stop.hex) ? stop.route_revenue(r.phase, r.train) : 0 } }
+          str
         end
 
         def float_str(entity)
@@ -639,150 +701,21 @@ module Engine
           @corporations.reject(&:removed)
         end
 
-        def event_close_mountain_railways!
-          @log << '-- Any remaining Mountain Railways are either exchanged or discarded'
-          # If this list contains any companies it will trigger an interrupt exchange/pass step
-          @forced_mountain_railway_exchange = @companies.select { |c| mountain_railway?(c) && !c.closed? }
-        end
-
-        def event_close_coal_railways!
-          @log << '-- Exchange any remaining Coal Railway'
-          @companies.select { |c| coal_railway?(c) }.reject(&:closed?).each do |coal_railway_company|
-            exchange_coal_railway(coal_railway_company)
-          end
-        end
-
-        def event_sd_formation!
-          @log << 'SD formation not yet implemented'
-        end
-
-        def event_ug_formation!
-          @log << 'UG formation not yet implemented'
-        end
-
-        def event_kk_formation!
-          @log << 'KK formation not yet implemented'
-        end
-
-        def event_1g_available!
-          @log << '-- Event: 1g trains now available to purchase from the Bank'
-        end
-
-        def event_2g_available!
-          @log << '-- Event: 2g trains now available'
-        end
-
-        def event_3g_available!
-          @log << '-- Event: 3g trains now available'
-        end
-
-        def event_4g_available!
-          @log << '-- Event: 4g trains now available'
-        end
-
-        def event_5g_available!
-          @log << '-- Event: 5g trains now available'
-        end
-
-        def event_1g_rust!
-          rust_g_trains(%w[1g])
-        end
-
-        def event_1g2g_rust!
-          rust_g_trains(%w[1g 2g])
-        end
-
-        def event_1g2g3g_rust!
-          rust_g_trains(%w[1g 2g 3g])
-        end
-
-        def rust_g_trains(g_types)
-          rusted_trains = []
-          owners = Hash.new(0)
-
-          trains.each do |t|
-            next if t.rusted
-            next unless g_types.include?(t.name)
-
-            rusted_trains << t.name
-            owners[t.owner.name] += 1
-            rust(t)
-          end
-
-          return if rusted_trains.empty?
-
-          @log << "-- Event: #{rusted_trains.uniq.join(', ')} trains rust " \
-                  "( #{owners.map { |c, t| "#{c} x#{t}" }.join(', ')}) --"
-        end
-
-        def exchange_coal_railway(company)
-          player = company.owner
-          minor = minor_by_id(company.id)
-          regional = associated_regional_railway(company)
-
-          @log << "#{player.name} receives presidency of #{regional.name} in exchange for #{minor.name}"
-          company.close!
-
-          # Transfer Coal Railway cash and trains to Regional. Remove CR token.
-          if minor.cash.positive?
-            @log << "#{regional.name} receives the #{minor.name} treasury of #{format_currency(minor.cash)}"
-            minor.spend(minor.cash, regional)
-          end
-          unless minor.trains.empty?
-            transferred = transfer(:trains, minor, regional)
-            @log << "#{regional.name} receives the trains: #{transferred.map(&:name).join(', ')}"
-          end
-          minor.tokens.first.remove!
-          minor.close!
-
-          # Handle Regional presidency, possibly transfering to another player in case they own more in the regional
-          presidency_share = regional.shares.find(&:president)
-          presidency_share.buyable = true
-          regional.floatable = true
-          @share_pool.transfer_shares(
-            presidency_share.to_bundle,
-            player,
-            allow_president_change: false,
-            price: 0
-          )
-
-          # Give presidency to majority owner (with minor owner priority if that player is one of them)
-          max_shares = @share_pool.presidency_check_shares(regional).values.max
-          majority_share_holders = @share_pool.presidency_check_shares(regional).select { |_, p| p == max_shares }.keys
-          if !majority_share_holders.find { |owner| owner == player }
-            # FIXME: Handle the case where multiple share the presidency criteria
-            new_president = majority_share_holders.first
-            @share_pool.change_president(presidency_share, player, new_president, player)
-            regional.owner = new_president
-            @log << "#{new_president.name} becomes president of #{regional.name} as majority owner"
-          else
-            regional.owner = player
-          end
-
-          float_corporation(regional) if regional.floated?
-          regional
-        end
-
-        def float_corporation(corporation)
-          @log << "#{corporation.name} floats"
-
-          return if corporation.capitalization == :incremental
-
-          floating_capital = case corporation.name
-                             when 'BK', 'MS', 'CL', 'SB'
-                               corporation.par_price.price * 8
-                             else
-                               corporation.par_price.price * corporation.total_shares
-                             end
-
-          @bank.spend(floating_capital, corporation)
-          @log << "#{corporation.name} receives floating capital of #{format_currency(floating_capital)}"
-        end
-
         private
 
         def mine_hex?(hex)
           option_cisleithania ? MINE_HEX_NAMES_CISLEITHANIA.include?(hex.name) : MINE_HEX_NAMES.include?(hex.name)
+        end
+
+        def bukowina_bonus_amount(route, stops)
+          return 0 unless option_cisleithania
+          return 0 unless stops.any? { |s| BUKOWINA_SOURCES.include?(s.hex.name)}
+          return 0 unless stops.any? { |s| BUKOWINA_TARGETS.include?(s.hex.name)}
+
+          # Rule X.4, last bullet: Run from Vienna/Prag to one of the Bukowina hexes
+          # gives a bonus of 50 Gulden. Bukowina bonus also applies for 3 player games
+          # on same map, although rule book does not explicitly state this.
+          50
         end
 
         MOUNTAIN_RAILWAY_DEFINITION = {
