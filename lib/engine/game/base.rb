@@ -697,6 +697,7 @@ module Engine
       end
 
       def active_step
+        puts "Active_step called with @round={@round}"
         @round.active_step
       end
 

@@ -280,13 +280,13 @@ module Engine
 
           if option_cisleithania
             if two_player?
-              # Rule X.1: Remove Pre-Staatsbahn U1 and U2, and minor SPB
-              minors.reject! { |m| %w[U1 U2 SPB].include?(m[:sym]) }
+              # Rule X.1: Remove Pre-Staatsbahn UG1 and UG2, and minor SPB
+              minors.reject! { |m| %w[UG1 UG2 SPB].include?(m[:sym]) }
             else
-              # Rule XI.1: Remove Pre-Staatsbahn U2, minor SPB, and move home location for U1
-              minors.reject! { |m| %w[U2 SPB].include?(m[:sym]) }
+              # Rule XI.1: Remove Pre-Staatsbahn UG2, minor SPB, and move home location for UG1
+              minors.reject! { |m| %w[UG2 SPB].include?(m[:sym]) }
               minors.map! do |m|
-                next m unless m['sym'] == 'U1'
+                next m unless m['sym'] == 'UG1'
 
                 m['coordinates'] = 'G12'
                 m['city'] = 0
@@ -315,9 +315,9 @@ module Engine
           mountain_railway_count.times { |index| companies << mountain_railway_definition(index) }
 
           if option_cisleithania
-            # Remove Pre-Staatsbahn U2 and possibly U1
+            # Remove Pre-Staatsbahn UG2 and possibly UG1
             p2 = players.size == 2
-            companies.reject! { |m| m['sym'] == 'U2' || (p2 && m['sym'] == 'U1') }
+            companies.reject! { |m| m['sym'] == 'UG2' || (p2 && m['sym'] == 'UG1') }
           end
 
           companies.map { |company| Company.new(**company) }
@@ -408,9 +408,16 @@ module Engine
             end
         end
 
-        def new_auction_round
-          Engine::Round::Auction.new(self, [
-            G1837::Step::SelectionAuction,
+#        def new_auction_round
+#          Engine::Round::Auction.new(self, [
+#            G1837::Step::SelectionAuction,
+#          ])
+#        end
+        def init_round
+          @log << '-- First Stock Round --'
+          @log << 'Player order is reversed during the first turn'
+          G1824::Round::FirstStock.new(self, [
+            G1824::Step::BuySellParSharesFirstSr,
           ])
         end
 
@@ -448,7 +455,6 @@ module Engine
             G1824::Step::BuyTrain,
           ], round_num: round_num)
         end
-
 
         def new_exchange_round(next_round, round_num = 1)
           @round_after_exchange = next_round
@@ -652,11 +658,11 @@ module Engine
 
         def associated_state_railway(prestate_railway)
           case prestate_railway.id
-          when 'S1', 'S2', 'S3'
+          when 'SD1', 'SD2', 'SD3'
             state_sd
-          when 'U1', 'U2'
+          when 'UG1', 'UG2'
             state_ug
-          when 'K1', 'K2'
+          when 'KK1', 'KK2'
             state_kk
           end
         end
@@ -687,11 +693,11 @@ module Engine
             needed = entity.percent_to_float
             needed.positive? ? "#{entity.percent_to_float}% (including exchange) to float" : 'Exchange to float'
           when 'UG'
-            'U1 exchange floats'
+            'UG1 exchange floats'
           when 'KK'
-            'K1 exchange floats'
+            'KK1 exchange floats'
           when 'SD'
-            'S1 exchange floats'
+            'SD1 exchange floats'
           else
             'Not floatable'
           end
