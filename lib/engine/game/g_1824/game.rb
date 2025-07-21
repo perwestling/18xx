@@ -62,15 +62,15 @@ module Engine
         GAME_END_CHECK = { bank: :full_or }.freeze
 
         EVENTS_TEXT = Base::EVENTS_TEXT.merge(
-          'close_mountain_railways' => ['Mountain Railways Close', 'Any still open Montain railways are exchanged'],
+          'buy_across' => ['Buy Across', 'Trains can be bought between companies'],
+          'close_mountain_railways' => ['Mountain Railways Close', 'Any still open Montain railways are exchanged or closed'],
           'sd_formation' => ['SD formation', 'SD forms at the end of the OR'],
-          'exchange_coal_companies' => ['Exchange Coal Companies', 'All remaining coal companies are exchanged'],
+          'exchange_coal_companies' => ['Coal Companies Exchange', 'All remaining coal companies are exchanged'],
           'ug_formation' => ['UG formation', 'UG forms at the end of the OR'],
           'kk_formation' => ['k&k formation', 'KK forms at the end of the OR'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
-          'buy_across' => ['Can Buy Across', 'Trains can be bought between different entities'],
           'may_exchange_coal_railways' => ['Coal Railway exchange', 'May exchange Coal Railways during SR'],
           'may_exchange_mountain_railways' => ['Mountain Railway exchange', 'May exchange Mountain Railways during SR']
         ).freeze
@@ -138,21 +138,26 @@ module Engine
         end
 
         def init_train_handler
-          trains = if two_player?
-                     self.class::TRAINS_2_PLAYER_CISLETHANIA
-                   elsif @players.size == 3 && option_cisleithania
-                     self.class::TRAINS_3_PLAYER_CISLETHANIA
-                   else
-                     self.class::TRAINS_STANDARD
-                   end
-          trains = trains.flat_map do |train|
-            Array.new((train[:num] || num_trains(train))) do |index|
+          train_count_map = num_trains_map()
+          trains = game_trains.flat_map do |train|
+            Array.new(train_count_map[train[:name]]) do |index|
               Train.new(**train, index: index)
             end
           end
 
           G1824::Depot.new(trains, self)
         end
+
+        def num_trains_map()
+          if two_player?
+            self.class::TRAIN_COUNT_2P_CISLETHANIA
+          elsif @players.size == 3 && option_cisleithania
+            self.class::TRAIN_COUNT_3P_CISLETHANIA
+          else
+            self.class::TRAIN_COUNT_STANDARD
+          end
+        end
+
 
         # def init_corporations(stock_market)
         #   corporations = CORPORATIONS.dup

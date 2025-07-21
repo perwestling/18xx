@@ -18,8 +18,7 @@ module Engine
             train_limit: { PreStaatsbahn: 2, Coal: 2, Regional: 4 },
             tiles: %i[yellow green],
             status: %w[may_exchange_coal_railways
-                       may_exchange_mountain_railways
-                       buy_across],
+                       may_exchange_mountain_railways],
             operating_rounds: 2,
           },
           {
@@ -27,8 +26,7 @@ module Engine
             on: '4',
             train_limit: { PreStaatsbahn: 2, Coal: 2, Regional: 3, Staatsbahn: 4 },
             tiles: %i[yellow green],
-            status: %w[may_exchange_coal_railways
-                       buy_across],
+            status: %w[may_exchange_coal_railways],
             operating_rounds: 2,
           },
           {
@@ -36,7 +34,6 @@ module Engine
             on: '5',
             train_limit: { PreStaatsbahn: 2, Regional: 3, Staatsbahn: 4 },
             tiles: %i[yellow green brown],
-            status: ['buy_across'],
             operating_rounds: 3,
           },
           {
@@ -44,7 +41,6 @@ module Engine
             on: '6',
             train_limit: { Regional: 2, Staatsbahn: 3 },
             tiles: %i[yellow green brown],
-            status: ['buy_across'],
             operating_rounds: 3,
           },
           {
@@ -52,7 +48,6 @@ module Engine
             on: '8',
             train_limit: { Regional: 2, Staatsbahn: 3 },
             tiles: %i[yellow green brown gray],
-            status: ['buy_across'],
             operating_rounds: 3,
           },
           {
@@ -60,7 +55,6 @@ module Engine
             on: '10',
             train_limit: { Regional: 2, Staatsbahn: 3 },
             tiles: %i[yellow green brown gray],
-            status: ['buy_across'],
             operating_rounds: 3,
           },
         ].freeze
