@@ -6,15 +6,15 @@ module Engine
       module Entities
         COMPANIES = [
           {
-            name: 'Eisenbahn Pilsen - Priesen (EPP/C1)',
+            name: 'Eisenbahn Pilsen - Priesen (EPP)',
             sym: 'EPP',
-            value: 200,
+            value: 0,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
-            desc: "Buyer take control of minor Coal Railway EPP (C1). EPP can be exchanged for the Director's "\
+            desc: "Buyer take control of minor Coal Railway EPP. EPP can be exchanged for the Director's "\
                   'certificate of Regional Railway BK during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
                   'BK floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'EPP starts with a g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'EPP starts at C6 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -23,15 +23,15 @@ module Engine
             ],
           },
           {
-            name: 'Eisenbahn Oderberg - Dombran (EOD/C2)',
+            name: 'Eisenbahn Oderberg - Dombran (EOD)',
             sym: 'EOD',
-            value: 200,
+            value: 0,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
-            desc: "Buyer take control of minor Coal Railway EOD (C2). EOD can be exchanged for the Director's "\
+            desc: "Buyer take control of minor Coal Railway EOD. EOD can be exchanged for the Director's "\
                   'certificate of Regional Railway MS during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
                   'MS floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'EOD starts with a g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'EOD starts in A12 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -40,15 +40,15 @@ module Engine
             ],
           },
           {
-            name: 'Mosty - Lemberg Bahn (MLB/C3)',
+            name: 'Mosty - Lemberg Bahn (MLB)',
             sym: 'MLB',
-            value: 200,
+            value: 0,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
-            desc: "Buyer take control of minor Coal Railway MLB (C3). MLB can be exchanged for the Director's "\
+            desc: "Buyer take control of minor Coal Railway MLB. MLB can be exchanged for the Director's "\
                   'certificate of Regional Railway CL during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
                   'CL floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'MLB starts with a g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'MLB starts in A22 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -57,15 +57,15 @@ module Engine
             ],
           },
           {
-            name: 'Simeria-Petrosani Bahn (SPB/C4)',
+            name: 'Simeria-Petrosani Bahn (SPB)',
             sym: 'SPB',
-            value: 200,
+            value: 0,
             interval: [120, 140, 160, 180, 200],
             revenue: 0,
-            desc: "Buyer take control of minor Coal Railway SPB (C4). SPB can be exchanged for the Director's "\
+            desc: "Buyer take control of minor Coal Railway SPB. SPB can be exchanged for the Director's "\
                   'certificate of Regional Railway SB during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
                   'SB floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'SPB starts with a g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'SPB starts in H25 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -91,7 +91,7 @@ module Engine
             value: 120,
             revenue: 0,
             desc: 'Located in Wien (E12) with 120K starting capital. '\
-                  'Buyer take control of Pre-Staatsbahn KK2. KK1 will be exchanged for a 10% share of Staatsbahn '\
+                  'Buyer take control of Pre-Staatsbahn KK2. KK2 will be exchanged for a 10% share of Staatsbahn '\
                   'KK when the first 6 train is sold. KK2 cannot be sold.',
             color: :brown,
             meta: { start_packet: true },
@@ -162,138 +162,6 @@ module Engine
             meta: { start_packet: true },
             abilities: [{ type: 'shares', shares: 'UG2_0' }],
           },
-          {
-            name: 'Semmeringbahn (M1)',
-            sym: 'M1',
-            value: 120,
-            revenue: 25,
-            desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                  'for a 10% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
-                  'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
-                  'A Mountain Railway cannot otherwise be sold. Semmeringbahn has order number: 1',
-            color: :gray,
-            meta: { type: :mountain_railway },
-            abilities: [
-              { type: 'no_buy' },
-              {
-                type: 'exchange',
-                description: 'Exchange for share in Regional Railway',
-                corporations: ['BH','BK','CL','MS','SB'],
-                when: 'exchange',
-                from: 'ipo',
-              },
-            ],
-          },
-          {
-            name: 'Karstbahn (M2)',
-            sym: 'M2',
-            value: 120,
-            revenue: 25,
-            desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                  'for a 10% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
-                  'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
-                  'A Mountain Railway cannot otherwise be sold. Karstbahn has order number: 2',
-            color: :gray,
-            meta: { type: :mountain_railway },
-            abilities: [
-              { type: 'no_buy' },
-              {
-                type: 'exchange',
-                description: 'Exchange for share in Regional Railway',
-                corporations: ['BH','BK','CL','MS','SB'],
-                when: 'exchange',
-                from: 'ipo',
-              },
-            ],
-          },
-          {
-            name: 'Brennerbahn (M3)',
-            sym: 'M3',
-            value: 120,
-            revenue: 25,
-            desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                  'for a 10% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
-                  'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
-                  'A Mountain Railway cannot otherwise be sold. Brennerbahn has order number: 3',
-            color: :gray,
-            meta: { type: :mountain_railway },
-            abilities: [
-              { type: 'no_buy' },
-              {
-                type: 'exchange',
-                description: 'Exchange for share in Regional Railway',
-                corporations: ['BH','BK','CL','MS','SB'],
-                when: 'exchange',
-                from: 'ipo',
-              },
-            ],
-          },
-          {
-            name: 'Albergbahn (M4)',
-            sym: 'M4',
-            value: 120,
-            revenue: 25,
-            desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                  'for a 10% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
-                  'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
-                  'A Mountain Railway cannot otherwise be sold. Albergsbahn has order number: 4',
-            color: :gray,
-            meta: { type: :mountain_railway },
-            abilities: [
-              { type: 'no_buy' },
-              {
-                type: 'exchange',
-                description: 'Exchange for share in Regional Railway',
-                corporations: ['BH','BK','CL','MS','SB'],
-                when: 'exchange',
-                from: 'ipo',
-              },
-            ],
-          },
-          {
-            name: 'Wocheinerbahn (M5)',
-            sym: 'M5',
-            value: 120,
-            revenue: 25,
-            desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                  'for a 10% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
-                  'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
-                  'A Mountain Railway cannot otherwise be sold. Wocheinerbahn has order number: 5',
-            color: :gray,
-            meta: { type: :mountain_railway },
-            abilities: [
-              { type: 'no_buy' },
-              {
-                type: 'exchange',
-                description: 'Exchange for share in Regional Railway',
-                corporations: ['BH','BK','CL','MS','SB'],
-                when: 'exchange',
-                from: 'ipo',
-              },
-            ],
-          },
-          {
-            name: 'Karawankenbahn (M6)',
-            sym: 'M6',
-            value: 120,
-            revenue: 25,
-            desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                  'for a 10% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
-                  'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
-                  'A Mountain Railway cannot otherwise be sold. Karawankenbahn has order number: 6',
-            color: :gray,
-            meta: { type: :mountain_railway },
-            abilities: [
-              { type: 'no_buy' },
-              {
-                type: 'exchange',
-                description: 'Exchange for share in Regional Railway',
-                corporations: ['BH','BK','CL','MS','SB'],
-                when: 'exchange',
-                from: 'ipo',
-              },
-            ],
-          },
         ].freeze
 
         CORPORATIONS = [
@@ -309,6 +177,7 @@ module Engine
             coordinates: 'E12',
             city: 1,
             color: :brown,
+            abilities: [],
           },
           {
             name: 'Kaiser Franz Joseph-Bahn (KK2)',
@@ -322,6 +191,7 @@ module Engine
             coordinates: 'E12',
             city: 2,
             color: :brown,
+            abilities: [],
           },
           {
             name: 'Wien-Gloggnitzer Eisenbahngesellschaft (SD1)',
@@ -335,6 +205,7 @@ module Engine
             coordinates: 'E12',
             city: 0,
             color: :orange,
+            abilities: [],
           },
           {
             name: 'Kärntner Bahn (SD2)',
@@ -347,6 +218,7 @@ module Engine
             type: 'minor',
             coordinates: 'G10',
             color: :orange,
+            abilities: [],
           },
           {
             name: 'Nordtiroler Staatsbahn (SD3)',
@@ -359,6 +231,7 @@ module Engine
             type: 'minor',
             coordinates: 'G4',
             color: :orange,
+            abilities: [],
           },
           {
             name: 'Eisenbahn Pest - Waitzen (UG1)',
@@ -373,6 +246,7 @@ module Engine
             coordinates: 'F17',
             city: 1,
             color: :pink,
+            abilities: [],
           },
           {
             name: 'Mohacs-Fünfkirchner Bahn (UG2)',
@@ -385,10 +259,11 @@ module Engine
             type: 'minor',
             coordinates: 'H15',
             color: :pink,
+            abilities: [],
           },
 
           {
-            name: 'Eisenbahn Pilsen - Priesen (EPP/C1)',
+            name: 'Eisenbahn Pilsen - Priesen (EPP)',
             sym: 'EPP',
             logo: '1824/C1',
             tokens: [0],
@@ -409,7 +284,7 @@ module Engine
             ],
           },
           {
-            name: 'Eisenbahn Oderberg - Dombran (EOD/C2)',
+            name: 'Eisenbahn Oderberg - Dombran (EOD)',
             sym: 'EOD',
             logo: '1824/C2',
             tokens: [0],
@@ -430,7 +305,7 @@ module Engine
             ],
           },
           {
-            name: 'Mosty - Lemberg Bahn (MLB/C3)',
+            name: 'Mosty - Lemberg Bahn (MLB)',
             sym: 'MLB',
             logo: '1824/C3',
             tokens: [0],
@@ -451,7 +326,7 @@ module Engine
             ],
           },
           {
-            name: 'Simeria-Petrosani Bahn (SPB/C4)',
+            name: 'Simeria-Petrosani Bahn (SPB)',
             sym: 'SPB',
             logo: '1824/C4',
             tokens: [0],
@@ -482,6 +357,7 @@ module Engine
             type: 'major',
             coordinates: 'J13',
             color: :red,
+            abilities: [],
           },
           {
             name: 'Böhmische Kommerzbahn',
@@ -495,6 +371,7 @@ module Engine
             type: 'major',
             coordinates: 'C11',
             color: :blue,
+            abilities: [],
           },
           {
             sym: 'CL',
@@ -508,6 +385,7 @@ module Engine
             type: 'major',
             coordinates: 'B23',
             color: :black,
+            abilities: [],
           },
           {
             name: 'Mährisch-Schlesische Eisenbahn',
@@ -522,6 +400,7 @@ module Engine
             coordinates: 'C12',
             color: :yellow,
             text_color: :black,
+            abilities: [],
           },
           {
             name: 'Siebenbürgische Bahn',
@@ -536,6 +415,7 @@ module Engine
             coordinates: 'G26',
             color: :green,
             text_color: :black,
+            abilities: [],
           },
           {
             name: 'Südbahn',
@@ -548,6 +428,7 @@ module Engine
             type: 'national',
             floatable: false,
             color: :orange,
+            abilities: [],
           },
           {
             name: 'k&k Staatsbahn',
@@ -560,6 +441,7 @@ module Engine
             type: 'national',
             floatable: false,
             color: :brown,
+            abilities: [],
           },
           {
             name: 'Ungarische Staatsbahn',
@@ -572,6 +454,7 @@ module Engine
             type: 'national',
             floatable: false,
             color: :pink,
+            abilities: [],
           },
         ].freeze
       end

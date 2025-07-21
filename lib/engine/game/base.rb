@@ -2042,6 +2042,7 @@ module Engine
       end
 
       def abilities(entity, type = nil, time: nil, on_phase: nil, passive_ok: nil, strict_time: nil)
+        puts "abilities called with entity: #{entity} (#{entity.name}), type: #{type}, time: #{time}, on_phase: #{on_phase}, passive_ok: #{passive_ok}, strict_time: #{strict_time}"
         return nil unless entity
 
         active_abilities = entity.all_abilities.select do |ability|
@@ -2518,6 +2519,7 @@ module Engine
       end
 
       def init_hexes(companies, corporations)
+        puts "init_hexes called with companies: #{companies}, corporations: #{corporations}"
         blockers = Hash.new { |h, k| h[k] = [] }
         (companies + minors + corporations).each do |entity|
           %i[blocks_hexes blocks_hexes_consent].each do |type|
