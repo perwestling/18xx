@@ -8,9 +8,9 @@ module Engine
 
         AXES = { x: :number, y: :letter }.freeze
 
-        MINE_HEXES = []
+        MINE_HEXES = [].freeze
 
-        ITALY_HEXES = []
+        ITALY_HEXES = [].freeze
 
         TILES = {
           '1' => 1,

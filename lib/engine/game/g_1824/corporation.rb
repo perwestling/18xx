@@ -66,10 +66,10 @@ module Engine
         end
 
         def presidents_percent
-           # If president's share is reserved we should become president by buying 20% in the corporation.
-           # In 1824 this can happen for regional railways which are IPOed by buying a coal railway, and
-           # then 10% shares are bought whule presidents share is still reserved for a later exchange.
-           @real_presidents_percent
+          # If president's share is reserved we should become president by buying 20% in the corporation.
+          # In 1824 this can happen for regional railways which are IPOed by buying a coal railway, and
+          # then 10% shares are bought whule presidents share is still reserved for a later exchange.
+          @real_presidents_percent
         end
 
         def prepare_merge!

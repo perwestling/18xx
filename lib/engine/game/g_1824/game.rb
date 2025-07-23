@@ -1,4 +1,3 @@
-
 # frozen_string_literal: true
 
 require_relative '../g_1837/game'
@@ -97,17 +96,17 @@ module Engine
 
         # Used for Bukowina bonus on the Cisleithania map
         # Bukowina bonus is for a route that included Prag/Vienna and one of the 3 green hexes in the East
-        BUKOWINA_SOURCES = %w[E12 B9]
-        BUKOWINA_TARGETS = %w[D25 E24 E26]
+        BUKOWINA_SOURCES = %w[E12 B9].freeze
+        BUKOWINA_TARGETS = %w[D25 E24 E26].freeze
 
         ASSIGNMENT_TOKENS = {
           'coal' => '/icons/1837/coalcar.svg',
         }.freeze
 
+        # Modified from 1837 as 1824 does not have single shares in Pre-staatsbahn
         def company_header(company)
           return 'COAL COMPANY' if company.color == :black
           return 'MOUNTAIN RAILWAY' if company.color == :gray
-          # return 'MINOR SHARE' if company.sym.end_with?('_share')
 
           'MINOR COMPANY'
         end
@@ -144,8 +143,9 @@ module Engine
           CERT_LIMIT_CISLEITHANIA[@players.size]
         end
 
+        # Modified 1837 version as the number of trains vary between player count and variant
         def init_train_handler
-          train_count_map = num_trains_map()
+          train_count_map = num_trains_map
           trains = game_trains.flat_map do |train|
             Array.new(train_count_map[train[:name]]) do |index|
               Train.new(**train, index: index)
@@ -155,7 +155,7 @@ module Engine
           G1824::Depot.new(trains, self)
         end
 
-        def num_trains_map()
+        def num_trains_map
           if two_player?
             self.class::TRAIN_COUNT_2P_CISLETHANIA
           elsif @players.size == 3 && option_cisleithania
@@ -172,7 +172,7 @@ module Engine
             # RUle X.1/XI.1, Remove Pre-Staatsbahn UG1, Regionals BH and SB, Coal mine SPB
             corporations.reject! { |m| %w[UG1 UG2 BH SB SPB].include?(m[:sym]) }
 
-            if !two_player?
+            unless two_player?
               # Rule XI.1: Remove Pre-Staatsbahn UG2, minor SPB, and move home location for UG1
               corporations.map! do |m|
                 case m['sym']
@@ -273,7 +273,7 @@ module Engine
 
         # 1824 use normal tile upgrades so use Base version instead
         def upgrades_to?(from, to, special = false, selected_company: nil)
-          Base.instance_method(:upgrades_to?).bind(self).call(from, to, special, selected_company)
+          Base.instance_method(:upgrades_to?).bind_call(self, from, to, special, selected_company)
         end
 
         # Similar to 1837
@@ -324,19 +324,20 @@ module Engine
           ])
         end
 
-       def operating_round(round_num)
-         G1824::Round::Operating.new(self, [
-           G1837::Step::Bankrupt,
-           G1837::Step::HomeToken,
-           G1837::Step::DiscardTrain,
-           Engine::Step::SpecialTrack,
-           Engine::Step::Track,
-           G1837::Step::Token,
-           Engine::Step::Route,
-           G1824::Step::Dividend,
-           G1824::Step::BuyTrain,
-         ], round_num: round_num)
-       end
+        def operating_round(round_num)
+          G1824::Round::Operating.new(self, [
+            G1837::Step::Bankrupt,
+            G1824::Step::ForcedMountainRailwayExchange,
+            G1837::Step::HomeToken,
+            G1837::Step::DiscardTrain,
+            Engine::Step::SpecialTrack,
+            Engine::Step::Track,
+            G1837::Step::Token,
+            Engine::Step::Route,
+            G1824::Step::Dividend,
+            G1824::Step::BuyTrain,
+          ], round_num: round_num)
+        end
 
         def new_exchange_round(next_round, round_num = 1)
           @round_after_exchange = next_round
@@ -358,11 +359,11 @@ module Engine
         def setup
           @two_train_bought = false
           @forced_mountain_railway_exchange = []
-          @coal_company_initial_cash = Hash.new {|h, k| h[k] = [] }
+          @coal_company_initial_cash = Hash.new { |h, k| h[k] = [] }
           @corporations.each do |corporation|
             next unless regional?(corporation)
 
-            if (corporation.id == 'BH')
+            if corporation.id == 'BH'
               # BH is a regional without association to coal railway
               corporation.remove_reserve_for_all_shares!
             else
@@ -387,7 +388,7 @@ module Engine
           # Rule IV.4.4
           market_row = stock_market.market[0]
           share_price = market_row.find { |sp| sp.price == 120 }
-          ['SD', 'UG', 'KK'].each do |c|
+          %w[SD UG KK].each do |c|
             national = corporation_by_id(c)
 
             stock_market.set_par(national, share_price)
@@ -415,16 +416,25 @@ module Engine
           @timeline ||= ['At the end of each OR set, the cheapest non-g train in bank is exported.'].freeze
         end
 
+        # In 1824 the close of MRs means they will be exchanged (if possible)
+        def event_close_mountain_railways!
+          @log << "-- Event: #{EVENTS_TEXT['close_mountain_railways'][1]} --"
+          @forced_mountain_railway_exchange = @companies.select { |c| mountain_railway?(c) && !c.closed? }
+        end
+
+        # In 1824 the SD formation is mandatory, and happens at end of OR
         def event_sd_formation!
           @log << "-- Event: #{EVENTS_TEXT['sd_formation'][1]} --"
           @sd_to_form = true
         end
 
+        # In 1824 the UG formation is mandatory, and happens at end of OR
         def event_ug_formation!
           @log << "-- Event: #{EVENTS_TEXT['ug_formation'][1]} --"
           @ug_to_form = true
         end
 
+        # In 1824 the KK formation is mandatory, and happens at end of OR
         def event_kk_formation!
           @log << "-- Event: #{EVENTS_TEXT['kk_formation'][1]} --"
           @kk_to_form = true
@@ -464,7 +474,7 @@ module Engine
         end
 
         def exchange_entities
-          @companies
+          @companies.reject(&:closed?)
         end
 
         def mountain_railway?(entity)
@@ -499,18 +509,8 @@ module Engine
           entity.all_abilities.none? { |a| a.type == :no_buy }
         end
 
-        def remove_ability(corporation, ability_name)
-          abilities(corporation, ability_name) do |ability|
-            corporation.remove_ability(ability)
-          end
-        end
-
-        def owns_mountain_railway?(player)
-          @companies.find { |c| mountain_railway?(c) && c.owned_by?(player) }
-        end
-
-        def exchangable_for_mountain_railway?(corporation)
-          corporation.type == :major
+        def exchangable_for_mountain_railway?(player, corporation)
+          corporation.type == :major && @companies.find { |c| mountain_railway?(c) && c.owned_by?(player) }
         end
 
         def corporation_available?(entity)
@@ -541,7 +541,6 @@ module Engine
           order.concat(kk_minors) if @kk_to_form
           order.concat(ug_minors) if @ug_to_form
           order
-          []
         end
 
         def minor_initial_cash(minor)
@@ -568,7 +567,6 @@ module Engine
             float_minor!(share.corporation) if share.president
           end
 
-
           company.close!
           minor = corporation_by_id(id)
           return unless coal_railway?(minor)
@@ -582,7 +580,8 @@ module Engine
           regional_railway.ipoed = true
           share_price = stock_market.par_prices.find { |s| s.price == price / 2 }
           stock_market.set_par(regional_railway, share_price)
-          log << "#{regional_railway.name} (the associated Regional Railway of #{id}) pars at #{format_currency(share_price.price)}"
+          association = "the associated Regional Railway of #{id}"
+          log << "#{regional_railway.name} (#{association}) pars at #{format_currency(share_price.price)}"
         end
 
         def merge_minor!(minor, corporation, allow_president_change: true)
@@ -627,8 +626,8 @@ module Engine
           case entity.id
           when 'BK', 'MS', 'CL', 'SB'
             needed = entity.percent_to_float
-            if needed.positive? 
-              need_exchange = entity.floatable ? "" : " + exchange "
+            if needed.positive?
+              need_exchange = entity.floatable ? '' : ' + exchange'
               "#{entity.percent_to_float}%#{need_exchange} to float"
             else
               'Exchange to float'
@@ -646,7 +645,7 @@ module Engine
 
         # 1824 uses standard sold out stock movement. Rule VIII.3, bullet 4: move up 1 if not at top
         def sold_out_stock_movement(corporation)
-          Base.instance_method(:sold_out_stock_movement).bind(self).call(corporation)
+          Base.instance_method(:sold_out_stock_movement).bind_call(self, corporation)
         end
 
         private
@@ -655,10 +654,10 @@ module Engine
           option_cisleithania ? MINE_HEX_NAMES_CISLEITHANIA.include?(hex.name) : MINE_HEX_NAMES.include?(hex.name)
         end
 
-        def bukowina_bonus_amount(route, stops)
+        def bukowina_bonus_amount(_route, stops)
           return 0 unless option_cisleithania
-          return 0 unless stops.any? { |s| BUKOWINA_SOURCES.include?(s.hex.name)}
-          return 0 unless stops.any? { |s| BUKOWINA_TARGETS.include?(s.hex.name)}
+          return 0 unless stops.any? { |s| BUKOWINA_SOURCES.include?(s.hex.name) }
+          return 0 unless stops.any? { |s| BUKOWINA_TARGETS.include?(s.hex.name) }
 
           # Rule X.4, last bullet: Run from Vienna/Prag to one of the Bukowina hexes
           # gives a bonus of 50 Gulden. Bukowina bonus also applies for 3 player games
@@ -688,7 +687,7 @@ module Engine
               description: 'Exchange for share in available Regional Railway',
               corporations: %w[CL BH BK MS SB],
               owner_type: 'player',
-              when: 'stock_round',
+              when: 'any',  # Need to be able to use in SR and during forced exchange in OR
               from: %w[ipo market],
             },
           ],

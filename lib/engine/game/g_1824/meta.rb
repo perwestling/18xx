@@ -24,7 +24,8 @@ module Engine
           {
             sym: :cisleithania,
             short_name: 'Cisleithania',
-            desc: 'Use the smaller Cislethania map, with some reduction of components - 2-3 players. For 2 players Cistleithania is always used. (2 player is not yet supported at 18xx.games)',
+            desc: 'Use the smaller Cislethania map, with some reduction of components - 2-3 players. '\
+                  'For 2 players Cistleithania is always used. (2 player is not yet supported at 18xx.games)',
           },
           {
             sym: :goods_time,
@@ -33,10 +34,13 @@ module Engine
           },
         ].freeze
 
-        def self.check_options(options, min_players, max_players)
+        def self.check_options(options, _min_players, max_players)
           optional_rules = (options || []).map(&:to_sym)
-          return { error: 'Cisleithania variant is for 2-3 players' } if optional_rules.include?(:cisleithania) && (!max_players.nil?) && (max_players > 3)
-          return { error: 'Cisleithania amd Goods Time combined not supported' } if optional_rules.include?(:cisleithania) && optional_rules.include?(:goods_time)
+          if optional_rules.include?(:cisleithania) && !max_players.nil? && (max_players > 3)
+            { error: 'Cisleithania variant is for 2-3 players' }
+          elsif optional_rules.include?(:cisleithania) && optional_rules.include?(:goods_time)
+            { error: 'Cisleithania and Goods Time combined not supported' }
+          end
         end
       end
     end

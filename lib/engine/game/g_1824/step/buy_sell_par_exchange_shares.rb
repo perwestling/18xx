@@ -20,7 +20,7 @@ module Engine
           end
 
           def company_actions(entity)
-            return EXCHANGE_ACTIONS if (@game.mountain_railway?(entity) && @game.mountain_railway_exchangable?)
+            return EXCHANGE_ACTIONS if @game.mountain_railway?(entity) && @game.mountain_railway_exchangable?
 
             []
           end
@@ -29,11 +29,11 @@ module Engine
             @game.sorted_corporations.reject { |c| c.type == :minor }
           end
 
-          def can_buy?(entity, bundle)
+          def can_buy?(_entity, bundle)
             super && @game.buyable?(bundle.corporation)
           end
 
-          def can_par?(entity, parrer)
+          def can_par?(_entity, _parrer)
             true
           end
 
@@ -55,12 +55,9 @@ module Engine
           def can_gain?(entity, bundle, exchange: false)
             return if !bundle || !entity
             return false if bundle.owner.player? && !@game.can_gain_from_player?(entity, bundle)
-            corporation = bundle.corporation
 
-            if exchange
-              puts "MRX: #{@game.mountain_railway_exchangable?}, own MR? #{@game.owns_mountain_railway?(entity)}, #{bundle.corporation.name} exchangable? #{@game.exchangable_for_mountain_railway?(bundle.corporation)}"
-              return false if !@game.mountain_railway_exchangable? || !@game.owns_mountain_railway?(entity) || !@game.exchangable_for_mountain_railway?(bundle.corporation)
-            end
+            corporation = bundle.corporation
+            return false if invalid_mountain_railway_exchange?(entity, corporation, exchange)
 
             (exchange || corporation.holding_ok?(entity, bundle.common_percent)) &&
               (@game.num_certs(entity) < @game.cert_limit(entity)) && @game.buyable?(corporation)
@@ -109,6 +106,12 @@ module Engine
             return if !entity.company? || !@game.mountain_railway?(entity) || !@game.mountain_railway_exchangable?
 
             @game.abilities(entity, :exchange)
+          end
+
+          def invalid_mountain_railway_exchange?(entity, corporation, exchange)
+            return false unless exchange
+
+            !@game.mountain_railway_exchangable? || !@game.exchangable_for_mountain_railway?(entity, corporation)
           end
         end
       end

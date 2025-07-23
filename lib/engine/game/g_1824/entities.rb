@@ -13,8 +13,8 @@ module Engine
             revenue: 0,
             desc: "Buyer take control of minor Coal Railway EPP. EPP can be exchanged for the Director's "\
                   'certificate of Regional Railway BK during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
-                  'BK floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'EPP starts at C6 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'BK floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. EPP '\
+                  'starts at C6 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -30,8 +30,8 @@ module Engine
             revenue: 0,
             desc: "Buyer take control of minor Coal Railway EOD. EOD can be exchanged for the Director's "\
                   'certificate of Regional Railway MS during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
-                  'MS floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'EOD starts in A12 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'MS floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. EOD '\
+                  'starts at A12 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -47,8 +47,8 @@ module Engine
             revenue: 0,
             desc: "Buyer take control of minor Coal Railway MLB. MLB can be exchanged for the Director's "\
                   'certificate of Regional Railway CL during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
-                  'CL floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'MLB starts in A22 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'CL floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. MLB '\
+                  'starts at A22 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },
@@ -64,8 +64,8 @@ module Engine
             revenue: 0,
             desc: "Buyer take control of minor Coal Railway SPB. SPB can be exchanged for the Director's "\
                   'certificate of Regional Railway SB during SRs in phase 3 or 4, or automatically when phase 5 starts. '\
-                  'SB floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. '\
-                  'SPB starts in H25 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
+                  'SB floats after exchange as soon as 50% or more are owned by players. This private cannot be sold. SPB '\
+                  'starts at H25 with a 1g-train and what is left from the purchase when cost of g-train (120G) has been paid.',
             color: :black,
             text_color: :white,
             meta: { start_packet: true, type: :coal },

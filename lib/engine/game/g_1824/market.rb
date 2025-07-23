@@ -4,7 +4,6 @@ module Engine
   module Game
     module G1824
       module Market
-
         MARKET = [
           %w[100 110 120 130 140 155 170 190 210 235 260 290 320 350],
           %w[90 100 110 120 130 145 160 180 200 225 250 280 310 340],

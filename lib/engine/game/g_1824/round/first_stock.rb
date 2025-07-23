@@ -52,7 +52,6 @@ module Engine
               next if company.closed? || company.owned_by_player?
 
               company.close!
-              minor = @game.corporation_by_id(company.sym)
 
               if @game.mountain_railway?(company)
                 # Rule VI.3, bullet 10: Mountain Railways not bought are removed from the game
@@ -68,16 +67,18 @@ module Engine
                 # 2. Close connected minor
                 # 3. Remove reservation of presidency share for connected Regional Railway, and make it floatable
                 associated_regional_railway = @game.get_associated_regional_railway(minor)
-                @game.log << "Coal Railway #{company.sym} closes; #{associated_regional_railway.name} becomes a Regional Railway without an associated "\
-                             "Coal Railway: president's share is no longer reserved"
+                @game.log << "Coal Railway #{company.sym} closes; #{associated_regional_railway.name} becomes a "\
+                             "Regional Railway without an associated Coal Railway: president's share is no longer reserved"
 
                 minor.close!
                 associated_regional_railway.remove_reserve_for_all_shares!
                 next
               end
-                
+
               # There is no implementation for close of a major Pre-Staatbahn - this is a weird corner case
-              raise GameError, "The weird case of unsold SD1, KK1, UG1 is not supported. Please reconsider. They are good!" if company.sym.end_with?('1')
+              if company.sym.end_with?('1')
+                raise GameError, 'The weird case of unsold SD1, KK1, UG1 is not supported. Please reconsider. They are good!'
+              end
 
               # Rule VI.3, bullet 10: Pre-State Railways not bought are removed from the game
               # # Make reserved share of associated corporation unreserved

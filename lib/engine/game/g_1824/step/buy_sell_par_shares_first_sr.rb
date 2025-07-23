@@ -15,7 +15,7 @@ module Engine
             super && @game.buyable?(bundle.corporation)
           end
 
-          def can_sell?(_entity, bundle)
+          def can_sell?(_entity, _bundle)
             false
           end
 

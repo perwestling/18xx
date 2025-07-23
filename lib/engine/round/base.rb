@@ -56,7 +56,6 @@ module Engine
       end
 
       def description
-        puts "Called description for round #{self} for active step #{active_step}"
         active_step.description
       end
 
