@@ -49,12 +49,12 @@ module Engine
                          ' and Montain Railways are removed from the game'
 
             @game.companies.each do |company|
-              next if company.closed?
+              next if company.closed? || company.owned_by_player?
 
               company.close!
               minor = @game.corporation_by_id(company.sym)
 
-              if company.meta[:type] == :mountain_railway
+              if @game.mountain_railway?(company)
                 # Rule VI.3, bullet 10: Mountain Railways not bought are removed from the game
                 @game.log << "Mountain Railway #{company.name} closes"
                 next

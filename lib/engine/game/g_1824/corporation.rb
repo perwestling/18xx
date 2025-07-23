@@ -71,6 +71,13 @@ module Engine
            # then 10% shares are bought whule presidents share is still reserved for a later exchange.
            @real_presidents_percent
         end
+
+        def prepare_merge!
+          @floatable = true
+          @percent_total_ipo_shares = 100
+          @real_presidents_percent = @presidents_share.percent
+          puts "Percent to float: #{percent_to_float}"
+        end
       end
     end
   end

@@ -166,7 +166,6 @@ module Engine
         end
 
         def game_corporations
-          puts "Game_Corporations called with stock_market: #{stock_market}"
           corporations = CORPORATIONS.dup
 
           if option_cisleithania
@@ -194,7 +193,6 @@ module Engine
         end
 
         def init_companies(players)
-          puts "Init Companies called with players: #{players.size}"
           companies = COMPANIES.dup
 
           mountain_railway_count =
@@ -273,6 +271,11 @@ module Engine
           :bank
         end
 
+        # 1824 use normal tile upgrades so use Base version instead
+        def upgrades_to?(from, to, special = false, selected_company: nil)
+          Base.instance_method(:upgrades_to?).bind(self).call(from, to, special, selected_company)
+        end
+
         # Similar to 1837
         def next_round!
           @round =
@@ -326,8 +329,8 @@ module Engine
            G1837::Step::Bankrupt,
            G1837::Step::HomeToken,
            G1837::Step::DiscardTrain,
-           G1837::Step::SpecialTrack,
-           G1837::Step::Track,
+           Engine::Step::SpecialTrack,
+           Engine::Step::Track,
            G1837::Step::Token,
            Engine::Step::Route,
            G1824::Step::Dividend,
@@ -392,6 +395,22 @@ module Engine
           end
         end
 
+        def sd_minors
+          @sd_minors ||= %w[SD1 SD2 SD3].map { |id| corporation_by_id(id) }.reject(&:closed?)
+        end
+
+        def kk_minors
+          @kk_minors ||= %w[KK1 KK2].map { |id| corporation_by_id(id) }.reject(&:closed?)
+        end
+
+        def ug_minors
+          @ug_minors ||= %w[UG1 UG2].map { |id| corporation_by_id(id) }.reject(&:closed?)
+        end
+
+        def coal_minors
+          @coal_minors ||= %w[EPP EOD MLB SPB].map { |id| corporation_by_id(id) }.reject(&:closed?)
+        end
+
         def timeline
           @timeline ||= ['At the end of each OR set, the cheapest non-g train in bank is exported.'].freeze
         end
@@ -444,6 +463,14 @@ module Engine
           @phase.status.include?('may_exchange_coal_railways')
         end
 
+        def exchange_entities
+          @companies
+        end
+
+        def mountain_railway?(entity)
+          entity.company? && entity.meta[:type] == :mountain_railway
+        end
+
         def coal_railway?(entity)
           entity.color == :black && entity.type == :minor
         end
@@ -478,6 +505,14 @@ module Engine
           end
         end
 
+        def owns_mountain_railway?(player)
+          @companies.find { |c| mountain_railway?(c) && c.owned_by?(player) }
+        end
+
+        def exchangable_for_mountain_railway?(corporation)
+          corporation.type == :major
+        end
+
         def corporation_available?(entity)
           buyable?(entity)
         end
@@ -501,11 +536,11 @@ module Engine
         end
 
         def exchange_order
-          # order = coal_minor_exchange_order
-          # order.concat(sd_minors.reject(&:closed?)) if @sd_to_form
-          # order.concat(kk_minors.reject(&:closed?)) if @kk_to_form
-          # order.concat(ug_minors.reject(&:closed?)) if @ug_to_form
-          # order
+          order = coal_minor_exchange_order
+          order.concat(sd_minors) if @sd_to_form
+          order.concat(kk_minors) if @kk_to_form
+          order.concat(ug_minors) if @ug_to_form
+          order
           []
         end
 
@@ -520,9 +555,10 @@ module Engine
           end
         end
 
+        # This is modified quite a lot compared to 1837
         def after_buy_company(player, company, price)
           @coal_company_initial_cash[company.id] = price
-          return if company.meta[:type] == :mountain_railway
+          return if mountain_railway?(company)
 
           id = company.id
 
@@ -531,6 +567,7 @@ module Engine
             @share_pool.buy_shares(player, share, exchange: :free)
             float_minor!(share.corporation) if share.president
           end
+
 
           company.close!
           minor = corporation_by_id(id)
@@ -546,6 +583,17 @@ module Engine
           share_price = stock_market.par_prices.find { |s| s.price == price / 2 }
           stock_market.set_par(regional_railway, share_price)
           log << "#{regional_railway.name} (the associated Regional Railway of #{id}) pars at #{format_currency(share_price.price)}"
+        end
+
+        def merge_minor!(minor, corporation, allow_president_change: true)
+          # Make it a proper major/national (eg. president is now possible?Id=)
+          corporation.prepare_merge!
+          # Note - do not use floated? here as this might change floated status.
+          floated = corporation.floated
+
+          super
+
+          float_corporation(corporation) if corporation.floatable && floated != corporation.floated?
         end
 
         def associated_coal_railway(regional_railway)
@@ -598,7 +646,7 @@ module Engine
 
         # 1824 uses standard sold out stock movement. Rule VIII.3, bullet 4: move up 1 if not at top
         def sold_out_stock_movement(corporation)
-          @stock_market.move_up(corporation)
+          Base.instance_method(:sold_out_stock_movement).bind(self).call(corporation)
         end
 
         private
@@ -640,7 +688,7 @@ module Engine
               description: 'Exchange for share in available Regional Railway',
               corporations: %w[CL BH BK MS SB],
               owner_type: 'player',
-              when: 'exchange',
+              when: 'stock_round',
               from: %w[ipo market],
             },
           ],

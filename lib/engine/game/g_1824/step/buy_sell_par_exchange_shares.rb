@@ -9,13 +9,20 @@ module Engine
         class BuySellParExchangeShares < Engine::Step::BuySellParShares
           EXCHANGE_ACTIONS = %w[buy_shares].freeze
           BUY_ACTION = %w[special_buy].freeze
+          PURCHASE_ACTIONS = Engine::Step::BuySellParShares::PURCHASE_ACTIONS + [Action::SpecialBuy]
 
           def actions(entity)
-            return can_exchange?(entity) ? EXCHANGE_ACTIONS : [] if entity.company?
+            return company_actions(entity) if entity.company?
 
             actions = super
             actions << 'special_buy' if !actions.empty? && buyable_items(entity)
             actions
+          end
+
+          def company_actions(entity)
+            return EXCHANGE_ACTIONS if (@game.mountain_railway?(entity) && @game.mountain_railway_exchangable?)
+
+            []
           end
 
           def visible_corporations
@@ -34,23 +41,29 @@ module Engine
             super && @game.buyable?(bundle.corporation)
           end
 
-          def can_gain?(entity, bundle, exchange: false)
-            return false if exchange && !@game.mountain_railway_exchangable? && !@game.coal_railway_exchangable?
+          # Rule VI.7, bullet 4: Exchange can take you over 60%
+          def check_legal_buy(entity, shares, exchange: nil, swap: nil, allow_president_change: true)
+            return if exchange
 
-            super && @game.buyable?(bundle.corporation)
+            super
           end
 
-          def can_exchange?(entity, bundle = nil)
-            return false unless (ability = exchangable_ability(entity))
-            return can_gain?(entity.owner, bundle, exchange: true) if bundle
+          # Need special implementation to handle the exchange cases
+          # 1. Exchange of coal railway
+          # 2. Exchange of mountain railway
+          # 3. Rule VI.7, bullet 4: Exchange can take you over 60%
+          def can_gain?(entity, bundle, exchange: false)
+            return if !bundle || !entity
+            return false if bundle.owner.player? && !@game.can_gain_from_player?(entity, bundle)
+            corporation = bundle.corporation
 
-            shares = []
-            @game.exchange_corporations(ability).each do |corporation|
-              shares << corporation.available_share if ability.from.include?(:ipo)
-              shares << @game.share_pool.shares_by_corporation[corporation]&.first if ability.from.include?(:market)
+            if exchange
+              puts "MRX: #{@game.mountain_railway_exchangable?}, own MR? #{@game.owns_mountain_railway?(entity)}, #{bundle.corporation.name} exchangable? #{@game.exchangable_for_mountain_railway?(bundle.corporation)}"
+              return false if !@game.mountain_railway_exchangable? || !@game.owns_mountain_railway?(entity) || !@game.exchangable_for_mountain_railway?(bundle.corporation)
             end
 
-            shares.any? { |s| can_gain?(entity.owner, s&.to_bundle, exchange: true) }
+            (exchange || corporation.holding_ok?(entity, bundle.common_percent)) &&
+              (@game.num_certs(entity) < @game.cert_limit(entity)) && @game.buyable?(corporation)
           end
 
           def process_buy_shares(action)
@@ -58,10 +71,6 @@ module Engine
 
             company = action.entity
             bundle = action.bundle
-            unless can_exchange?(company, bundle)
-              raise GameError, "Cannot exchange #{action.entity.id} for #{bundle.corporation.id}"
-            end
-
             bundle.share_price = 0
             buy_shares(company.owner, bundle, exchange: company)
             company.close!
@@ -73,20 +82,22 @@ module Engine
           def buyable_items(entity)
             return [] unless @game.coal_railway_exchangable?
 
-            @game.companies.select { |c| @game.coal_railway?(c) && c.owner == entity }.map do |c|
+            @game.corporations.select { |c| !c.closed? && @game.coal_railway?(c) && c.owned_by?(entity) }.map do |c|
               Item.new(description: c.id, cost: 0)
             end
           end
 
           def item_str(item)
-            company = @game.company_by_id(item.description)
-            regional = @game.associated_regional_railway(@game.company_by_id(item.description))
-            "Exchange #{company.name} for #{regional.name} presidency"
+            coal_minor = @game.corporation_by_id(item.description)
+            regional = @game.get_associated_regional_railway(coal_minor)
+            "Exchange #{coal_minor.name} for #{regional.name} presidency"
           end
 
           def process_special_buy(action)
-            company = @game.company_by_id(action.item.description)
-            regional = @game.exchange_coal_railway(company)
+            coal_minor = @game.corporation_by_id(action.item.description)
+            regional = @game.exchange_target(coal_minor)
+
+            @game.exchange_coal_minor(coal_minor)
 
             # Exchange is treated as a Buy, and no more actions allowed as Sell-Buy
             track_action(action, regional)

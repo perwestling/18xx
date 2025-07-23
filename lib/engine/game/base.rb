@@ -2517,7 +2517,6 @@ module Engine
       end
 
       def init_hexes(companies, corporations)
-        puts "init_hexes called with companies: #{companies}, corporations: #{corporations}"
         blockers = Hash.new { |h, k| h[k] = [] }
         (companies + minors + corporations).each do |entity|
           %i[blocks_hexes blocks_hexes_consent].each do |type|
