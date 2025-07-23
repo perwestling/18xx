@@ -133,7 +133,6 @@ module Engine
       end
 
       def active_step(entity = nil)
-        puts "active_step called with entity #{entity}"
         # Steps for companies are non-blocking
         if entity
           return @steps.find do |step|
@@ -142,7 +141,6 @@ module Engine
         end
 
         @active_step ||= @steps.find { |step| step.active? && step.blocking? }
-        puts "active_step set to #{@active_step}"
         @active_step
       end
 

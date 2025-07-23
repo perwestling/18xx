@@ -8,6 +8,10 @@ module Engine
 
         AXES = { x: :number, y: :letter }.freeze
 
+        MINE_HEXES = []
+
+        ITALY_HEXES = []
+
         TILES = {
           '1' => 1,
           '2' => 1,

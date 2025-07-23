@@ -18,8 +18,16 @@ module Engine
             actions
           end
 
+          def visible_corporations
+            @game.sorted_corporations.reject { |c| c.type == :minor }
+          end
+
           def can_buy?(entity, bundle)
             super && @game.buyable?(bundle.corporation)
+          end
+
+          def can_par?(entity, parrer)
+            true
           end
 
           def can_sell?(_entity, bundle)
