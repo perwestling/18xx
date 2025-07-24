@@ -329,9 +329,7 @@ module Engine
 
         def stock_round
           Engine::Round::Stock.new(self, [
-            # G1837::Step::HomeToken,
             G1837::Step::DiscardTrain,
-            # Engine::Step::DiscardTrain,
             G1824::Step::BuySellParExchangeShares,
           ])
         end
@@ -622,13 +620,6 @@ module Engine
           log << "#{regional_railway.name} (#{association}) pars at #{format_currency(share_price.price)}"
         end
 
-        def merge_minor!(minor, corporation, allow_president_change: true)
-
-          super
-
-          float_corporation(corporation) if corporation.floatable && floated != corporation.floated?
-        end
-
         # This 1837 version with some tweeks
         def merge_minor!(minor, corporation, allow_president_change: true)
           # 1824 ADD BEGIN
@@ -679,8 +670,15 @@ module Engine
           graph.clear_graph_for(corporation)
 
           # 1824 ADD BEGIN
-          float_corporation(corporation) if corporation.floatable && floated != corporation.floated?
+          float_corporation(corporation) if regional?(corporation) && corporation.floatable && floated != corporation.floated?
           # 1824 ADD END
+        end
+
+        def place_home_token(corporation)
+          # When Staatsbahn is formed it uses existing Pre-Staatsbahn so no new token is placed
+          return if staatsbahn?(corporation)
+
+          super
         end
 
         def associated_coal_railway(regional_railway)
