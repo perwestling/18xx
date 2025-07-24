@@ -14,8 +14,15 @@ module Engine
           def actions(entity)
             return company_actions(entity) if entity.company?
 
+            player_debt = @game.player_debt(entity)
+
             actions = super
             actions << 'special_buy' if !actions.empty? && buyable_items(entity)
+            if player_debt.positive? && entity.cash.positive?
+              actions << 'payoff_player_debt'
+              actions << 'payoff_player_debt_partial'
+            end
+
             actions
           end
 
@@ -98,6 +105,20 @@ module Engine
 
             # Exchange is treated as a Buy, and no more actions allowed as Sell-Buy
             track_action(action, regional)
+          end
+
+          def process_payoff_player_debt(action)
+            player = action.entity
+            @game.payoff_player_loan(player)
+            @round.last_to_act = player
+            @round.current_actions << action
+          end
+
+          def process_payoff_player_debt_partial(action)
+            player = action.entity
+            @game.payoff_player_loan(player, payoff_amount: action.amount)
+            @round.last_to_act = player
+            @round.current_actions << action
           end
 
           private

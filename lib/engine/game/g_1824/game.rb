@@ -26,7 +26,7 @@ module Engine
         CORPORATION_CLASS = G1824::Corporation
         DEPOT_CLASS = G1824::Depot
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash, :player_debts
 
         register_colors(
           gray70: '#B3B3B3',
@@ -137,10 +137,20 @@ module Engine
           end
         end
 
+        def player_value(player)
+          player.value - @player_debts[player]
+        end
+
         def game_cert_limit
           return super unless option_cisleithania
 
           CERT_LIMIT_CISLEITHANIA[@players.size]
+        end
+
+        # Rule VI.78, bullet 4: Cannot buy if holding 60% or more
+        # but can exceed via exchanges
+        def can_hold_above_corp_limit?(_entity)
+          true
         end
 
         # Modified 1837 version as the number of trains vary between player count and variant
@@ -281,6 +291,7 @@ module Engine
           @round =
             case @round
             when Engine::Round::Stock
+              sr_round_finished
               @operating_rounds = @phase.operating_rounds
               reorder_players
               new_exchange_round(Round::Operating)
@@ -318,8 +329,9 @@ module Engine
 
         def stock_round
           Engine::Round::Stock.new(self, [
-            G1837::Step::HomeToken,
+            # G1837::Step::HomeToken,
             G1837::Step::DiscardTrain,
+            # Engine::Step::DiscardTrain,
             G1824::Step::BuySellParExchangeShares,
           ])
         end
@@ -328,7 +340,6 @@ module Engine
           G1824::Round::Operating.new(self, [
             G1837::Step::Bankrupt,
             G1824::Step::ForcedMountainRailwayExchange,
-            G1837::Step::HomeToken,
             G1837::Step::DiscardTrain,
             Engine::Step::SpecialTrack,
             Engine::Step::Track,
@@ -348,8 +359,16 @@ module Engine
           G1824::Round::Exchange.new(self, [
             G1837::Step::DiscardTrain,
             G1837::Step::CoalExchange,
-            G1837::Step::MinorExchange,
           ], round_num: round_num)
+        end
+
+        def or_round_finished
+          potentially_form_nationals
+        end
+
+        def sr_round_finished
+          # Rule VII.12, bullet 7: Debts increase by 50%
+          add_interest_player_loans!
         end
 
         def or_set_finished
@@ -357,24 +376,22 @@ module Engine
         end
 
         def setup
+          # To keep track of when 1st two train bought
+          # TODO: Check if this is needed?
           @two_train_bought = false
-          @forced_mountain_railway_exchange = []
-          @coal_company_initial_cash = Hash.new { |h, k| h[k] = [] }
-          @corporations.each do |corporation|
-            next unless regional?(corporation)
 
-            if corporation.id == 'BH'
-              # BH is a regional without association to coal railway
-              corporation.remove_reserve_for_all_shares!
-            else
-              # Remaining regionals are OPOed by buying a coal railway
-              # and should have shares buyable but presidency reserved.
-              # Note if coal railway not sold, the regional is similar to BH.
-              # That case is handled in the first stock round.
-              corporation.should_not_float_until_exchange!
-            end
-          end
+          # When 1st 4-train is bought any remaining MRs will be exchanged
+          @forced_mountain_railway_exchange = []
+
+          # Used to remember what coal companies was bought for
+          # TODO: Improve this solution
+          @coal_company_initial_cash = Hash.new { |h, k| h[k] = [] }
+
+          # Initialize the player depts, if player have to take an emergency loan
+          @player_debts = Hash.new { |h, k| h[k] = 0 }
+
           super
+          setup_regionals
         end
 
         def setup_mines
@@ -393,6 +410,23 @@ module Engine
 
             stock_market.set_par(national, share_price)
             national.ipoed = true
+          end
+        end
+
+        def setup_regionals
+          @corporations.each do |corporation|
+            next unless regional?(corporation)
+
+            if corporation.id == 'BH'
+              # BH is a regional without association to coal railway
+              corporation.remove_reserve_for_all_shares!
+            else
+              # Remaining regionals are OPOed by buying a coal railway
+              # and should have shares buyable but presidency reserved.
+              # Note if coal railway not sold, the regional is similar to BH.
+              # That case is handled in the first stock round.
+              corporation.should_not_float_until_exchange!
+            end
           end
         end
 
@@ -537,10 +571,14 @@ module Engine
 
         def exchange_order
           order = coal_minor_exchange_order
-          order.concat(sd_minors) if @sd_to_form
-          order.concat(kk_minors) if @kk_to_form
-          order.concat(ug_minors) if @ug_to_form
           order
+        end
+
+        # Changed log text compared to 1837
+        def exchange_coal_minor(minor)
+          target = exchange_target(minor)
+          @log << "#{minor.id} exchanged for the president's share of #{target.id}"
+          merge_minor!(minor, target)
         end
 
         def minor_initial_cash(minor)
@@ -585,14 +623,64 @@ module Engine
         end
 
         def merge_minor!(minor, corporation, allow_president_change: true)
-          # Make it a proper major/national (eg. president is now possible?Id=)
-          corporation.prepare_merge!
-          # Note - do not use floated? here as this might change floated status.
-          floated = corporation.floated
 
           super
 
           float_corporation(corporation) if corporation.floatable && floated != corporation.floated?
+        end
+
+        # This 1837 version with some tweeks
+        def merge_minor!(minor, corporation, allow_president_change: true)
+          # 1824 ADD BEGIN
+          # Make it a proper major/national (eg. president is now possible?Id=)
+          corporation.prepare_merge!
+          # Note - do not use floated? here as this might change floated status.
+          floated = corporation.floated
+          # 1824 ADD END
+
+          @log << "#{minor.name} merges into #{corporation.name}"
+
+          minor.share_holders.each do |sh, _|
+            num_shares = sh.shares_of(minor).size
+            next if num_shares.zero?
+
+            @log << "#{sh.name} receives #{num_shares} share#{num_shares > 1 ? 's' : ''} of #{corporation.name}"
+            shares = corporation.reserved_shares.take(num_shares)
+            shares.each { |s| s.buyable = true }
+            @share_pool.transfer_shares(ShareBundle.new(shares), sh, allow_president_change: allow_president_change)
+            if @round.respond_to?(:non_paying_shares) && operated_this_round?(minor)
+              @round.non_paying_shares[sh][corporation] += num_shares
+            end
+          end
+
+          if minor.cash.positive?
+            @log << "#{corporation.name} receives #{format_currency(minor.cash)}"
+            minor.spend(minor.cash, corporation)
+          end
+
+          unless minor.trains.empty?
+            @log << "#{corporation.name} receives #{minor.trains.map(&:name).join(', ')} train#{minor.trains.size > 1 ? 's' : ''}"
+            @round.merged_trains[corporation].concat(minor.trains)
+            minor.trains.dup.each { |t| buy_train(corporation, t, :free) }
+          end
+
+          if coal_minor?(minor)
+            minor.tokens.first.swap!(blocking_token, check_tokenable: false)
+          else
+            token = minor.tokens.first
+            new_token = Token.new(corporation)
+            corporation.tokens << new_token
+            # 1824 Removed special case with L2, L8 as does not exist
+            token.swap!(new_token, check_tokenable: false)
+            @log << "#{corporation.name} receives token (#{new_token.used ? new_token.city.hex.id : 'charter'})"
+          end
+
+          close_corporation(minor, quiet: true)
+          graph.clear_graph_for(corporation)
+
+          # 1824 ADD BEGIN
+          float_corporation(corporation) if corporation.floatable && floated != corporation.floated?
+          # 1824 ADD END
         end
 
         def associated_coal_railway(regional_railway)
@@ -648,7 +736,84 @@ module Engine
           Base.instance_method(:sold_out_stock_movement).bind_call(self, corporation)
         end
 
+        def take_player_loan(player, loan)
+          # Give the player the money. The money for loans is outside money, doesnt count towards the normal bank money.
+          player.cash += loan
+
+          # Add interest to the loan, must atleast pay 150% of the loaned value
+          loan_interest = player_loan_interest(loan)
+          @player_debts[player] += loan + loan_interest
+
+          @log << "#{player.name} takes a loan of #{format_currency(loan)}. " \
+                  "Interest #{loan_interest} added to debt."
+        end
+
+        def take_loan(player, amount)
+          loan_amount = (amount.to_f * 1.5).ceil
+
+          increase_debt(player, loan_amount)
+
+          @log << "#{player.name} takes a loan of #{format_currency(amount)}. " \
+                  "The player debt is increased by #{format_currency(loan_amount * 2)}."
+
+          @bank.spend(loan_amount, player)
+        end
+
+        def add_interest_player_loans!
+          @player_debts.each do |player, loan|
+            next unless loan.positive?
+
+            interest = player_loan_interest(loan)
+            new_loan = loan + interest
+            @player_debts[player] = new_loan
+            @log << "#{player.name} increases their loan by 50% (#{format_currency(interest)}) to "\
+                    "#{format_currency(new_loan)}"
+          end
+        end
+
+        # Pay full or partial of the player loan. The money from loans is
+        # outside money, doesnt count towards the normal bank money.
+        def payoff_player_loan(player, payoff_amount: nil)
+          loan_balance = @player_debts[player]
+          payoff_amount = player.cash if !payoff_amount || payoff_amount > player.cash
+          payoff_amount = [payoff_amount, loan_balance].min
+
+          @player_debts[player] -= payoff_amount
+          player.cash -= payoff_amount
+
+          @log <<
+            if payoff_amount == loan_balance
+              "#{player.name} pays off their loan of #{format_currency(loan_balance)}"
+            else
+              "#{player.name} decreases their loan by #{format_currency(payoff_amount)} "\
+                "(#{format_currency(@player_debts[player])})"
+            end
+        end
+
+        def player_debt(player)
+          @player_debts[player] || 0
+        end
+
         private
+
+        def potentially_form_nationals
+          if @sd_to_form
+            national = corporation_by_id('SD')
+            form_national_railway!(national, sd_minors)
+          end
+          if @ug_to_form
+            national = corporation_by_id('UG')
+            form_national_railway!(national, ug_minors)
+          end
+          if @kk_to_form
+            national = corporation_by_id('KK')
+            form_national_railway!(national, kk_minors)
+          end
+        end
+
+        def player_loan_interest(loan)
+          (loan * 0.5).ceil
+        end
 
         def mine_hex?(hex)
           option_cisleithania ? MINE_HEX_NAMES_CISLEITHANIA.include?(hex.name) : MINE_HEX_NAMES.include?(hex.name)

@@ -8,6 +8,14 @@ module Engine
       module Round
         class Operating < G1837::Round::Operating
         end
+
+        def round_state
+          super.merge(
+            {
+              pending_tokens: [],
+            }
+          )
+        end
       end
     end
   end
