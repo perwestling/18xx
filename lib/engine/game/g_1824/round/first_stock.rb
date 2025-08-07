@@ -91,7 +91,8 @@ module Engine
               # 4. Remove reservation of shares in connected national
               # 5. Do not make national floatable - still need phase to do that
               @game.log << "Pre-staatsbahn #{company.sym} closes and reservations are removed"
-              remove_reservation(minor)
+              remove_city_reservation(minor)
+              remove_share_reservation(@game.corporation_by_id(company.sym[0..-2]))
               minor.close!
             end
 
@@ -102,13 +103,17 @@ module Engine
 
           private
 
-          def remove_reservation(minor)
+          def remove_city_reservation(minor)
             hex = @game.hex_by_id(minor.coordinates)
             tile = hex.tile
             cities = tile.cities
             city = cities.find { |c| c.reserved_by?(minor) } || cities.first
             city.remove_reservation!(minor)
             minor.tokens.first.remove!
+          end
+
+          def remove_share_reservation(national)
+            national.unreserve_one_share!
           end
         end
       end

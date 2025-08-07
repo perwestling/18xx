@@ -60,6 +60,15 @@ module Engine
           @real_presidents_percent = @presidents_share.percent
         end
 
+        def unreserve_one_share!
+          shares.each do |share|
+            if !share.buyable
+              share.buyable = true
+              break
+            end
+          end
+        end
+
         def should_not_float_until_exchange!
           @floatable = false
           @real_presidents_percent = 100
