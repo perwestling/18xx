@@ -361,7 +361,7 @@ module Engine
             reserved_shares: [20],
             float_percent: 50,
             type: 'major',
-            coordinates: 'C11',
+            coordinates: 'B9',
             color: :blue,
           },
           {

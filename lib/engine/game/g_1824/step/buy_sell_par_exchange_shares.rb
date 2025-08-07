@@ -45,7 +45,8 @@ module Engine
           end
 
           def can_sell?(_entity, bundle)
-            super && @game.buyable?(bundle.corporation)
+            # Rule VI.8, bullet 1, sub-bullet 2: Bank ownership cannot exceed 50% for started corporations
+            super && @game.buyable?(bundle.corporation) && (bundle.corporation.ipo_shares.sum(&:percent) + bundle.percent <= 50)
           end
 
           # Rule VI.7, bullet 4: Exchange can take you over 60%

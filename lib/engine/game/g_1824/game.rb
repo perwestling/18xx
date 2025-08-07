@@ -341,7 +341,7 @@ module Engine
             G1837::Step::DiscardTrain,
             Engine::Step::SpecialTrack,
             Engine::Step::Track,
-            G1837::Step::Token,
+            Engine::Step::Token,
             Engine::Step::Route,
             G1824::Step::Dividend,
             G1824::Step::BuyTrain,
@@ -371,6 +371,11 @@ module Engine
 
         def or_set_finished
           depot.export!
+          potentially_form_nationals
+        end
+
+        def init_stock_market
+          StockMarket.new(game_market, self.class::CERT_LIMIT_TYPES)
         end
 
         def setup
@@ -390,6 +395,9 @@ module Engine
 
           super
           setup_regionals
+          @sd_to_form = false
+          @ug_to_form = false
+          @kk_to_form = false
         end
 
         def setup_mines
@@ -426,6 +434,14 @@ module Engine
               corporation.should_not_float_until_exchange!
             end
           end
+        end
+
+        def ipo_name(_entity = nil)
+          'Bank'
+        end
+
+        def ipo_reserved_name(_entity = nil)
+          'Reserved'
         end
 
         def sd_minors
@@ -798,14 +814,17 @@ module Engine
           if @sd_to_form
             national = corporation_by_id('SD')
             form_national_railway!(national, sd_minors)
+            @sd_to_form = false
           end
           if @ug_to_form
             national = corporation_by_id('UG')
             form_national_railway!(national, ug_minors)
+            @ug_to_form = false
           end
           if @kk_to_form
             national = corporation_by_id('KK')
             form_national_railway!(national, kk_minors)
+            @kk_to_form = false
           end
         end
 
