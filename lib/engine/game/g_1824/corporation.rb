@@ -49,6 +49,8 @@ module Engine
           @percent_total_ipo_shares / share_percent
         end
 
+        # Used when transforming a regional associated to a coal railway
+        # to an unassociated regional railway, during initial SR
         def remove_reserve_for_all_shares!
           @floatable = true
           @par_via_exchange = false
@@ -60,12 +62,14 @@ module Engine
           @real_presidents_percent = @presidents_share.percent
         end
 
+        # Used when a pre-staatsbahn is unsold during initial SR.
+        # We need to unreserve one of the shares of the national.
         def unreserve_one_share!
           shares.each do |share|
-            if !share.buyable
-              share.buyable = true
-              break
-            end
+            next if share.buyable
+
+            share.buyable = true
+            break
           end
         end
 
@@ -85,7 +89,6 @@ module Engine
           @floatable = true
           @percent_total_ipo_shares = 100
           @real_presidents_percent = @presidents_share.percent
-          puts "Percent to float: #{percent_to_float}"
         end
       end
     end

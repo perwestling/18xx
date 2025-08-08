@@ -584,8 +584,7 @@ module Engine
         end
 
         def exchange_order
-          order = coal_minor_exchange_order
-          order
+          coal_minor_exchange_order
         end
 
         # Changed log text compared to 1837
@@ -821,11 +820,11 @@ module Engine
             form_national_railway!(national, ug_minors)
             @ug_to_form = false
           end
-          if @kk_to_form
-            national = corporation_by_id('KK')
-            form_national_railway!(national, kk_minors)
-            @kk_to_form = false
-          end
+          return unless @kk_to_form
+
+          national = corporation_by_id('KK')
+          form_national_railway!(national, kk_minors)
+          @kk_to_form = false
         end
 
         def player_loan_interest(loan)
