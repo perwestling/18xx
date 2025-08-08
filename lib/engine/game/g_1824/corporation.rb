@@ -23,6 +23,9 @@ module Engine
             share.buyable = false
           end
           @real_presidents_percent = @presidents_share.percent
+
+          # Used for 2 player variant initial SR
+          @stack = nil
         end
 
         def floated?
@@ -62,7 +65,8 @@ module Engine
           @real_presidents_percent = @presidents_share.percent
         end
 
-        # Used when a pre-staatsbahn is unsold during initial SR.
+        # Used when a pre-staatsbahn is unsold during initial SR, or
+        # when pre-staatsbahn becomes a construction railway (2 players)
         # We need to unreserve one of the shares of the national.
         def unreserve_one_share!
           shares.each do |share|
@@ -89,6 +93,23 @@ module Engine
           @floatable = true
           @percent_total_ipo_shares = 100
           @real_presidents_percent = @presidents_share.percent
+        end
+
+        def make_construction_railway!
+          @type = :construction_railway
+          a = @abilities.first
+          puts "Remove ability #{a}"
+          remove_ability(a)
+        end
+
+        def make_bond_railway!
+          @type = :bond_railway
+          remove_reserve_for_all_shares!
+        end
+
+        def close!
+          super
+          puts "#{self.name} was closed"
         end
       end
     end

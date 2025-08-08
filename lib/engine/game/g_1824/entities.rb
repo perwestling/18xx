@@ -82,7 +82,8 @@ module Engine
                   "Buyer take control of pre-staatsbahn KK1. KK1 will be exchanged for the Director's certificate "\
                   'of Staatsbahn KK when the first 6 train is sold. KK1 cannot be sold.',
             color: :brown,
-            meta: { start_packet: true },
+            text_color: :white,
+            meta: { start_packet: true, type: :pre_staatsbahn_primary },
             abilities: [{ type: 'shares', shares: 'KK1_0' }],
           },
           {
@@ -94,7 +95,8 @@ module Engine
                   'Buyer take control of Pre-Staatsbahn KK2. KK2 will be exchanged for a 10% share of Staatsbahn '\
                   'KK when the first 6 train is sold. KK2 cannot be sold.',
             color: :brown,
-            meta: { start_packet: true },
+            text_color: :white,
+            meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [{ type: 'shares', shares: 'KK2_0' }],
           },
           {
@@ -106,7 +108,7 @@ module Engine
                   "Buyer take control of Pre-Staatsbahn SD1. SD1 will be exchanged for the Director's certificate "\
                   'of Staatsbahn SD when the first 4 train is sold. SD1 cannot be sold.',
             color: :orange,
-            meta: { start_packet: true },
+            meta: { start_packet: true, type: :pre_staatsbahn_primary },
             abilities: [
               { type: 'shares', shares: 'SD1_0' },
             ],
@@ -120,7 +122,7 @@ module Engine
                   'Buyer take control of Pre-Staatsbahn SD2. SD2 will be exchanged for a 10% share of Staatsbahn '\
                   'SD when the first 4 train is sold. SD2 cannot be sold.',
             color: :orange,
-            meta: { start_packet: true },
+            meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [
               { type: 'shares', shares: 'SD2_0' },
             ],
@@ -134,7 +136,7 @@ module Engine
                   'Buyer take control of Pre-Staatsbahn SD3. SD3 will be exchanged for a 10% share of Staatsbahn '\
                   'SD when the first 4 train is sold. SD3 cannot be sold.',
             color: :orange,
-            meta: { start_packet: true },
+            meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [
               { type: 'shares', shares: 'SD3_0' },
             ],
@@ -148,7 +150,7 @@ module Engine
                   "Buyer take control of pre-staatsbahn UG1. UG1 will be exchanged for the Director's certificate "\
                   'in Staatsbahn UG when the first 5 train is sold. UG1 cannot be sold.',
             color: :pink,
-            meta: { start_packet: true },
+            meta: { start_packet: true, type: :pre_staatsbahn_primary },
             abilities: [{ type: 'shares', shares: 'UG1_0' }],
           },
           {
@@ -159,7 +161,7 @@ module Engine
                   'Buyer take control of Pre-Staatsbahn UG2. UG2 will be exchanged for a 10% share of Staatsbahn '\
                   'UG when the first 5 train is sold. UG2 cannot be sold.',
             color: :pink,
-            meta: { start_packet: true },
+            meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [{ type: 'shares', shares: 'UG2_0' }],
           },
         ].freeze

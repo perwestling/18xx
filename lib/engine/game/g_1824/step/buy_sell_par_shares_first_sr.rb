@@ -7,7 +7,24 @@ module Engine
     module G1824
       module Step
         class BuySellParSharesFirstSr < Engine::Step::BuySellParShares
-          def can_buy_company?(_player, _company)
+
+          def actions(entity)
+            actions = super
+                    
+            return actions unless @game.two_player?
+            
+            if @game.companies.find { |c| c.stack && c.stack < 4 }
+              actions.delete(:pass)
+            end
+
+            actions
+          end
+
+          def can_buy_company?(player, company)
+            if @game.two_player? && @game.mountain_railway?(company)
+               return false if any_stacks_left? || already_bought_mountain_railway?(player)
+            end
+
             !bought?
           end
 
@@ -30,11 +47,59 @@ module Engine
           end
 
           def visible_corporations
-            # None if Cislethania variant
-            return [] if @game.option_cisleithania
+            return [] if @game.two_player? && any_stacks_left?
 
-            # Rule VI.3 bullet 4 - only BH available of the Regional Railways
-            [@game.corporation_by_id('BH')]
+            @game.sorted_corporations.reject { |c| c.closed? || c.type == :minor || c.type == :construction_railway }
+
+            # TODO: Should corporations be visible for 3-6 players during first SR?
+
+            # # None if Cislethania variant
+            # return [] if @game.option_cisleithania
+
+            # # Rule VI.3 bullet 4 - only BH available of the Regional Railways
+            # [@game.corporation_by_id('BH')]
+          end
+
+          def process_buy_company(action)
+            return super unless @game.two_player?
+
+            company = action.company
+            player = action.entity
+            @game.log << "#{player.name} buys from Stack #{company.stack}" if company.stack
+
+            if bought_from_different_stack?(company)
+              a_p = @game.players.find { |p| p != player }
+              raise GameError, "#{player.name} must buy from stack #{@game.current_stack} as #{a_p.name} bought from it"
+            else 
+              if @game.current_stack
+                @game.current_stack = nil
+              else
+                @game.current_stack = company.stack
+              end
+              super
+            end
+          end
+
+          private
+
+          def bought_from_different_stack?(company)
+            @game.current_stack && @game.current_stack != company.stack
+          end
+
+          def bought_non_stack_entity_while_stacks_still_remain?(entity)
+            return false if entity.company? && entity.stack
+
+            any_stacks_left?
+          end
+
+          def already_bought_mountain_railway?(player)
+            @game.companies.count { |c| @game.mountain_railway?(c) && c.owner == player } > 0
+          end
+
+          def any_stacks_left?
+            result = @game.companies.find { |c| c.stack }
+            puts "any_stacks_left? #{result}"
+            result
           end
         end
       end

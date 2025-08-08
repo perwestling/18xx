@@ -14,6 +14,10 @@ module Engine
           def must_buy_train?(entity)
             # Rule VII.11 all entities must own a train, unless coal company and there are no g-trains in the depot
             return false unless entity.trains.empty?
+
+            # Rule X.3 and X.4: Construction railways cannot own any trains
+            return false if @game.construction_railway?(entity) || @game.bond_railway?(entity)
+
             return true unless @game.coal_railway?(entity)
 
             depot_g_trains = @depot.depot_trains.select { |t| @game.goods_train?(t.name) }

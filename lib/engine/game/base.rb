@@ -1110,6 +1110,7 @@ module Engine
       def check_sale_timing(entity, bundle)
         corporation = bundle.corporation
 
+        puts "Timing = #{self.class::SELL_AFTER}"
         case self.class::SELL_AFTER
         when :first
           @turn > 1 || @round.operating?
@@ -2187,6 +2188,7 @@ module Engine
       end
 
       def exchange_corporations(exchange_ability)
+        puts "Hepp1 #{exchange_ability.corporations}"
         candidates = case exchange_ability.corporations
                      when 'any'
                        corporations
@@ -2195,6 +2197,7 @@ module Engine
                      else
                        exchange_ability.corporations.map { |c| corporation_by_id(c) }
                      end
+        puts "Hepp2"
         candidates.reject(&:closed?)
       end
 

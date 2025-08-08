@@ -5,6 +5,7 @@ require_relative 'meta'
 require_relative '../base'
 require_relative '../g_1837/round/exchange'
 require_relative 'round/operating'
+require_relative 'company'
 require_relative 'depot'
 require_relative 'entities'
 require_relative 'map'
@@ -26,7 +27,7 @@ module Engine
         CORPORATION_CLASS = G1824::Corporation
         DEPOT_CLASS = G1824::Depot
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash, :player_debts
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash, :player_debts, :current_stack
 
         # TODO: Can these be removed? They do not seem to be used in 1824?
         register_colors(
@@ -106,10 +107,10 @@ module Engine
 
         # Modified from 1837 as 1824 does not have single shares in Pre-staatsbahn
         def company_header(company)
-          return 'COAL COMPANY' if company.color == :black
-          return 'MOUNTAIN RAILWAY' if company.color == :gray
+          return stackify(company, 'COAL COMPANY') if company.color == :black
+          return stackify(company, 'MOUNTAIN RAILWAY') if company.color == :gray
 
-          'MINOR COMPANY'
+          stackify(company, 'MINOR COMPANY')
         end
 
         def init_optional_rules(optional_rules)
@@ -158,8 +159,10 @@ module Engine
         def init_train_handler
           train_count_map = num_trains_map
           trains = game_trains.flat_map do |train|
-            Array.new(train_count_map[train[:name]]) do |index|
-              Train.new(**train, index: index)
+            t = train
+            t = adjust_events_for_two_players(t) if two_player?
+            Array.new(train_count_map[t[:name]]) do |index|
+              Train.new(**t, index: index)
             end
           end
 
@@ -179,28 +182,39 @@ module Engine
         def game_corporations
           corporations = CORPORATIONS.dup
 
-          if option_cisleithania
-            # RUle X.1/XI.1, Remove Pre-Staatsbahn UG1, Regionals BH and SB, Coal mine SPB
-            corporations.reject! { |m| %w[UG1 UG2 BH SB SPB].include?(m[:sym]) }
-
-            unless two_player?
-              # Rule XI.1: Remove Pre-Staatsbahn UG2, minor SPB, and move home location for UG1
-              corporations.map! do |m|
-                case m['sym']
-                when 'UG1'
-                  m['coordinates'] = 'G12'
-                  m['city'] = 0
-                when 'UG'
-                  m['ipo_shares'] = [10, 10, 10, 10, 10, 10, 10, 10]
-                  m['reserved_shares'] = [20]
-                end
-
-                m
+          if option_cisleithania && !two_player?
+            # Rule XI.1: Move home location for UG1, and reserve only 20% share of UG
+            corporations.map! do |m|
+              case m['sym']
+              when 'UG1'
+                m['coordinates'] = 'G12'
+                m['city'] = 0
+              when 'UG'
+                m['ipo_shares'] = [10, 10, 10, 10, 10, 10, 10, 10]
+                m['reserved_shares'] = [20]
               end
+
+              m
             end
           end
 
           corporations
+        end
+
+        def init_corporations(stock_market)
+          all = super
+
+          if option_cisleithania && two_player?
+            # Rule X.1: Remove Pre-Staatsbahns UG1 and UG2, Regionals BH and SB, Coal mine SPB
+            all.select { |c| %w[UG UG1 UG2 BH SB SPB].include?(c.id) }.each(&:close!)
+          end
+
+          if option_cisleithania && !two_player?
+            # Rule XI.1: Remove Pre-Staatsbahn UG2, Regionals BH and SB, Coal mine SPB
+            all.select { |c| %w[UG2 BH SB SPB].include?(c.id) }.each(&:close!)
+          end
+
+          all
         end
 
         def init_companies(players)
@@ -225,7 +239,13 @@ module Engine
             companies.reject! { |m| %w[UG2 SPB].include?(m[:sym]) || (p2 && m['sym'] == 'UG1') }
           end
 
-          companies.map { |company| Company.new(**company) }
+          used_companies = companies.map { |company| G1824::Company.new(**company) }
+
+          # Rule X.3 Setup, need to do some modifications of companies for two players
+          # and need to do it before trains which also are affected
+          setup_companies_for_two_players(used_companies) if two_player?
+
+          used_companies
         end
 
         def init_tiles
@@ -341,7 +361,7 @@ module Engine
             G1824::Step::ForcedMountainRailwayExchange,
             G1837::Step::DiscardTrain,
             Engine::Step::SpecialTrack,
-            Engine::Step::Track,
+            G1824::Step::Track,
             Engine::Step::Token,
             Engine::Step::Route,
             G1824::Step::Dividend,
@@ -356,6 +376,7 @@ module Engine
 
         def exchange_round(round_num)
           G1837::Round::Exchange.new(self, [
+            G1824::Step::ForcedMountainRailwayExchange,
             G1837::Step::DiscardTrain,
             G1837::Step::CoalExchange,
           ], round_num: round_num)
@@ -380,7 +401,7 @@ module Engine
         end
 
         def setup
-          # To keep track of when 1st two train bought
+          # To keep track of when 1st two train bought, for g-trains
           # TODO: Check if this is needed?
           @two_train_bought = false
 
@@ -415,6 +436,9 @@ module Engine
           %w[SD UG KK].each do |c|
             national = corporation_by_id(c)
 
+            # Rule X.1, bullet 3: Do not use UG in two player game (it is closed)
+            next if national.closed?
+
             stock_market.set_par(national, share_price)
             national.ipoed = true
           end
@@ -422,6 +446,7 @@ module Engine
 
         def setup_regionals
           @corporations.each do |corporation|
+            next if corporation.closed?
             next unless regional?(corporation)
 
             if corporation.id == 'BH'
@@ -490,7 +515,11 @@ module Engine
         end
 
         def status_str(entity)
-          if coal_railway?(entity)
+          if bond_railway?(entity)
+            'Bond Railway - pay stock value each OR'
+          elsif construction_railway?(entity)
+            'Construction Railway - only build tracks'
+          elsif coal_railway?(entity)
             'Coal Railway - may only own g trains'
           elsif pre_staatsbahn?(entity)
             'Pre-Staatsbahn'
@@ -523,11 +552,21 @@ module Engine
         end
 
         def exchange_entities
+          puts "EXCHANGE ENTITIES"
+          puts "Companies: #{companies}"
           @companies.reject(&:closed?)
         end
 
         def mountain_railway?(entity)
           entity.company? && entity.meta[:type] == :mountain_railway
+        end
+
+        def bond_railway?(entity)
+          entity.type == :bond_railway
+        end
+
+        def construction_railway?(entity)
+          entity.type == :construction_railway
         end
 
         def coal_railway?(entity)
@@ -539,11 +578,11 @@ module Engine
         end
 
         def regional?(entity)
-          entity.corporation? && entity.type == :major
+          entity.type == :major
         end
 
         def staatsbahn?(entity)
-          entity.corporation? && entity.type == :national
+          entity.type == :national
         end
 
         def reserved_regional?(entity)
@@ -553,7 +592,9 @@ module Engine
         end
 
         def buyable?(entity)
-          return true unless entity.corporation?
+          # TODO: Is this OK?
+          return true if entity.nil?
+          # return true unless entity.corporation?
 
           entity.all_abilities.none? { |a| a.type == :no_buy }
         end
@@ -580,7 +621,7 @@ module Engine
         end
 
         def operating_order
-          minors, majors = @corporations.select(&:floated?).partition { |c| c.type == :minor }
+          minors, majors = @corporations.select(&:floated?).partition { |c| c.type == :minor || c.type == :construction_railway }
           minors + majors.sort
         end
 
@@ -620,7 +661,22 @@ module Engine
           end
 
           company.close!
+
           minor = corporation_by_id(id)
+
+          # Need to handle construction railways when two player variant
+          if two_player? && company.stack == 1
+            if pre_staatsbahn?(minor)
+              create_construction_railway_from_bought_pre_staatsbahn(player, company, minor)
+            else
+              create_construction_railways_from_coal_mine(player, company, minor)
+            end
+
+            company.stack = nil
+            return
+          end
+
+          company.stack = nil
           return unless coal_railway?(minor)
 
           # Rule IV.2, bullet 8: Coal Railways start with a g train bought from the depot
@@ -710,6 +766,19 @@ module Engine
               'SPB'
             end
           corporation_by_id(coal_railway)
+        end
+
+        def associated_regional_name(coal_railway)
+          case coal_railway.sym
+            when 'EPP'
+              'BK'
+            when 'EOD'
+              'MS'
+            when 'MLB'
+              'CL'
+            when 'SPB'
+              'SB'
+          end
         end
 
         def revenue_for(route, stops)
@@ -867,8 +936,8 @@ module Engine
             {
               type: 'exchange',
               description: 'Exchange for share in available Regional Railway',
-              corporations: %w[CL BH BK MS SB],
               owner_type: 'player',
+              corporations: %w[CL BH BK MS SB],
               when: 'any',  # Need to be able to use in SR and during forced exchange in OR
               from: %w[ipo market],
             },
@@ -882,6 +951,126 @@ module Engine
           definition[:name] = format(definition[:name], real_index, MOUNTAIN_RAILWAY_NAMES[real_index])
           definition[:desc] = format(definition[:desc], MOUNTAIN_RAILWAY_NAMES[real_index], real_index)
           definition
+        end
+
+        def select_randomly(collection)
+          collection.min_by { rand }
+        end
+
+        def stackify(company, header)
+          return header unless company.stack
+
+          real_header = "#{header} STACK #{company.stack}"
+          real_header += " (CR)" if company.stack == 1
+          real_header
+        end
+
+        def setup_companies_for_two_players(companies)
+          coal_companies = companies.select { |c| c.meta[:type] == :coal }.reject(&:closed?)
+          pre_staatsbahns_primary = companies.select { |c| c.meta[:type] == :pre_staatsbahn_primary }.reject(&:closed?)
+          pre_staatsbahns_secondary = companies.select { |c| c.meta[:type] == :pre_staatsbahn_secondary }.reject(&:closed?)
+
+          # Follow X.3 Setup, with slight modification
+          # 1. Let 2nd player select one from stack 1-3, 1st player gets the other in stack
+          # 2. Repeat step 2 for player 1 first, player 2 second
+          # 3. Let 2nd player buy CR from stack 4 (and par associated Regional) and player 1 buy (and par) the other
+          # That completes the initial drafting
+
+          # Place remaining companies in their stacks, preparing for initial drafting
+          select_randomly(coal_companies).stack = 1
+          select_randomly(pre_staatsbahns_secondary).stack = 1
+          pre_staatsbahns_primary.each { |c| c.stack = 2 }
+          pre_staatsbahns_secondary.select {|c| c.stack.nil? }.each { |c| c.stack = 3 }
+          coal_companies.select {|c| c.stack.nil? }.each { |c| c.stack = 4 }
+
+          # Rule X.3, penultimate paragraph: if KK1 is in stack 1, close construction corporations
+          # when 1st 5 train is bought, otherwise close when 1st 4 train is bought
+          closed_construction = close_construction_company_when_first_5_sold?(companies) ? '5' : '4'
+
+          # Adjust descriptions so they match 2 player rules
+          companies.select { |c| c.sym == 'KK1' }.each do |c|
+            # Rule X.4, bullet 1: KK is formed when 1st 5 train is bought
+            c.desc = c.desc.gsub(/first 6 train/, 'first 5 train')
+          end
+          coal_companies.select { |c| c.stack == 1 }.each do |c|
+
+            # According to rule clarification, see https://boardgamegeek.com/thread/2929817/questions-about-2-player-variant
+            c.make_construction_company!
+
+            desc = 'Buyer take control of minor Coal Railway XXX. That Railway will be a Construction Company '\
+                   'which just builds track, for free - no treasury or trains. '\
+                   "When first #{closed_construction} train is bought XXX closes, and nothing is added to YYY treasury. "\
+                   'XXX cannot be exchanged for any shares, and no shares are reserved.'
+            c.desc = desc.gsub(/XXX/, c.sym).gsub(/YYY/, associated_regional_name(c))
+          end
+          pre_staatsbahns_secondary.select { |c| c.stack == 1 }.each do |c|
+
+            # According to rule clarification, see https://boardgamegeek.com/thread/2929817/questions-about-2-player-variant
+            c.make_construction_company!
+
+            desc = 'Buyer take control of pre-staatsbahn XXX. That Railway will be a Construction Company '\
+                   'which just builds track, for free - no treasury or trains. '\
+                   "When first #{closed_construction} train is bought XXX closes, and #{format_currency(c.value)} "\
+                   "is added to the treasury of YYY."
+                   'XXX cannot be exchanged for any shares, and no shares are reserved.'
+            c.desc = desc.gsub(/XXX/, c.sym).gsub(/YYY/, c.sym[0..-1])
+          end
+        end
+
+        def close_construction_company_when_first_5_sold?(companies)
+          companies.find { |c| c.stack == 1 }.sym == 'KK2'
+        end
+
+        def adjust_events_for_two_players(train)
+          # KK forms on 5 trains instead of 6 trains, and UG is not present when 2 players
+
+          if train[:name] == '5'
+            train[:events] = [{ 'type' => 'exchange_coal_companies' }, { 'type' => 'kk_formation' }]
+          end
+
+          train[:events] = [] if train[:name] == '6'
+
+          train
+        end
+
+        def create_construction_railway_from_bought_pre_staatsbahn(player, company, minor)
+          make_minor_construction_railway(company, minor)
+
+          national = corporation_by_id(company.sym[0..-1])
+          national.unreserve_one_share!
+        end
+
+        def create_construction_railways_from_coal_mine(player, company, minor)
+          regional = get_associated_regional_railway(minor)
+          make_minor_construction_railway(company, minor)
+
+          regional.make_bond_railway!
+          regional.ipoed = true
+          regional.float!
+          share_price = stock_market.share_price([6,1]) # This is the lower one at 50G
+          stock_market.set_par(regional, share_price)
+          association = "the associated Regional Railway of #{company.sym}"
+          log << "#{regional.name} (#{association}) pars at #{format_currency(share_price.price)}"
+          log << "#{regional.name} will not build or run trains but shareholders will receive current stock value in revenue each OR"
+        end
+
+        def make_minor_construction_railway(company, minor)
+          @log << "#{minor.name} returns its cash to the bank as it does not use any money"
+          minor.spend(minor.cash, @bank)
+          minor.add_ability(free_tile_lay_ability)
+          minor.make_construction_railway!
+        end
+
+        def free_tile_lay_ability
+          Engine::Ability::TileLay.new(
+            type: 'tile_lay',
+            tiles: [],
+            hexes: [],
+            closed_when_used_up: false,
+            reachable: true,
+            free: true,
+            special: false,
+            when: 'track')
         end
       end
     end

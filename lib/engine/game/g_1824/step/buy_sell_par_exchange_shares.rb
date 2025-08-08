@@ -33,7 +33,7 @@ module Engine
           end
 
           def visible_corporations
-            @game.sorted_corporations.reject { |c| c.type == :minor }
+            @game.sorted_corporations.reject { |c| c.type == :minor || c.type == :construction_railway }
           end
 
           def can_buy?(_entity, bundle)
@@ -46,7 +46,10 @@ module Engine
 
           def can_sell?(_entity, bundle)
             # Rule VI.8, bullet 1, sub-bullet 2: Bank ownership cannot exceed 50% for started corporations
-            super && @game.buyable?(bundle.corporation) && (bundle.corporation.ipo_shares.sum(&:percent) + bundle.percent <= 50)
+            corp = bundle.corporation
+            puts "entity #{_entity}, corp #{corp.name}, super #{super}, game buyable? #{@game.buyable?(corp)}, bond corp? #{@game.bond_railway?(corp)}"
+            super && @game.buyable?(corp) &&
+                    (@game.bond_railway?(corp) || (corp.ipo_shares.sum(&:percent) + bundle.percent <= 50))
           end
 
           # Rule VI.7, bullet 4: Exchange can take you over 60%
