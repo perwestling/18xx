@@ -648,6 +648,9 @@ module View
       selected_games = game_rows_data.sort_by { |g| [g['meta']::PROTOTYPE ? 1 : 0, g['meta']] }
       selected_games = selected_games.select { |g| %i[alpha beta production].include?(g['meta']::DEV_STAGE) } if @production
 
+      # On Shambolica, only allow 1824
+      selected_games.select! { |g| g['title'] == '1824' }
+
       if @keywords&.size&.positive?
         searches = @keywords.split(/[:, ]+/).map(&:upcase)
 
