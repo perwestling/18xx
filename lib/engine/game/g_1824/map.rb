@@ -320,7 +320,7 @@ module Engine
               %w[A6 A10] => TOWN_WITH_MOUNTAIN,
               %w[B13 B25 F11] => DOUBLE_TOWN_WITH_WATER,
               %w[H3] => CITY_WITH_MOUNTAIN,
-              %w[A18 C26 E26 I8] => CITY_WITH_MOUNTAIN,
+              %w[A18 C26 E26 I8] => CITY_LABEL_T,
               %w[B5 B9 B15 B23 C12 E8 F7 G4 G10] => CITY,
               %w[B7 B11 B19 B21 C8 C14 C20 C22 C24 D9 D11 D13 D15 E6
                  F9 F13 G6 H9 H11] => PLAIN,

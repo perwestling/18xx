@@ -1110,7 +1110,6 @@ module Engine
       def check_sale_timing(entity, bundle)
         corporation = bundle.corporation
 
-        puts "Timing = #{self.class::SELL_AFTER}"
         case self.class::SELL_AFTER
         when :first
           @turn > 1 || @round.operating?

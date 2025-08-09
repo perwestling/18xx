@@ -76,6 +76,7 @@ module Engine
           'exchange_coal_companies' => ['Coal Companies Exchange', 'All remaining coal companies are exchanged'],
           'ug_formation' => ['UG formation', 'UG forms at the end of the OR'],
           'kk_formation' => ['k&k formation', 'KK forms at the end of the OR'],
+          'close_construction_railways' => ['Close Construction Railways', 'All construction railways are closed'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
@@ -243,6 +244,7 @@ module Engine
 
           # Rule X.3 Setup, need to do some modifications of companies for two players
           # and need to do it before trains which also are affected
+          @close_construction_company_when_first_5_sold = false
           setup_companies_for_two_players(used_companies) if two_player?
 
           used_companies
@@ -351,6 +353,7 @@ module Engine
         def stock_round
           Engine::Round::Stock.new(self, [
             G1837::Step::DiscardTrain,
+            G1824::Step::ForcedMountainRailwayExchange, # In case train export after OR set triggers exchage
             G1824::Step::BuySellParExchangeShares,
           ])
         end
@@ -358,7 +361,6 @@ module Engine
         def operating_round(round_num)
           G1824::Round::Operating.new(self, [
             G1837::Step::Bankrupt,
-            G1824::Step::ForcedMountainRailwayExchange,
             G1837::Step::DiscardTrain,
             Engine::Step::SpecialTrack,
             G1824::Step::Track,
@@ -376,7 +378,6 @@ module Engine
 
         def exchange_round(round_num)
           G1837::Round::Exchange.new(self, [
-            G1824::Step::ForcedMountainRailwayExchange,
             G1837::Step::DiscardTrain,
             G1837::Step::CoalExchange,
           ], round_num: round_num)
@@ -425,6 +426,7 @@ module Engine
         def setup_mines
           mine_hex_names = option_cisleithania ? MINE_HEX_NAMES_CISLEITHANIA : MINE_HEX_NAMES
           mine_hex_names.each do |hex_id|
+            puts "### ASSIGNE MINE HEX: #{hex_id}"
             hex_by_id(hex_id).assign!(:coal)
           end
         end
@@ -512,6 +514,19 @@ module Engine
         def event_kk_formation!
           @log << "-- Event: #{EVENTS_TEXT['kk_formation'][1]} --"
           @kk_to_form = true
+        end
+
+        def event_close_construction_railways!
+          @log << "-- Event: #{EVENTS_TEXT['close_construction_railways'][1]} --"
+          @corporations.each do |c|
+            next unless construction_railway?(c)
+
+            @log << "#{c.name} closes without compensation"
+            c.close!
+
+            # TODO Close home station
+            # TODO Extra token by Bond railway?
+          end
         end
 
         def status_str(entity)
@@ -983,14 +998,26 @@ module Engine
           pre_staatsbahns_secondary.select {|c| c.stack.nil? }.each { |c| c.stack = 3 }
           coal_companies.select {|c| c.stack.nil? }.each { |c| c.stack = 4 }
 
-          # Rule X.3, penultimate paragraph: if KK1 is in stack 1, close construction corporations
-          # when 1st 5 train is bought, otherwise close when 1st 4 train is bought
-          closed_construction = close_construction_company_when_first_5_sold?(companies) ? '5' : '4'
-
           # Adjust descriptions so they match 2 player rules
           companies.select { |c| c.sym == 'KK1' }.each do |c|
             # Rule X.4, bullet 1: KK is formed when 1st 5 train is bought
             c.desc = c.desc.gsub(/first 6 train/, 'first 5 train')
+          end
+          pre_staatsbahns_secondary.select { |c| c.stack == 1 }.each do |c|
+
+            # Rule X.3, penultimate paragraph: if KK1 is in stack 1, close construction corporations
+            # when 1st 5 train is bought, otherwise close when 1st 4 train is bought
+            @close_construction_company_when_first_5_sold = (c.sym == 'KK2')
+
+            # According to rule clarification, see https://boardgamegeek.com/thread/2929817/questions-about-2-player-variant
+            c.make_construction_company!
+
+            desc = 'Buyer take control of pre-staatsbahn XXX. That Railway will be a Construction Company '\
+                   'which just builds track, for free - no treasury or trains. '\
+                   "When first #{closed_construction} train is bought XXX closes, and #{format_currency(c.value)} "\
+                   "is added to the treasury of YYY."
+                   'XXX cannot be exchanged for any shares, and no shares are reserved.'
+            c.desc = desc.gsub(/XXX/, c.sym).gsub(/YYY/, c.sym[0..-1])
           end
           coal_companies.select { |c| c.stack == 1 }.each do |c|
 
@@ -1003,29 +1030,23 @@ module Engine
                    'XXX cannot be exchanged for any shares, and no shares are reserved.'
             c.desc = desc.gsub(/XXX/, c.sym).gsub(/YYY/, associated_regional_name(c))
           end
-          pre_staatsbahns_secondary.select { |c| c.stack == 1 }.each do |c|
-
-            # According to rule clarification, see https://boardgamegeek.com/thread/2929817/questions-about-2-player-variant
-            c.make_construction_company!
-
-            desc = 'Buyer take control of pre-staatsbahn XXX. That Railway will be a Construction Company '\
-                   'which just builds track, for free - no treasury or trains. '\
-                   "When first #{closed_construction} train is bought XXX closes, and #{format_currency(c.value)} "\
-                   "is added to the treasury of YYY."
-                   'XXX cannot be exchanged for any shares, and no shares are reserved.'
-            c.desc = desc.gsub(/XXX/, c.sym).gsub(/YYY/, c.sym[0..-1])
-          end
         end
 
-        def close_construction_company_when_first_5_sold?(companies)
-          companies.find { |c| c.stack == 1 }.sym == 'KK2'
+        def closed_construction
+          @close_construction_company_when_first_5_sold ? '5' : '4'
         end
 
         def adjust_events_for_two_players(train)
           # KK forms on 5 trains instead of 6 trains, and UG is not present when 2 players
 
+          if train[:name] == '4' && !@close_construction_company_when_first_5_sold
+            train[:events] << { 'type' => 'close_construction_railways'}
+          end
+
           if train[:name] == '5'
             train[:events] = [{ 'type' => 'exchange_coal_companies' }, { 'type' => 'kk_formation' }]
+
+            train[:events] << { 'type' => 'close_construction_railways'} if @close_construction_company_when_first_5_sold
           end
 
           train[:events] = [] if train[:name] == '6'

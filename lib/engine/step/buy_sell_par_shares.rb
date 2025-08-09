@@ -115,21 +115,18 @@ module Engine
       end
 
       def can_sell?(entity, bundle)
-        puts "can_sell? called for entity #{entity.name}, bundle for #{bundle.corporation.name}"
         return unless bundle
         return false if entity != bundle.owner
 
         corporation = bundle.corporation
 
         timing = @game.check_sale_timing(entity, bundle)
-        result = timing &&
+        timing &&
           !(@game.class::TURN_SELL_LIMIT && (bundle.percent + sold_this_turn(corporation)) > @game.class::TURN_SELL_LIMIT) &&
           !(@game.class::MUST_SELL_IN_BLOCKS && @round.players_sold[entity][corporation] == :now) &&
           can_sell_order? &&
           @game.share_pool.fit_in_bank?(bundle) &&
           can_dump?(entity, bundle)
-        puts "Result #{result}, timing #{timing}, fit in bank #{@game.share_pool.fit_in_bank?(bundle)}"
-        result
       end
 
       def can_dump?(entity, bundle)
