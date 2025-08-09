@@ -76,7 +76,8 @@ module Engine
           'exchange_coal_companies' => ['Coal Companies Exchange', 'All remaining coal companies are exchanged'],
           'ug_formation' => ['UG formation', 'UG forms at the end of the OR'],
           'kk_formation' => ['k&k formation', 'KK forms at the end of the OR'],
-          'close_construction_railways' => ['Close Construction Railways', 'All construction railways are closed'],
+          'close_construction_railways' => ['Close Construction Railways', 'All construction minors are closed'],
+          'vienna_tokened' => ['Vienna tokened', 'The last token of the bond railway is placed in Vienna'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
@@ -140,6 +141,10 @@ module Engine
           end
         end
 
+        def init_share_pool
+          G1824::SharePool.new(self)
+        end
+
         def player_value(player)
           player.value - @player_debts[player]
         end
@@ -154,6 +159,13 @@ module Engine
         # but can exceed via exchanges
         def can_hold_above_corp_limit?(_entity)
           true
+        end
+
+        def can_buy_presidents_share_directly_from_market?(corporation)
+          # Rule X.4, bullet 3, sub-bullet 6: 20% is just a double share
+          return true if two_player? && bond_railway?(corporation)
+
+          super
         end
 
         # Modified 1837 version as the number of trains vary between player count and variant
@@ -421,12 +433,14 @@ module Engine
           @sd_to_form = false
           @ug_to_form = false
           @kk_to_form = false
+
+          # Used in two-player for extra tokening
+          @last_train_buyer = nil
         end
 
         def setup_mines
           mine_hex_names = option_cisleithania ? MINE_HEX_NAMES_CISLEITHANIA : MINE_HEX_NAMES
           mine_hex_names.each do |hex_id|
-            puts "### ASSIGNE MINE HEX: #{hex_id}"
             hex_by_id(hex_id).assign!(:coal)
           end
         end
@@ -522,11 +536,16 @@ module Engine
             next unless construction_railway?(c)
 
             @log << "#{c.name} closes without compensation"
-            c.close!
+            c.tokens.first.swap!(blocking_token, check_tokenable: false) if c.color == :black
+            close_corporation(c, quiet: true)
+            graph.clear_graph_for(c)
 
-            # TODO Close home station
             # TODO Extra token by Bond railway?
           end
+        end
+
+        def event_vienna_tokened!
+          @log << "-- Event: #{EVENTS_TEXT['vienna_tokened'][1]} --"
         end
 
         def status_str(entity)
@@ -567,8 +586,6 @@ module Engine
         end
 
         def exchange_entities
-          puts "EXCHANGE ENTITIES"
-          puts "Companies: #{companies}"
           @companies.reject(&:closed?)
         end
 
@@ -617,6 +634,26 @@ module Engine
         def exchangable_for_mountain_railway?(player, corporation)
           corporation.type == :major && @companies.find { |c| mountain_railway?(c) && c.owned_by?(player) }
         end
+
+        # Rule X.4, should be able to sell bundles with presidency share
+        def bundles_for_corporation(share_holder, corporation, shares: nil)
+          return super if !(two_player? && bond_railway?(corporation))
+
+          shares = (shares || share_holder.shares_of(corporation))
+
+          bundles = (1..shares.size).flat_map do |n|
+            shares.combination(n).to_a.map { |ss| Engine::ShareBundle.new(ss) }
+          end
+
+          bundles = bundles.uniq do |b|
+            [b.shares.count { |s| s.percent == 10 },
+             b.presidents_share ? 1 : 0,
+             b.shares.find(&:last_cert) ? 1 : 0]
+          end
+
+          bundles.sort_by(&:percent)
+        end
+
 
         def corporation_available?(entity)
           buyable?(entity)
@@ -710,7 +747,7 @@ module Engine
         # This 1837 version with some tweeks
         def merge_minor!(minor, corporation, allow_president_change: true)
           # 1824 ADD BEGIN
-          # Make it a proper major/national (eg. president is now possible?Id=)
+          # Make it a proper major/national (eg. president is now possible?)
           corporation.prepare_merge!
           # Note - do not use floated? here as this might change floated status.
           floated = corporation.floated
@@ -718,14 +755,23 @@ module Engine
 
           @log << "#{minor.name} merges into #{corporation.name}"
 
+          # This part has been simplified in 1824, as a minor can only have one owner
+          # and if its a lesser pre-staatsbahn it should correspond to a 10% share in
+          # the mergee, otherwise 20%.
           minor.share_holders.each do |sh, _|
             num_shares = sh.shares_of(minor).size
             next if num_shares.zero?
 
+            num_shares = 2 if coal_minor?(minor) || minor.id.end_with?('1')
+
+            share = corporation.shares.find { |s| !s.buyable && s.percent == num_shares * 10 }
             @log << "#{sh.name} receives #{num_shares} share#{num_shares > 1 ? 's' : ''} of #{corporation.name}"
-            shares = corporation.reserved_shares.take(num_shares)
-            shares.each { |s| s.buyable = true }
-            @share_pool.transfer_shares(ShareBundle.new(shares), sh, allow_president_change: allow_president_change)
+            share.buyable = true
+            puts "Transfer shares #{share}"
+
+            # 1824 fix. We explicitly set allow_president_change to true here as we otherwise get a strange
+            # behavior when presidency decided for nationals. Might need revisiting.
+            @share_pool.transfer_shares(share.to_bundle, sh, allow_president_change: true)
             if @round.respond_to?(:non_paying_shares) && operated_this_round?(minor)
               @round.non_paying_shares[sh][corporation] += num_shares
             end
@@ -892,6 +938,17 @@ module Engine
           @player_debts[player] || 0
         end
 
+        def set_last_train_buyer(buyer, train)
+          return unless two_player?
+
+          bond_railway = @corporations.find { |c| bond_railway?(c) }
+          return unless bond_railway.placed_tokens.size == 1
+
+          @last_train_buyer = buyer
+          @log << "Last #{train.name} bought by #{buyer.name} which means #{buyer.name} gets to put a #{bond_railway.name} "\
+                  'token anywhere where the slot it is free'
+        end
+
         private
 
         def potentially_form_nationals
@@ -1038,15 +1095,16 @@ module Engine
 
         def adjust_events_for_two_players(train)
           # KK forms on 5 trains instead of 6 trains, and UG is not present when 2 players
+          close_construction_event = 'close_construction_railways'
 
           if train[:name] == '4' && !@close_construction_company_when_first_5_sold
-            train[:events] << { 'type' => 'close_construction_railways'}
+            train[:events] = add_event(train, close_construction_event)
           end
 
           if train[:name] == '5'
             train[:events] = [{ 'type' => 'exchange_coal_companies' }, { 'type' => 'kk_formation' }]
-
-            train[:events] << { 'type' => 'close_construction_railways'} if @close_construction_company_when_first_5_sold
+            train[:events] = add_event(train, close_construction_event) if @close_construction_company_when_first_5_sold
+            train[:events] = add_event(train, 'vienna_tokened')
           end
 
           train[:events] = [] if train[:name] == '6'
@@ -1054,10 +1112,19 @@ module Engine
           train
         end
 
+        def add_event(train, event)
+          events = train[:events]
+          added_event = { 'type' =>  event }
+
+          events << added_event unless events.include?(added_event)
+
+          events
+        end
+
         def create_construction_railway_from_bought_pre_staatsbahn(player, company, minor)
           make_minor_construction_railway(company, minor)
 
-          national = corporation_by_id(company.sym[0..-1])
+          national = corporation_by_id(company.sym[0..-2])
           national.unreserve_one_share!
         end
 
@@ -1066,10 +1133,11 @@ module Engine
           make_minor_construction_railway(company, minor)
 
           regional.make_bond_railway!
-          regional.ipoed = true
-          regional.float!
           share_price = stock_market.share_price([6,1]) # This is the lower one at 50G
           stock_market.set_par(regional, share_price)
+          regional.shares.each do |s|
+            @share_pool.transfer_shares(s.to_bundle, @share_pool, price: 0, allow_president_change: false)
+          end
           association = "the associated Regional Railway of #{company.sym}"
           log << "#{regional.name} (#{association}) pars at #{format_currency(share_price.price)}"
           log << "#{regional.name} will not build or run trains but shareholders will receive current stock value in revenue each OR"
@@ -1091,6 +1159,7 @@ module Engine
             reachable: true,
             free: true,
             special: false,
+            consume_tile_lay: true,
             when: 'track')
         end
       end

@@ -36,7 +36,7 @@ module Engine
             @game.sorted_corporations.reject { |c| c.type == :minor || c.type == :construction_railway }
           end
 
-          def can_buy?(_entity, bundle)
+          def can_buy?(_entity, bundle, exchange: false)
             super && @game.buyable?(bundle.corporation)
           end
 
@@ -47,7 +47,6 @@ module Engine
           def can_sell?(_entity, bundle)
             # Rule VI.8, bullet 1, sub-bullet 2: Bank ownership cannot exceed 50% for started corporations
             corp = bundle.corporation
-            puts "entity #{_entity}, corp #{corp.name}, super #{super}, game buyable? #{@game.buyable?(corp)}, bond corp? #{@game.bond_railway?(corp)}"
             super && @game.buyable?(corp) &&
                     (@game.bond_railway?(corp) || (corp.ipo_shares.sum(&:percent) + bundle.percent <= 50))
           end
@@ -70,8 +69,15 @@ module Engine
             corporation = bundle.corporation
             return false if invalid_mountain_railway_exchange?(entity, corporation, exchange)
 
-            (exchange || corporation.holding_ok?(entity, bundle.common_percent)) &&
+            (exchange || corporation.holding_ok?(entity, bundle.common_percent) || allowed_buy_from_market(entity, bundle)) &&
               (@game.num_certs(entity) < @game.cert_limit(entity)) && @game.buyable?(corporation)
+          end
+
+          # Rule X.4, bullet 2: Maybe exceed 60% in 2 player 1824, if buying from market
+          def allowed_buy_from_market(entity, bundle)
+            return false unless @game.two_player?
+
+            bundle.shares.first.owner == @game.share_pool
           end
 
           def process_buy_shares(action)

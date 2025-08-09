@@ -97,9 +97,7 @@ module Engine
           end
 
           def any_stacks_left?
-            result = @game.companies.find { |c| c.stack }
-            puts "any_stacks_left? #{result}"
-            result
+            @game.companies.find { |c| c.stack }
           end
         end
       end

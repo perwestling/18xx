@@ -70,7 +70,7 @@ module Engine
         # We need to unreserve one of the shares of the national.
         def unreserve_one_share!
           shares.each do |share|
-            next if share.buyable
+            next if share.buyable || share.percent > 10
 
             share.buyable = true
             break
@@ -98,18 +98,23 @@ module Engine
         def make_construction_railway!
           @type = :construction_railway
           a = @abilities.first
-          puts "Remove ability #{a}"
           remove_ability(a)
         end
 
         def make_bond_railway!
           @type = :bond_railway
           remove_reserve_for_all_shares!
+          @ipoed = true
+          float!
+
+          # Presidency share is treated as a double cert
+          @presidents_share.double_cert = true
         end
 
-        def close!
+        def receivership?
+          return true if @type == :bond_railway
+
           super
-          puts "#{self.name} was closed"
         end
       end
     end
