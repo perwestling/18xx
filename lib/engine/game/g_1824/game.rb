@@ -77,7 +77,7 @@ module Engine
           'ug_formation' => ['UG formation', 'UG forms at the end of the OR'],
           'kk_formation' => ['k&k formation', 'KK forms at the end of the OR'],
           'close_construction_railways' => ['Close Construction Railways', 'All construction minors are closed'],
-          'vienna_tokened' => ['Vienna tokened', 'The last token of the bond railway is placed in Vienna'],
+          'vienna_tokened' => ['Vienna tokened', 'When Vienna is upgraded to Brown the last token of the bond railway is placed there'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
@@ -374,6 +374,7 @@ module Engine
           G1824::Round::Operating.new(self, [
             G1837::Step::Bankrupt,
             G1837::Step::DiscardTrain,
+            G1824::Step::BondToken,
             Engine::Step::SpecialTrack,
             G1824::Step::Track,
             Engine::Step::Token,
@@ -435,7 +436,8 @@ module Engine
           @kk_to_form = false
 
           # Used in two-player for extra tokening
-          @last_train_buyer = nil
+          clear_extra_token_entity
+          clear_vienna_token_entity
         end
 
         def setup_mines
@@ -546,6 +548,7 @@ module Engine
 
         def event_vienna_tokened!
           @log << "-- Event: #{EVENTS_TEXT['vienna_tokened'][1]} --"
+          set_token_vienna_when_brown
         end
 
         def status_str(entity)
@@ -621,6 +624,10 @@ module Engine
           return false unless regional?(entity)
 
           entity.floatable
+        end
+
+        def bond_railway
+          @bond_railway ||= @corporations.find { |c| bond_railway?(c) }
         end
 
         def buyable?(entity)
@@ -767,7 +774,6 @@ module Engine
             share = corporation.shares.find { |s| !s.buyable && s.percent == num_shares * 10 }
             @log << "#{sh.name} receives #{num_shares} share#{num_shares > 1 ? 's' : ''} of #{corporation.name}"
             share.buyable = true
-            puts "Transfer shares #{share}"
 
             # 1824 fix. We explicitly set allow_president_change to true here as we otherwise get a strange
             # behavior when presidency decided for nationals. Might need revisiting.
@@ -941,12 +947,58 @@ module Engine
         def set_last_train_buyer(buyer, train)
           return unless two_player?
 
-          bond_railway = @corporations.find { |c| bond_railway?(c) }
-          return unless bond_railway.placed_tokens.size == 1
+          if bond_railway.placed_tokens.size > 1
+            @last_train_buyer = nil
+            return
+          end
 
           @last_train_buyer = buyer
-          @log << "Last #{train.name} bought by #{buyer.name} which means #{buyer.name} gets to put a #{bond_railway.name} "\
+          @log << "Last #{train.name} bought by #{buyer.name} which means "\
+                  "#{buyer.name} (#{buyer.owner.name}) gets to put a #{bond_railway.name} "\
                   'token anywhere where the slot it is free'
+        end
+
+        def extra_token_entity
+          @last_train_buyer
+        end
+
+        def clear_extra_token_entity
+          @last_train_buyer = nil
+        end
+
+        def set_token_vienna_when_brown
+          return unless two_player?
+
+          @token_vienna_when_brown = true
+        end
+
+        def set_token_vienna_entity(entity)
+          return unless two_player?
+
+          @log << "Vienna upgraded to brown by #{entity.name} which means "\
+                  "#{entity.name} (#{entity.owner.name}) gets to put a token in Vienna"
+          @token_vienna_entity = entity
+        end
+
+        def vienna_token_entity
+          return unless two_player?
+          return unless @token_vienna_when_brown
+
+          @token_vienna_entity
+        end
+
+        def clear_vienna_token_entity
+          @token_vienna_when_brown = nil
+          @token_vienna_entity = nil
+        end
+
+        def token_owner(_entity)
+          # This is so that extra token uses bond railway
+          # despite it not being active. This is for 2 player
+          # when last 4 (or 5) train is bought to place 2nd token.
+          return bond_railway if extra_token_entity
+
+          super
         end
 
         private
@@ -1138,6 +1190,10 @@ module Engine
           regional.shares.each do |s|
             @share_pool.transfer_shares(s.to_bundle, @share_pool, price: 0, allow_president_change: false)
           end
+
+          # Tokens placed via events should be free
+          regional.tokens.each { |t| t.price = 0 }
+
           association = "the associated Regional Railway of #{company.sym}"
           log << "#{regional.name} (#{association}) pars at #{format_currency(share_price.price)}"
           log << "#{regional.name} will not build or run trains but shareholders will receive current stock value in revenue each OR"

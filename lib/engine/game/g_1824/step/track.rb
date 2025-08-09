@@ -21,6 +21,21 @@ module Engine
             @log << "#{spender.name} lays tile ##{tile.name} with rotation #{rotation} on #{hex.name}"\
                 "#{tile.location_name.to_s.empty? ? '' : " (#{tile.location_name})"}"
           end
+
+          def lay_tile_action(action, entity: nil, spender: nil)
+            tile = action.tile
+            hex = action.hex
+
+            old_tile = action.hex.tile
+            tile_lay = get_tile_lay(action.entity)
+
+            super
+
+            # Rule XI.4: Trigger potential Vienna tokening (for 2 players) when Vienna upgraded to brown
+            if track_upgrade?(old_tile, tile, action.hex) && action.hex.id == 'E12' && tile.name == '493'
+              @game.set_token_vienna_entity(action.entity)
+            end
+          end
         end
       end
     end
