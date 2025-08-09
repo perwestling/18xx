@@ -56,13 +56,14 @@ module Engine
               revenue_str: '',
               routes: routes
             )
-            @round.routes = routes
             entity.operating_history[[@game.turn, @round.round_num]] = OperatingInfo.new(
               routes,
               action,
               revenue,
               @round.laid_hexes
             )
+            @round.routes = []
+            @round.extra_revenue = 0
             payout_shares(entity, revenue)
             change_share_price(entity, payout)
             pass!
