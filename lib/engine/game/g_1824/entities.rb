@@ -80,7 +80,7 @@ module Engine
             revenue: 0,
             desc: 'Located in Wien (E12) with 240K starting capital. '\
                   "Buyer take control of pre-staatsbahn KK1. KK1 will be exchanged for the Director's certificate "\
-                  'of Staatsbahn KK when the first 6 train is sold. KK1 cannot be sold.',
+                  'of Staatsbahn KK at the end of the OR the first 6 train was sold in. KK1 cannot be sold.',
             color: :brown,
             text_color: :white,
             meta: { start_packet: true, type: :pre_staatsbahn_primary },
@@ -93,7 +93,7 @@ module Engine
             revenue: 0,
             desc: 'Located in Wien (E12) with 120K starting capital. '\
                   'Buyer take control of Pre-Staatsbahn KK2. KK2 will be exchanged for a 10% share of Staatsbahn '\
-                  'KK when the first 6 train is sold. KK2 cannot be sold.',
+                  'KK at the end of the OR the first 6 train is sold. KK2 cannot be sold.',
             color: :brown,
             text_color: :white,
             meta: { start_packet: true, type: :pre_staatsbahn_secondary },
@@ -106,7 +106,7 @@ module Engine
             revenue: 0,
             desc: 'Located in Wien (E12) with 240K starting capital. '\
                   "Buyer take control of Pre-Staatsbahn SD1. SD1 will be exchanged for the Director's certificate "\
-                  'of Staatsbahn SD when the first 4 train is sold. SD1 cannot be sold.',
+                  'of Staatsbahn SD at the end of the OR the first 4 train is sold. SD1 cannot be sold.',
             color: :orange,
             meta: { start_packet: true, type: :pre_staatsbahn_primary },
             abilities: [
@@ -120,7 +120,7 @@ module Engine
             revenue: 0,
             desc: 'Located in Graz (G10) with 120K starting capital. '\
                   'Buyer take control of Pre-Staatsbahn SD2. SD2 will be exchanged for a 10% share of Staatsbahn '\
-                  'SD when the first 4 train is sold. SD2 cannot be sold.',
+                  'SD at the end of the OR the first 4 train is sold. SD2 cannot be sold.',
             color: :orange,
             meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [
@@ -134,7 +134,7 @@ module Engine
             revenue: 0,
             desc: 'Located in Innsbruck (G4) with 120K starting capital. '\
                   'Buyer take control of Pre-Staatsbahn SD3. SD3 will be exchanged for a 10% share of Staatsbahn '\
-                  'SD when the first 4 train is sold. SD3 cannot be sold.',
+                  'SD at the end of the OR the first 4 train is sold. SD3 cannot be sold.',
             color: :orange,
             meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [
@@ -148,8 +148,9 @@ module Engine
             revenue: 0,
             desc: 'Located in Pest (F17) with 240K starting capital. '\
                   "Buyer take control of pre-staatsbahn UG1. UG1 will be exchanged for the Director's certificate "\
-                  'in Staatsbahn UG when the first 5 train is sold. UG1 cannot be sold.',
+                  'in Staatsbahn UG at the end of the OR the first 5 train is sold. UG1 cannot be sold.',
             color: :pink,
+            text_color: :black,
             meta: { start_packet: true, type: :pre_staatsbahn_primary },
             abilities: [{ type: 'shares', shares: 'UG1_0' }],
           },
@@ -159,8 +160,9 @@ module Engine
             value: 80,
             desc: 'Located in Fünfkirchener (H15) with 120K starting capital. '\
                   'Buyer take control of Pre-Staatsbahn UG2. UG2 will be exchanged for a 10% share of Staatsbahn '\
-                  'UG when the first 5 train is sold. UG2 cannot be sold.',
+                  'UG at the end of the OR the 5 train is sold. UG2 cannot be sold.',
             color: :pink,
+            text_color: :black,
             meta: { start_packet: true, type: :pre_staatsbahn_secondary },
             abilities: [{ type: 'shares', shares: 'UG2_0' }],
           },
