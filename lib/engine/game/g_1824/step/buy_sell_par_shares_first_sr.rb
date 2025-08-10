@@ -7,23 +7,18 @@ module Engine
     module G1824
       module Step
         class BuySellParSharesFirstSr < Engine::Step::BuySellParShares
-
           def actions(entity)
             actions = super
-                    
+
             return actions unless @game.two_player?
-            
-            if @game.companies.find { |c| c.stack && c.stack < 4 }
-              actions.delete(:pass)
-            end
+
+            actions.delete(:pass) if @game.companies.find { |c| c.stack && c.stack < 4 }
 
             actions
           end
 
           def can_buy_company?(player, company)
-            if @game.two_player? && @game.mountain_railway?(company)
-               return false if any_stacks_left? || already_bought_mountain_railway?(player)
-            end
+            allowed_to_buy_mr?(player) if @game.two_player? && @game.mountain_railway?(company)
 
             !bought?
           end
@@ -52,10 +47,8 @@ module Engine
             @game.sorted_corporations.reject { |c| c.closed? || c.type == :minor || c.type == :construction_railway }
 
             # TODO: Should corporations be visible for 3-6 players during first SR?
-
             # # None if Cislethania variant
             # return [] if @game.option_cisleithania
-
             # # Rule VI.3 bullet 4 - only BH available of the Regional Railways
             # [@game.corporation_by_id('BH')]
           end
@@ -65,17 +58,13 @@ module Engine
 
             company = action.company
             player = action.entity
-            @game.log << "#{player.name} buys from Stack #{company.stack}" if company.stack
 
             if bought_from_different_stack?(company)
               a_p = @game.players.find { |p| p != player }
               raise GameError, "#{player.name} must buy from stack #{@game.current_stack} as #{a_p.name} bought from it"
-            else 
-              if @game.current_stack
-                @game.current_stack = nil
-              else
-                @game.current_stack = company.stack
-              end
+            else
+              @game.log << "#{player.name} buys from Stack #{company.stack}" if company.stack
+              @game.current_stack = @game.current_stack ? nil : company.stack
               super
             end
           end
@@ -92,12 +81,14 @@ module Engine
             any_stacks_left?
           end
 
-          def already_bought_mountain_railway?(player)
-            @game.companies.count { |c| @game.mountain_railway?(c) && c.owner == player } > 0
+          def any_stacks_left?
+            @game.companies.find(&:stack)
           end
 
-          def any_stacks_left?
-            @game.companies.find { |c| c.stack }
+          def allowed_to_buy_mr?(player)
+            return false if any_stacks_left?
+
+            @game.companies.count { |c| @game.mountain_railway?(c) && c.owner == player }.zero?
           end
         end
       end

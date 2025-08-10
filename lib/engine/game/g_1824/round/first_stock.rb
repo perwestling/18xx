@@ -15,16 +15,18 @@ module Engine
 
           def setup
             if @game.two_player?
-              @game.log << 'During First Stock Round one player selects one paper from Stack 1-4, '\
-                           'and the other player gets the other paper in that Stack. The order will '\
+              @game.log << 'During First Stock Round one player selects one company from Stack 1-4, '\
+                           'and the other player gets the other company in that Stack. The order will '\
                            'be reversed for the first stack, then normal.'
-              @game.log << 'NOTE! The two pre-staatsbahn in stack 1 are construction railways which do not own '\
-                           'or run any trains, just build track for free.'
-              @game.log << 'NOTE! Pass is not allowed for Stack 1-3. Stack 4 and Mountain Railways are optional.'
+              @game.log << 'NOTE! The two railways in stack 1 are construction railways which do not own '\
+                           'nor run any trains, just build track for free.'
+              @game.log << 'NOTE! Pass is not allowed for Stack 1-4. Mountain Railways are optional, max one per '\
+                           'player, and any unsold will be removed from the game.'
+            else
+              @game.log << 'After First Stock Round is finished any unsold Pre-State Railways, Coal Railways, '\
+                           'and Mountain Railways will be removed from the game'
             end
 
-            @game.log << 'After First Stock Round is finished any unsold Pre-State Railways, Coal Railways, '\
-                            'and Mountain Railways will be removed from the game'
             @reverse = true
             @order_notified = false
 

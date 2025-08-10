@@ -74,7 +74,7 @@ module Engine
           end
 
           # Rule X.4, bullet 2: Maybe exceed 60% in 2 player 1824, if buying from market
-          def allowed_buy_from_market(entity, bundle)
+          def allowed_buy_from_market(_entity, bundle)
             return false unless @game.two_player?
 
             bundle.shares.first.owner == @game.share_pool

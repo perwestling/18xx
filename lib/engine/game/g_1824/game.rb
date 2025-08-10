@@ -27,7 +27,8 @@ module Engine
         CORPORATION_CLASS = G1824::Corporation
         DEPOT_CLASS = G1824::Depot
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash, :player_debts, :current_stack
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash, :player_debts,
+                      :current_stack
 
         # TODO: Can these be removed? They do not seem to be used in 1824?
         register_colors(
@@ -77,7 +78,8 @@ module Engine
           'ug_formation' => ['UG formation', 'UG forms at the end of the OR'],
           'kk_formation' => ['k&k formation', 'KK forms at the end of the OR'],
           'close_construction_railways' => ['Close Construction Railways', 'All construction minors are closed'],
-          'vienna_tokened' => ['Vienna tokened', 'When Vienna is upgraded to Brown the last token of the bond railway is placed there'],
+          'vienna_tokened' => ['Vienna tokened',
+                               'When Vienna is upgraded to Brown the last token of the bond railway is placed there'],
         ).freeze
 
         STATUS_TEXT = Base::STATUS_TEXT.merge(
@@ -541,14 +543,12 @@ module Engine
             c.tokens.first.swap!(blocking_token, check_tokenable: false) if c.color == :black
             close_corporation(c, quiet: true)
             graph.clear_graph_for(c)
-
-            # TODO Extra token by Bond railway?
           end
         end
 
         def event_vienna_tokened!
           @log << "-- Event: #{EVENTS_TEXT['vienna_tokened'][1]} --"
-          set_token_vienna_when_brown
+          @token_vienna_when_brown = true
         end
 
         def status_str(entity)
@@ -631,9 +631,8 @@ module Engine
         end
 
         def buyable?(entity)
-          # TODO: Is this OK?
+          # TODO: Is this OK? Do we still need buyable?
           return true if entity.nil?
-          # return true unless entity.corporation?
 
           entity.all_abilities.none? { |a| a.type == :no_buy }
         end
@@ -644,7 +643,8 @@ module Engine
 
         # Rule X.4, should be able to sell bundles with presidency share
         def bundles_for_corporation(share_holder, corporation, shares: nil)
-          return super if !(two_player? && bond_railway?(corporation))
+          return super unless two_player?
+          return super unless bond_railway?(corporation)
 
           shares = (shares || share_holder.shares_of(corporation))
 
@@ -660,7 +660,6 @@ module Engine
 
           bundles.sort_by(&:percent)
         end
-
 
         def corporation_available?(entity)
           buyable?(entity)
@@ -726,9 +725,9 @@ module Engine
           # Need to handle construction railways when two player variant
           if two_player? && company.stack == 1
             if pre_staatsbahn?(minor)
-              create_construction_railway_from_bought_pre_staatsbahn(player, company, minor)
+              create_construction_railway_from_bought_pre_staatsbahn(company, minor)
             else
-              create_construction_railways_from_coal_mine(player, company, minor)
+              create_construction_railways_from_coal_mine(company, minor)
             end
 
             company.stack = nil
@@ -748,7 +747,7 @@ module Engine
           share_price = stock_market.par_prices.find { |s| s.price == price / 2 }
           stock_market.set_par(regional_railway, share_price)
           association = "the associated Regional Railway of #{id}"
-          log << "#{regional_railway.name} (#{association}) pars at #{format_currency(share_price.price)}"
+          log << "#{regional_railway.name} (#{association}) pars at #{format_currency(share_price.price)}."
         end
 
         # This 1837 version with some tweeks
@@ -837,14 +836,14 @@ module Engine
 
         def associated_regional_name(coal_railway)
           case coal_railway.sym
-            when 'EPP'
-              'BK'
-            when 'EOD'
-              'MS'
-            when 'MLB'
-              'CL'
-            when 'SPB'
-              'SB'
+          when 'EPP'
+            'BK'
+          when 'EOD'
+            'MS'
+          when 'MLB'
+            'CL'
+          when 'SPB'
+            'SB'
           end
         end
 
@@ -917,7 +916,7 @@ module Engine
             new_loan = loan + interest
             @player_debts[player] = new_loan
             @log << "#{player.name} increases their loan by 50% (#{format_currency(interest)}) to "\
-                    "#{format_currency(new_loan)}"
+                    "#{format_currency(new_loan)}."
           end
         end
 
@@ -933,10 +932,10 @@ module Engine
 
           @log <<
             if payoff_amount == loan_balance
-              "#{player.name} pays off their loan of #{format_currency(loan_balance)}"
+              "#{player.name} pays off their loan of #{format_currency(loan_balance)}."
             else
               "#{player.name} decreases their loan by #{format_currency(payoff_amount)} "\
-                "(#{format_currency(@player_debts[player])})"
+                "(#{format_currency(@player_debts[player])})."
             end
         end
 
@@ -955,7 +954,7 @@ module Engine
           @last_train_buyer = buyer
           @log << "Last #{train.name} bought by #{buyer.name} which means "\
                   "#{buyer.name} (#{buyer.owner.name}) gets to put a #{bond_railway.name} "\
-                  'token anywhere where the slot it is free'
+                  'token anywhere where the slot it is free.'
         end
 
         def extra_token_entity
@@ -966,17 +965,11 @@ module Engine
           @last_train_buyer = nil
         end
 
-        def set_token_vienna_when_brown
-          return unless two_player?
-
-          @token_vienna_when_brown = true
-        end
-
-        def set_token_vienna_entity(entity)
+        def notify_vienna_can_be_tokened_by_bond_railway(entity)
           return unless two_player?
 
           @log << "Vienna upgraded to brown by #{entity.name} which means "\
-                  "#{entity.name} (#{entity.owner.name}) gets to put a token in Vienna"
+                  "#{entity.name} (#{entity.owner.name}) gets to put a #{bond_railway.name} token in Vienna."
           @token_vienna_entity = entity
         end
 
@@ -1060,9 +1053,9 @@ module Engine
             {
               type: 'exchange',
               description: 'Exchange for share in available Regional Railway',
-              owner_type: 'player',
               corporations: %w[CL BH BK MS SB],
-              when: 'any',  # Need to be able to use in SR and during forced exchange in OR
+              owner_type: 'player',
+              when: 'any', # Need to be able to use in SR and during forced exchange in OR
               from: %w[ipo market],
             },
           ],
@@ -1085,7 +1078,7 @@ module Engine
           return header unless company.stack
 
           real_header = "#{header} STACK #{company.stack}"
-          real_header += " (CR)" if company.stack == 1
+          real_header += ' (CR)' if company.stack == 1
           real_header
         end
 
@@ -1104,8 +1097,8 @@ module Engine
           select_randomly(coal_companies).stack = 1
           select_randomly(pre_staatsbahns_secondary).stack = 1
           pre_staatsbahns_primary.each { |c| c.stack = 2 }
-          pre_staatsbahns_secondary.select {|c| c.stack.nil? }.each { |c| c.stack = 3 }
-          coal_companies.select {|c| c.stack.nil? }.each { |c| c.stack = 4 }
+          pre_staatsbahns_secondary.select { |c| c.stack.nil? }.each { |c| c.stack = 3 }
+          coal_companies.select { |c| c.stack.nil? }.each { |c| c.stack = 4 }
 
           # Adjust descriptions so they match 2 player rules
           companies.select { |c| c.sym == 'KK1' }.each do |c|
@@ -1113,7 +1106,6 @@ module Engine
             c.desc = c.desc.gsub(/first 6 train/, 'first 5 train')
           end
           pre_staatsbahns_secondary.select { |c| c.stack == 1 }.each do |c|
-
             # Rule X.3, penultimate paragraph: if KK1 is in stack 1, close construction corporations
             # when 1st 5 train is bought, otherwise close when 1st 4 train is bought
             @close_construction_company_when_first_5_sold = (c.sym == 'KK2')
@@ -1124,12 +1116,10 @@ module Engine
             desc = 'Buyer take control of pre-staatsbahn XXX. That Railway will be a Construction Company '\
                    'which just builds track, for free - no treasury or trains. '\
                    "When first #{closed_construction} train is bought XXX closes, and #{format_currency(c.value)} "\
-                   "is added to the treasury of YYY."
-                   'XXX cannot be exchanged for any shares, and no shares are reserved.'
+                   'is added to the treasury of YYY. XXX cannot be exchanged for any shares, and no shares are reserved.'
             c.desc = desc.gsub(/XXX/, c.sym).gsub(/YYY/, c.sym[0..-1])
           end
           coal_companies.select { |c| c.stack == 1 }.each do |c|
-
             # According to rule clarification, see https://boardgamegeek.com/thread/2929817/questions-about-2-player-variant
             c.make_construction_company!
 
@@ -1166,26 +1156,26 @@ module Engine
 
         def add_event(train, event)
           events = train[:events]
-          added_event = { 'type' =>  event }
+          added_event = { 'type' => event }
 
           events << added_event unless events.include?(added_event)
 
           events
         end
 
-        def create_construction_railway_from_bought_pre_staatsbahn(player, company, minor)
-          make_minor_construction_railway(company, minor)
+        def create_construction_railway_from_bought_pre_staatsbahn(company, minor)
+          make_minor_construction_railway(minor)
 
           national = corporation_by_id(company.sym[0..-2])
           national.unreserve_one_share!
         end
 
-        def create_construction_railways_from_coal_mine(player, company, minor)
+        def create_construction_railways_from_coal_mine(company, minor)
           regional = get_associated_regional_railway(minor)
-          make_minor_construction_railway(company, minor)
+          make_minor_construction_railway(minor)
 
           regional.make_bond_railway!
-          share_price = stock_market.share_price([6,1]) # This is the lower one at 50G
+          share_price = stock_market.share_price([6, 1]) # This is the lower one at 50G
           stock_market.set_par(regional, share_price)
           regional.shares.each do |s|
             @share_pool.transfer_shares(s.to_bundle, @share_pool, price: 0, allow_president_change: false)
@@ -1195,12 +1185,13 @@ module Engine
           regional.tokens.each { |t| t.price = 0 }
 
           association = "the associated Regional Railway of #{company.sym}"
-          log << "#{regional.name} (#{association}) pars at #{format_currency(share_price.price)}"
-          log << "#{regional.name} will not build or run trains but shareholders will receive current stock value in revenue each OR"
+          log << "#{regional.name} (#{association}) pars at #{format_currency(share_price.price)}."
+          log << "#{regional.name} will not build or run trains but shareholders will receive current stock value "\
+                 'in revenue each OR.'
         end
 
-        def make_minor_construction_railway(company, minor)
-          @log << "#{minor.name} returns its cash to the bank as it does not use any money"
+        def make_minor_construction_railway(minor)
+          @log << "#{minor.name} returns its cash to the bank as it does not use any money."
           minor.spend(minor.cash, @bank)
           minor.add_ability(free_tile_lay_ability)
           minor.make_construction_railway!
@@ -1216,7 +1207,8 @@ module Engine
             free: true,
             special: false,
             consume_tile_lay: true,
-            when: 'track')
+            when: 'track'
+          )
         end
       end
     end

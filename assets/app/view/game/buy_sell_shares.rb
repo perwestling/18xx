@@ -276,9 +276,7 @@ module View
 
         source_entities.each do |entity|
           @game.abilities(entity, :exchange) do |ability|
-            puts "EXCHANGE CORPORATIONS"
             next unless @game.exchange_corporations(ability).include?(@corporation)
-            puts "CURRENT ENTITY"
             next unless entity.owner == @current_entity
 
             if ability.from.include?(:ipo)

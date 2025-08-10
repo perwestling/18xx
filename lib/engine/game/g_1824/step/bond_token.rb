@@ -49,7 +49,7 @@ module Engine
             [token, nil]
           end
 
-          def available_tokens(entity)
+          def available_tokens(_entity)
             @game.bond_railway.tokens_by_type
           end
 

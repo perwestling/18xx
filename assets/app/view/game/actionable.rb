@@ -151,11 +151,11 @@ module View
 
         clear_ui_state
         store(:game, game)
-      # rescue StandardError => e
-      #   LOGGER.error(e)
-      #   clear_ui_state
-      #   store(:flash_opts, e.message)
-      #   `setTimeout(function() { self['$store']('game', Opal.nil) }, 10)`
+      rescue StandardError => e
+        LOGGER.error(e)
+        clear_ui_state
+        store(:flash_opts, e.message)
+        `setTimeout(function() { self['$store']('game', Opal.nil) }, 10)`
       end
 
       def clear_ui_state
