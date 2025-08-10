@@ -304,6 +304,7 @@ module Engine
             coordinates: 'F17',
             city: 1,
             color: :pink,
+            text_color: :black,
           },
           {
             name: 'Mohacs-Fünfkirchner Bahn (UG2)',
@@ -316,6 +317,7 @@ module Engine
             type: 'minor',
             coordinates: 'H15',
             color: :pink,
+            text_color: :black,
           },
           {
             name: 'Kaiserin Elisabeth-Bahn (KK1)',
@@ -412,7 +414,6 @@ module Engine
             type: 'major',
             coordinates: 'G26',
             color: :green,
-            text_color: :black,
           },
           {
             name: 'Südbahn',
@@ -452,6 +453,7 @@ module Engine
             type: 'national',
             floatable: false,
             color: :pink,
+            text_color: :black,
           },
         ].freeze
       end
