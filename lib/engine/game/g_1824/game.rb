@@ -1039,7 +1039,7 @@ module Engine
           value: 120,
           revenue: 25,
           desc: 'When the first 3 train has been bought, during an SR, this Mountain Railway can be exchanged '\
-                'for a 10%% share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
+                'for a regular share in any Regional Railway. As soon as the first 4 train is bought all remaining '\
                 'Mountain Railways will directly do a mandatory exchange, in numerical ascending order. '\
                 'If no Regional Railway shares are available from IPO, this private is lost without compensation. '\
                 'A Mountain Railway cannot otherwise be sold. %1$s has order number: %2$d',
