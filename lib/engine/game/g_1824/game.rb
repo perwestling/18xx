@@ -876,17 +876,17 @@ module Engine
           when 'BK', 'MS', 'CL', 'SB'
             needed = entity.percent_to_float
             if needed.positive?
-              need_exchange = entity.floatable ? '' : ' + exchange'
+              need_exchange = entity.floatable ? '' : ' + exchange '
               "#{entity.percent_to_float}%#{need_exchange} to float"
             else
               'Exchange to float'
             end
           when 'UG'
-            'UG1 exchange floats'
+            'UG1 exchange to float'
           when 'KK'
-            'KK1 exchange floats'
+            'KK1 exchange to float'
           when 'SD'
-            'SD1 exchange floats'
+            'SD1 exchange to float'
           else
             super
           end

@@ -296,7 +296,7 @@ module Engine
             sym: 'UG1',
             logo: '1824/U1',
             tokens: [0],
-            reserved_shares: [50, 50],
+            reserved_shares: [100],
             treasury_as_holding: true,
             float_percent: 50,
             max_ownership_percent: 100,
