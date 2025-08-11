@@ -157,7 +157,7 @@ module Engine
           {
             name: 'Mohacs-Fünfkirchener Bahn (UG2)',
             sym: 'UG2',
-            value: 80,
+            value: 120,
             desc: 'Located in Fünfkirchener (H15) with 120K starting capital. '\
                   'Buyer take control of Pre-Staatsbahn UG2. UG2 will be exchanged for a 10% share of Staatsbahn '\
                   'UG at the end of the OR the 5 train is sold. UG2 cannot be sold.',
