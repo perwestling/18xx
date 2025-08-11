@@ -27,8 +27,7 @@ module Engine
         CORPORATION_CLASS = G1824::Corporation
         DEPOT_CLASS = G1824::Depot
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :coal_company_initial_cash, :player_debts,
-                      :current_stack
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :player_debts, :current_stack
 
         # TODO: Can these be removed? They do not seem to be used in 1824?
         register_colors(
@@ -147,8 +146,24 @@ module Engine
           G1824::SharePool.new(self)
         end
 
+        # Need to handle special valuation of some minors, and also handle debt
         def player_value(player)
-          player.value - @player_debts[player]
+          shares_valuation = player.shares.select { |s| s.corporation.ipoed }.sum { |s| player_share_valuation(s) }
+          player.cash + shares_valuation + player.companies.sum(&:value) - @player_debts[player]
+        end
+
+        def player_share_valuation(share)
+          corp = share.corporation
+
+          # Coal railways are worth bought price (which is actually par price for the associated regional)
+          # but I use this 1824 attribute Corporation#coal_price as it is needed before regional is IPOed.
+          return corp.coal_price if coal_railway?(corp)
+
+          # The share price seems to be 120G for all other minors, but SD1/UG1/KK1 are worth 240G, as
+          # they correspond to the 20% share of the national.
+          return share.price * 2 if corp.id.end_with?('1')
+
+          share.price
         end
 
         def game_cert_limit
@@ -424,10 +439,6 @@ module Engine
           # When 1st 4-train is bought any remaining MRs will be exchanged
           @forced_mountain_railway_exchange = []
 
-          # Used to remember what coal companies was bought for
-          # TODO: Improve this solution
-          @coal_company_initial_cash = Hash.new { |h, k| h[k] = [] }
-
           # Initialize the player depts, if player have to take an emergency loan
           @player_debts = Hash.new { |h, k| h[k] = 0 }
 
@@ -694,20 +705,21 @@ module Engine
           merge_minor!(minor, target)
         end
 
-        def minor_initial_cash(minor)
+        # Slightly modified compared to 1837
+        def minor_initial_cash(minor, price)
           case minor.id
           when 'KK1', 'SD1', 'UG1'
             240
           when 'KK2', 'SD2', 'SD3', 'UG2'
             120
           else
-            @coal_company_initial_cash[minor.id]
+            minor.coal_price = price if coal_railway?(minor)
+            price
           end
         end
 
         # This is modified quite a lot compared to 1837
         def after_buy_company(player, company, price)
-          @coal_company_initial_cash[company.id] = price
           return if mountain_railway?(company)
 
           id = company.id
@@ -715,7 +727,7 @@ module Engine
           abilities(company, :shares) do |ability|
             share = ability.shares.first
             @share_pool.buy_shares(player, share, exchange: :free)
-            float_minor!(share.corporation) if share.president
+            float_minor!(share.corporation, price) if share.president
           end
 
           company.close!
@@ -877,6 +889,19 @@ module Engine
             'SD1 exchange floats'
           else
             super
+          end
+        end
+
+        # Simplified version compared to 1837
+        def float_minor!(minor, price)
+          cash = minor_initial_cash(minor, price)
+          @bank.spend(cash, minor)
+          @log << "#{minor.name} receives #{format_currency(cash)}"
+          place_home_token(minor)
+          if minor.corporation?
+            minor.floated = true
+          else
+            minor.float!
           end
         end
 

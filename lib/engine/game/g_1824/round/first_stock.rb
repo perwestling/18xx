@@ -94,10 +94,6 @@ module Engine
               end
 
               # Rule VI.3, bullet 10: Pre-State Railways not bought are removed from the game
-              # # Make reserved share of associated corporation unreserved
-              # regional.shares.find(&:president).buyable = true
-              # regional.floatable = true
-              # # Preestatsbahn closes
               # 1. Close company representing the pre-staatsbahn
               # 2. Close connected Preestatsbahn Minor
               # 3. Remove reservation of starting city

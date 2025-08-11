@@ -6,6 +6,9 @@ module Engine
   module Game
     module G1824
       class Corporation < Engine::Corporation
+        # Used for correct valuation of coal railway shares
+        attr_accessor :coal_price
+
         def initialize(sym:, name:, **opts)
           ipo_shares = opts[:ipo_shares] || []
           @reserved_ipo_shares = opts[:reserved_shares] || []
@@ -26,6 +29,9 @@ module Engine
 
           # Used for 2 player variant initial SR
           @stack = nil
+
+          # Used for coal railway valuation
+          @coal_price = 0
         end
 
         def floated?
