@@ -333,9 +333,9 @@ module Engine
           :bank
         end
 
-        # 1824 use normal tile upgrades so use Base version instead
-        def upgrades_to?(from, to, special = false, selected_company: nil)
-          Base.instance_method(:upgrades_to?).bind_call(self, from, to, special, selected_company)
+        # Needed to shortcut 1837 special behavior in upgrades_to?
+        def use_yellow_town_tile_upgrades_to?(_from)
+          false
         end
 
         # Similar to 1837
@@ -720,6 +720,12 @@ module Engine
 
         # This is modified quite a lot compared to 1837
         def after_buy_company(player, company, price)
+          do_after_buy_company(player, company, price)
+
+          log << "#{player.name} has now value #{player_value(player)}"
+        end
+
+        def do_after_buy_company(player, company, price)
           return if mountain_railway?(company)
 
           id = company.id
@@ -906,8 +912,9 @@ module Engine
         end
 
         # 1824 uses standard sold out stock movement. Rule VIII.3, bullet 4: move up 1 if not at top
-        def sold_out_stock_movement(corporation)
-          Base.instance_method(:sold_out_stock_movement).bind_call(self, corporation)
+        # Disable 1837 special for sold out stock movement, and instead uses base version
+        def use_diagonal_stock_movement?
+          false
         end
 
         def take_player_loan(player, loan)
