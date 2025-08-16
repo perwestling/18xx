@@ -296,6 +296,9 @@ module Engine
             tiles['204'] = 3
           end
 
+          # Remove all Budapest specific tiles as Budapest is an offboard city in Cisleithania
+          %w[126 490 495 498].each { |name| tiles.delete(name) } if option_cisleithania
+
           tiles.flat_map do |name, val|
             init_tile(name, val)
           end
