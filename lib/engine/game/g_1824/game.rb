@@ -866,6 +866,10 @@ module Engine
         end
 
         def revenue_for(route, stops)
+          # Rule VII.9, bullet 6: Cannot visit the same revenue center twice (see correction in info)
+          all_stops = stops.map(&:hex)
+          raise GameError, 'Route cannot visit same revenue center twice' if all_stops.size != all_stops.uniq.size
+
           super + bukowina_bonus_amount(route, stops)
         end
 
