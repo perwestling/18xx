@@ -381,7 +381,7 @@ module Engine
 
         def stock_round
           Engine::Round::Stock.new(self, [
-            G1837::Step::DiscardTrain,
+            G1824::Step::DiscardTrain,
             G1824::Step::ForcedMountainRailwayExchange, # In case train export after OR set triggers exchage
             G1824::Step::BuySellParExchangeShares,
           ])
@@ -390,7 +390,7 @@ module Engine
         def operating_round(round_num)
           G1824::Round::Operating.new(self, [
             G1837::Step::Bankrupt,
-            G1837::Step::DiscardTrain,
+            G1824::Step::DiscardTrain,
             G1824::Step::BondToken,
             Engine::Step::SpecialTrack,
             G1824::Step::Track,

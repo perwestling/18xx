@@ -71,6 +71,14 @@ module Engine
 
             trains
           end
+
+          def spend_minmax(entity, train)
+            # Rule VII.11, bullet 8: Face price must be paid if buying from another player's corporation
+            return [train.price, train.price] if train.owner&.corporation? && train.owner.owner != entity.owner
+
+            super
+          end
+
         end
       end
     end
