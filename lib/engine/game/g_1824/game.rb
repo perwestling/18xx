@@ -729,12 +729,6 @@ module Engine
 
         # This is modified quite a lot compared to 1837
         def after_buy_company(player, company, price)
-          do_after_buy_company(player, company, price)
-
-          log << "#{player.name} has now value #{player_value(player)}"
-        end
-
-        def do_after_buy_company(player, company, price)
           return if mountain_railway?(company)
 
           id = company.id
