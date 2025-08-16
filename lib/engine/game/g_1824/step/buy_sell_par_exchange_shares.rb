@@ -36,7 +36,7 @@ module Engine
             @game.sorted_corporations.reject { |c| c.type == :minor || c.type == :construction_railway }
           end
 
-          def can_buy?(_entity, bundle, exchange: false)
+          def can_buy?(_entity, bundle)
             super && @game.buyable?(bundle.corporation)
           end
 
