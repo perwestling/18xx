@@ -427,6 +427,12 @@ module Engine
           potentially_form_nationals
         end
 
+        # 1824 does not have a par chart, but 1837 do, so disable it.
+        def par_chart; end
+
+        # 1824 does not need this (as it does not use par_chart), but 1837 do, so make it noop.
+        def set_par(_corporation, _share_price, _slot); end
+
         def init_stock_market
           StockMarket.new(game_market, self.class::CERT_LIMIT_TYPES)
         end
