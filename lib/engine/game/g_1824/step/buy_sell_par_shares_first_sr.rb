@@ -18,7 +18,7 @@ module Engine
           end
 
           def can_buy_company?(player, company)
-            allowed_to_buy_mr?(player) if @game.two_player? && @game.mountain_railway?(company)
+            return allowed_to_buy_mr?(player) if @game.two_player? && @game.mountain_railway?(company)
 
             !bought?
           end
