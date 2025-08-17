@@ -337,10 +337,14 @@ module Engine
         end
 
         def show_map_legend?
-          cisleithania_map
+          option_cisleithania
         end
 
-        def map_legend(font_color, *_extra_colors)
+        def map_legends
+          ['bonus_legend']
+        end
+
+        def bonus_legend(font_color, *_extra_colors)
           [
             # table-wide props
             {
