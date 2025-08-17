@@ -42,15 +42,9 @@ module Engine
           end
 
           def visible_corporations
-            return [] if @game.two_player? && any_stacks_left?
+            return [] if @game.two_player? && @game.any_stacks_left?
 
             @game.sorted_corporations.reject { |c| c.closed? || c.type == :minor || c.type == :construction_railway }
-
-            # TODO: Should corporations be visible for 3-6 players during first SR?
-            # # None if Cislethania variant
-            # return [] if @game.option_cisleithania
-            # # Rule VI.3 bullet 4 - only BH available of the Regional Railways
-            # [@game.corporation_by_id('BH')]
           end
 
           def process_buy_company(action)
@@ -60,11 +54,16 @@ module Engine
             player = action.entity
 
             if bought_from_different_stack?(company)
-              a_p = @game.players.find { |p| p != player }
-              raise GameError, "#{player.name} must buy from stack #{@game.current_stack} as #{a_p.name} bought from it"
+              raise GameError, "#{player.name} must buy from stack #{@game.current_stack} "\
+                               "as #{other_player(player).name} bought from it"
             else
-              @game.log << "#{player.name} buys from Stack #{company.stack}" if company.stack
+              @game.log << "#{player.name} buys from stack #{company.stack}" if company.stack
               @game.current_stack = @game.current_stack ? nil : company.stack
+              if @game.current_stack
+                @game.log << "#{other_player(player).name} must buy remaining from stack "\
+                             "#{@game.current_stack}"
+              end
+
               super
             end
           end
@@ -78,17 +77,17 @@ module Engine
           def bought_non_stack_entity_while_stacks_still_remain?(entity)
             return false if entity.company? && entity.stack
 
-            any_stacks_left?
-          end
-
-          def any_stacks_left?
-            @game.companies.find(&:stack)
+            @game.any_stacks_left?
           end
 
           def allowed_to_buy_mr?(player)
-            return false if any_stacks_left?
+            return false if @game.any_stacks_left?
 
             @game.companies.count { |c| @game.mountain_railway?(c) && c.owner == player }.zero?
+          end
+
+          def other_player(player)
+            @game.players.find { |p| p != player }
           end
         end
       end

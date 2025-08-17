@@ -78,7 +78,6 @@ module Engine
 
             super
           end
-
         end
       end
     end

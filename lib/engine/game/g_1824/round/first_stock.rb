@@ -10,18 +10,23 @@ module Engine
           attr_reader :reverse
 
           def description
+            return 'Initial Drafting' if @game.two_player? && @game.any_stacks_left?
+
             'First Stock Round'
           end
 
           def setup
             if @game.two_player?
-              @game.log << 'During First Stock Round one player selects one company from Stack 1-4, '\
+              @game.log << 'During Initial Drafting one player selects one company from Stack 1-4, '\
                            'and the other player gets the other company in that Stack. The order will '\
-                           'be reversed for the first stack, then normal.'
+                           'be reversed for the second stack, then normal.'
+              @game.log << 'No player may pass as long as there are still things in stacks.'
+              @game.log << 'After all Stacks have been drafted, then First Stock Round starts.'
+              @game.log << 'During the First Stock Round players can optionally buy ONE Mountain Railway '\
+                           'and shares. Any unsold Mountain Railways will be removed from the game.'
               @game.log << 'NOTE! The two railways in stack 1 are construction railways which do not own '\
-                           'nor run any trains, just build track for free.'
-              @game.log << 'NOTE! Pass is not allowed for Stack 1-4. Mountain Railways are optional, max one per '\
-                           'player, and any unsold will be removed from the game.'
+                           'nor run any trains, just build track for free. And the associated Regional Railway '\
+                           'is a bond railway, which just payout - do not build nor own trains.'
             else
               @game.log << 'After First Stock Round is finished any unsold Pre-State Railways, Coal Railways, '\
                            'and Mountain Railways will be removed from the game'
@@ -31,6 +36,11 @@ module Engine
             @order_notified = false
 
             super
+
+            if @game.two_player?
+              @log << "Player order is reversed when selecting the first stack, that is #{@game.players.first.name} "\
+                      'selects first'
+            end
 
             @entities.reverse!
           end
@@ -43,10 +53,11 @@ module Engine
 
           def next_entity_index!
             if @entity_index == @game.players.size - 1
-              @reverse = false
-              @entities = @game.players
-              @game.log << 'Player order is from now on normal' unless @order_notified
-              @order_notified = true
+              if @game.two_player? && @game.any_stacks_left?
+                do_handle_next_entity_index_for_two_players
+              else
+                do_handle_next_entity_index_for_multi_players
+              end
             end
 
             super
@@ -123,6 +134,27 @@ module Engine
 
           def remove_share_reservation(national)
             national.unreserve_one_share!
+          end
+
+          def do_handle_next_entity_index_for_two_players
+            if @game.remaining_stacks == 1
+              @reverse = true
+              @entities = @game.players.reverse
+              @game.log << 'Player order is reversed when selecting from the last stack, '\
+                           "that is #{@game.players.last.name} selects first"
+            else
+              @reverse = false
+              @entities = @game.players
+              @game.log << 'Player order is normal when selecting from the 2nd and 3rd stacks, '\
+                           "that is #{@game.players.first.name} selects first"
+            end
+          end
+
+          def do_handle_next_entity_index_for_multi_players
+            @reverse = false
+            @entities = @game.players
+            @game.log << 'Player order is from now on normal' unless @order_notified
+            @order_notified = true
           end
         end
       end

@@ -263,11 +263,10 @@ module Engine
             end
           mountain_railway_count.times { |index| companies << mountain_railway_definition(index) }
 
-          if option_cisleithania
-            # Rule X.1/XI.1: Remove Coal mine3 SPB, Pre-Staatsbahn UG2, and possibly UG1
-            p2 = players.size == 2
-            companies.reject! { |m| %w[UG2 SPB].include?(m[:sym]) || (p2 && m['sym'] == 'UG1') }
-          end
+          # Rule X.1/XI.1: Remove Coal mine3 SPB, Pre-Staatsbahn UG2, and - if 2 players - UG1
+          companies.reject! { |m| %w[UG2 SPB].include?(m[:sym]) } if option_cisleithania
+          # NOTE: Writing below as m[:sym] == 'UG1' does not work (in Ruby 3.2? Suggested by copilot) on server
+          companies.reject! { |m| %w[UG1].include?(m[:sym]) } if players.size == 2 && option_cisleithania
 
           used_companies = companies.map { |company| G1824::Company.new(**company) }
 
@@ -1033,6 +1032,28 @@ module Engine
           super
         end
 
+        # Used during initial drafting, for two player variant
+        def any_stacks_left?
+          remaining_stacks.positive?
+        end
+
+        # Used during first stock round. Need special handling if initial drafting.
+        def buyable_bank_owned_companies
+          available = super
+          return available unless two_player?
+          return available unless any_stacks_left?
+
+          available.select!(&:stack)
+          if (single_stack = available.group_by(&:stack).find { |_stack, companies| companies.size == 1 })
+            available.select! { |c| c.stack == single_stack.first }
+          end
+          available.sort_by(&:stack)
+        end
+
+        def remaining_stacks
+          @companies.select { |c| c.stack && !c.closed? }.group_by(&:stack).size
+        end
+
         private
 
         def potentially_form_nationals
@@ -1122,9 +1143,10 @@ module Engine
         end
 
         def setup_companies_for_two_players(companies)
-          coal_companies = companies.select { |c| c.meta[:type] == :coal }.reject(&:closed?)
-          pre_staatsbahns_primary = companies.select { |c| c.meta[:type] == :pre_staatsbahn_primary }.reject(&:closed?)
-          pre_staatsbahns_secondary = companies.select { |c| c.meta[:type] == :pre_staatsbahn_secondary }.reject(&:closed?)
+          available = companies.reject(&:closed?)
+          coal_companies = available.select { |c| c.meta[:type] == :coal }
+          pre_staatsbahns_primary = available.select { |c| c.meta[:type] == :pre_staatsbahn_primary }
+          pre_staatsbahns_secondary = available.select { |c| c.meta[:type] == :pre_staatsbahn_secondary }
 
           # Follow X.3 Setup, with slight modification
           # 1. Let 2nd player select one from stack 1-3, 1st player gets the other in stack

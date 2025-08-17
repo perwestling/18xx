@@ -288,8 +288,8 @@ module Engine
         def cisleithania_map
           # For 3 players Budapest is a city for Pre-staatsbahn U1
           budapest = @players.size == 3 ? 'city' : 'offboard'
-          b_major = ";icon=image:1824/B,sticky:1"
-          b_minor = ";icon=image:1824/b_lower_case,sticky:1"
+          b_major = ';icon=image:1824/B,sticky:1'
+          b_minor = ';icon=image:1824/b_lower_case,sticky:1'
           {
             red: {
               ['A4'] => DRESDEN_1,
@@ -344,7 +344,7 @@ module Engine
           ['bonus_legend']
         end
 
-        def bonus_legend(font_color, *_extra_colors)
+        def bonus_legend(_font_color, *_extra_colors)
           [
             # table-wide props
             {
