@@ -263,10 +263,11 @@ module Engine
             end
           mountain_railway_count.times { |index| companies << mountain_railway_definition(index) }
 
-          # Rule X.1/XI.1: Remove Coal mine3 SPB, Pre-Staatsbahn UG2, and - if 2 players - UG1
-          companies.reject! { |m| %w[UG2 SPB].include?(m[:sym]) } if option_cisleithania
-          # NOTE: Writing below as m[:sym] == 'UG1' does not work (in Ruby 3.2? Suggested by copilot) on server
-          companies.reject! { |m| %w[UG1].include?(m[:sym]) } if players.size == 2 && option_cisleithania
+          if option_cisleithania
+            # Rule X.1/XI.1: Remove Coal mine SPB, Pre-Staatsbahn UG2, and - if 2 players - UG1
+            removed_companies = players.size == 2 ? %w[SPB UG2 UG1] : %w[SPB UG2]
+            companies.reject! { |m| removed_companies.include?(m[:sym]) }
+          end
 
           used_companies = companies.map { |company| G1824::Company.new(**company) }
 
