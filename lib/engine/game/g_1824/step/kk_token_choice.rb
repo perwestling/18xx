@@ -47,14 +47,15 @@ module Engine
           end
 
           def choice_name
-            'Choose Wien token to return to KK charter as a regular token'
+            "Choose Wien token to return to #{@game.kk.name} charter as a regular token"
           end
 
           def process_choose(action)
             player = action.entity
 
             choice = action.choice == 'Return one token' ? 1 : 2
-            @log << "Selected token are removed from Wien and put as a #{@game.format_currency(100)} token on the KK charter"
+            @log << "#{player.name} removes selected #{@game.kk.name} token from Wien, and put it as a "\
+                    "#{@game.format_currency(100)} token on the #{@game.kk.name} charter"
             @game.return_kk_token(choice)
             @game.kk_token_choice_player = nil
           end
