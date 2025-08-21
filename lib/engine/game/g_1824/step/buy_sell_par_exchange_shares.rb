@@ -131,6 +131,11 @@ module Engine
             @round.current_actions << action
           end
 
+          def allow_president_change?(corporation)
+            reserved = corporation.reserved_shares
+            reserved.none? { |s| s.percent == 20 }
+          end
+
           private
 
           def exchangable_ability(entity)
