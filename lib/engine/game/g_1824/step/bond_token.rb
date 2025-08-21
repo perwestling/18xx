@@ -38,14 +38,14 @@ module Engine
 
             pass!
 
-            if @game.vienna_token_entity
+            if action.city.hex.id == 'E12'
               @game.clear_vienna_token_entity
             else
               @game.clear_extra_token_entity
             end
           end
 
-          def adjust_token_price_ability!(_entity, token, _hex, _city)
+          def adjust_token_price_ability!(_entity, token, _hex, _city, special_ability: nil)
             [token, nil]
           end
 

@@ -28,10 +28,6 @@ module Engine
             return unless @game.two_player?
             return unless vienna_tile_upgrade?(action)
 
-            # TODO: Actually, when this upgrade is done, it should be checked if same city has
-            # two tokens from the same national. Can probably only happen for SD. Need also to
-            # figure out what happens with a surplus token - removed or returned?
-
             # Rule XI.4: Trigger potential Vienna tokening (for 2 players) when Vienna upgraded to brown
             @game.notify_vienna_can_be_tokened_by_bond_railway(action.entity)
           end

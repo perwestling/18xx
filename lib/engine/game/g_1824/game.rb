@@ -27,7 +27,8 @@ module Engine
         CORPORATION_CLASS = G1824::Corporation
         DEPOT_CLASS = G1824::Depot
 
-        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :player_debts, :current_stack
+        attr_accessor :two_train_bought, :forced_mountain_railway_exchange, :player_debts, :current_stack,
+                      :kk_token_choice_player
 
         # TODO: Can these be removed? They do not seem to be used in 1824?
         register_colors(
@@ -385,6 +386,7 @@ module Engine
         def stock_round
           Engine::Round::Stock.new(self, [
             G1824::Step::DiscardTrain,
+            G1824::Step::KkTokenChoice, # In case train export triggers KK formation
             G1824::Step::ForcedMountainRailwayExchange, # In case train export after OR set triggers exchage
             G1824::Step::BuySellParExchangeShares,
           ])
@@ -393,11 +395,12 @@ module Engine
         def operating_round(round_num)
           G1824::Round::Operating.new(self, [
             G1837::Step::Bankrupt,
+            G1824::Step::KkTokenChoice,
             G1824::Step::DiscardTrain,
             G1824::Step::BondToken,
             Engine::Step::SpecialTrack,
             G1824::Step::Track,
-            Engine::Step::Token,
+            G1824::Step::Token,
             Engine::Step::Route,
             G1824::Step::Dividend,
             G1824::Step::BuyTrain,
@@ -457,9 +460,13 @@ module Engine
           @ug_to_form = false
           @kk_to_form = false
 
-          # Used in two-player for extra tokening
-          clear_extra_token_entity
-          clear_vienna_token_entity
+          # Used in two-player for extra tokening when last 4 sold (or last 5, if were exported)
+          @train_based_bond_token_used = false
+          @corporation_to_put_train_based_bond_token = nil
+
+          # Used in two-player for extra tokening when Wien upgraded to brown
+          @upgrade_based_bond_token_used = false
+          @corporation_to_put_upgrade_based_bond_token = nil
         end
 
         def setup_mines
@@ -648,6 +655,10 @@ module Engine
 
         def bond_railway
           @bond_railway ||= @corporations.find { |c| bond_railway?(c) }
+        end
+
+        def kk
+          @kk ||= corporation_by_id('KK')
         end
 
         def buyable?(entity)
@@ -990,24 +1001,24 @@ module Engine
 
         def set_last_train_buyer(buyer, train)
           return unless two_player?
+          return if @train_based_bond_token_used
 
-          if bond_railway.placed_tokens.size > 1
-            @last_train_buyer = nil
-            return
-          end
-
-          @last_train_buyer = buyer
+          @corporation_to_put_train_based_bond_token = buyer
           @log << "Last #{train.name} bought by #{buyer.name} which means "\
                   "#{buyer.name} (#{buyer.owner.name}) gets to put a #{bond_railway.name} "\
                   'token anywhere where the slot it is free.'
         end
 
         def extra_token_entity
-          @last_train_buyer
+          return unless two_player?
+          return if @train_based_bond_token_used
+
+          @corporation_to_put_train_based_bond_token
         end
 
         def clear_extra_token_entity
-          @last_train_buyer = nil
+          @train_based_bond_token_used = true
+          @corporation_to_put_train_based_bond_token = nil
         end
 
         def notify_vienna_can_be_tokened_by_bond_railway(entity)
@@ -1015,19 +1026,19 @@ module Engine
 
           @log << "Vienna upgraded to brown by #{entity.name} which means "\
                   "#{entity.name} (#{entity.owner.name}) gets to put a #{bond_railway.name} token in Vienna."
-          @token_vienna_entity = entity
+          @corporation_to_put_upgrade_based_bond_token = entity
         end
 
         def vienna_token_entity
           return unless two_player?
-          return unless @token_vienna_when_brown
+          return if @upgrade_based_bond_token_used
 
-          @token_vienna_entity
+          @corporation_to_put_upgrade_based_bond_token
         end
 
         def clear_vienna_token_entity
-          @token_vienna_when_brown = nil
-          @token_vienna_entity = nil
+          @upgrade_based_bond_token_used = true
+          @corporation_to_put_upgrade_based_bond_token = nil
         end
 
         def token_owner(_entity)
@@ -1061,6 +1072,13 @@ module Engine
           @companies.select { |c| c.stack && !c.closed? }.group_by(&:stack).size
         end
 
+        def return_kk_token(selected_token)
+          selected = selected_token == 1 ? kk.placed_tokens.dup.first : kk.placed_tokens.dup.last
+          selected.remove!
+          kk.tokens.last.price = 100
+          @kk_token_choice_player = nil
+        end
+
         private
 
         def potentially_form_nationals
@@ -1077,7 +1095,10 @@ module Engine
           return unless @kk_to_form
 
           national = corporation_by_id('KK')
+          @kk1_token = kk_minors.find { |c| c.id == 'KK1' }
+          @kk1_token = kk_minors.find { |c| c.id == 'KK1' }
           form_national_railway!(national, kk_minors)
+          @kk_token_choice_player = kk.placed_tokens.size == 1 ? nil : @kk.owner
           @kk_to_form = false
         end
 

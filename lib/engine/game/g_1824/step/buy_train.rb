@@ -52,7 +52,7 @@ module Engine
 
             return unless @game.two_player?
 
-            # RUle X.4, need to handle extra tokening of bond railway
+            # Rule X.4, need to handle extra tokening of bond railway
             @game.set_last_train_buyer(entity, train) if train.name == '4' && @depot.depot_trains.first.name == '5'
             @game.set_last_train_buyer(entity, train) if train.name == '5' && @depot.depot_trains.first.name == '6'
           end
