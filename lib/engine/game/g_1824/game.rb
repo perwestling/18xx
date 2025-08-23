@@ -709,6 +709,13 @@ module Engine
           sorted_corporations.select { |c| buyable?(c) }
         end
 
+        # TODO: This is a work around to avoid bond railway to appear twice in Entities view.
+        # That is as bond railway is both bank owned and in receivership.
+        # See https://github.com/tobymao/18xx/issues/11929
+        def receivership_corporations
+          []
+        end
+
         def operating_order
           minors, majors = @corporations.select(&:floated?).partition { |c| c.type == :minor || c.type == :construction_railway }
           minors + majors.sort
