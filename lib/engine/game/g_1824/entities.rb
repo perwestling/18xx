@@ -377,7 +377,7 @@ module Engine
             name: 'Carl Ludwigs-Bahn',
             logo: '1824/CL',
             simple_logo: '1824/CL.alt',
-            tokens: [0, 20, 40],
+            tokens: [0, 40, 100],
             ipo_shares: [10, 10, 10, 10, 10, 10, 10, 10],
             reserved_shares: [20],
             float_percent: 50,
