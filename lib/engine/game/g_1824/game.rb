@@ -1102,10 +1102,8 @@ module Engine
           return unless @kk_to_form
 
           national = corporation_by_id('KK')
-          @kk1_token = kk_minors.find { |c| c.id == 'KK1' }
-          @kk1_token = kk_minors.find { |c| c.id == 'KK1' }
           form_national_railway!(national, kk_minors)
-          @kk_token_choice_player = kk.placed_tokens.size == 1 ? nil : @kk.owner
+          possibly_return_kk_token
           @kk_to_form = false
         end
 
@@ -1305,6 +1303,26 @@ module Engine
             consume_tile_lay: true,
             when: 'track'
           )
+        end
+
+        def possibly_return_kk_token
+          if kk.placed_tokens.size == 2
+            cities_with_kk_tokens = kk.placed_tokens.map { |t| t.city }.uniq
+            if cities_with_kk_tokens.size == 2
+              # KK tokens in two different cities in Wien, so owning player gets to choose which to remove
+              @log << "Both KK tokens are in different cities in E12, so #{kk.owner.name} to select one to return to charter"
+              @kk_token_choice_player = kk.owner
+            else
+              # KK tokens in same city in Wien, so return the last one placed
+              @log << "Both KK tokens are in the same city in E12, so the last one placed is returned to the bank"
+              return_kk_token(2)
+            end
+          else
+            # Only one token, so nothing to remove (this is a case when one KK pre-stadtsbahn not sold)
+            @log << "Only one KK token on board so no token to return to charter"
+            @kk_token_choice_player = nil
+          end
+
         end
       end
     end
