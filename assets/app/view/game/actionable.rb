@@ -67,6 +67,7 @@ module View
       end
 
       def process_action(action)
+        puts "Actionable, process_action called with action: #{action.inspect}"
         if @game.exception
           msg = 'This game is broken and cannot accept any new actions. If '\
                 'this issue has not already been reported, please follow the '\

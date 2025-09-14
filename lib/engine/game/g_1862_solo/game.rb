@@ -26,6 +26,10 @@ module Engine
           false
         end
 
+        def solo_player
+          players.first
+        end
+
         def setup_preround
           @original_corporations = @corporations.dup
 
@@ -44,27 +48,30 @@ module Engine
         end
 
         def create_decks(corporations)
-          draw_deck = []
+          @deck = []
 
           corporations.each do |corporation|
             corporation.ipo_shares.each do |share|
               company = convert_share_to_company(share)
               company.owner = bank
-              draw_deck << company
+              @deck << company
+
+              # Need to store them so that they are found by company_by_id
+              @companies << company
             end
           end
 
-          draw_deck.sort_by! { rand }
-          deal_deck_to_ipo(draw_deck)
+          @deck.sort_by! { rand }
+          deal_deck_to_ipo()
         end
 
         # create a placeholder 'company' for shares in IPO
         def convert_share_to_company(share)
           description = "Certificate for #{share.percent}\% of #{share.corporation.full_name}."
-          Company.new(
+          G1862Solo::Company.new(
             sym: share.id,
             name: share.corporation.name,
-            value: 0,
+            value: 1,
             desc: description,
             type: :share,
             color: share.corporation.color,
@@ -75,9 +82,20 @@ module Engine
           )
         end
 
-        def deal_deck_to_ipo(deck)
+        def deal_deck_to_ipo
           all_rows_indexes.each do |row|
-            @ipo_rows[row] = deck.pop(6) # 6 shares per row
+            deal_to_ipo_row(row)
+          end
+        end
+
+        def cards_to_deal
+          @deck.size >= 6 ? 6 : @deck.size # 6 shares per row if possible
+        end
+
+        def deal_to_ipo_row(row)
+          @ipo_rows[row] = @deck.pop(cards_to_deal)
+          @ipo_rows[row].each do |company|
+            company.ipo_row_index = row
           end
         end
 
@@ -127,7 +145,7 @@ module Engine
         end
 
         def stock_round
-          G1862::Round::Stock.new(self, [
+          G1862Solo::Round::Stock.new(self, [
             G1862::Step::BuyTokens,
             G1862::Step::ForcedSales,
             G1862Solo::Step::BuySellParShares,
@@ -174,7 +192,11 @@ module Engine
 
         # So that value is not shown on company cards representing shares
         def company_value(_company)
-          0
+          1
+        end
+
+        def company_header(_company)
+          '10% SHARE'
         end
 
         def show_value_of_companies?(_owner)
@@ -203,8 +225,6 @@ module Engine
             company.name.to_s
           end
         end
-
-        private
 
         def all_rows_indexes
           (0..8)

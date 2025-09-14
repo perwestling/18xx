@@ -782,15 +782,19 @@ module Engine
       end
 
       def process_action(action, add_auto_actions: false, validate_auto_actions: false)
+        puts "Base game, process_action called with action: #{action.inspect}"
         action = Engine::Action::Base.action_from_h(action, self) if action.is_a?(Hash)
 
+        puts "Raw actions"
         action.id = current_action_id + 1
         LOGGER.debug { "Game::Base#process_action({ id: #{action.id}, ... }, ...)" }
         @raw_actions << action.to_h
+        puts "Clone"
         return clone(@raw_actions) if action.is_a?(Action::Undo) || action.is_a?(Action::Redo)
 
         @actions << action
 
+        puts "Process single action"
         # Process the main action we came here to do first
         process_single_action(action)
 
@@ -800,6 +804,7 @@ module Engine
           @last_game_action_id = action.id
         end
 
+        puts "Next"
         if add_auto_actions || validate_auto_actions
           auto_actions = []
           until (actions = round.auto_actions || []).empty?

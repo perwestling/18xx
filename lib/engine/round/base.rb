@@ -73,6 +73,7 @@ module Engine
       end
 
       def process_action(action)
+        puts "Base round, process_action called with action: #{action.inspect}"
         type = action.type
         clear_cache!
 
@@ -83,7 +84,7 @@ module Engine
 
           process = s.actions(action.entity).include?(type)
           blocking = s.blocking?
-          raise GameError, "Blocking step #{s.description} cannot process action #{action.id}" if blocking && !process
+          raise GameError, "Blocking step #{s.description} cannot process action #{action.id}, action = #{action.inspect}" if blocking && !process
 
           blocking || process
         end
