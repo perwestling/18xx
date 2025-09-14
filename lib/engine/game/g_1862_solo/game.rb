@@ -176,6 +176,10 @@ module Engine
           []
         end
 
+        def companies_to_payout(_ignore)
+          []
+        end
+
         def init_corporations(_stock_market)
           self.class::CORPORATIONS.map do |corporation|
             corporation[:float_percent] = 30
@@ -190,9 +194,22 @@ module Engine
           end
         end
 
+        def stock_prices
+          par_prices
+        end
+
+        def par_prices
+          @par_prices ||= stock_market.market.first.select { |p| p.type == :par }
+        end
+
+        def repar_prices
+          @repar_prices ||= stock_market.market.first.select { |p| p.type == :repar }
+        end
+
         # So that value is not shown on company cards representing shares
-        def company_value(_company)
-          1
+        def company_value(company)
+          corporation = company.treasury.corporation
+          corporation.share_price ? corporation.share_price.price : 0
         end
 
         def company_header(_company)

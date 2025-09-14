@@ -12,8 +12,10 @@ module Engine
       end
 
       def actions(entity)
+        puts "CompanyPendingPars actions entered for #{entity}"
         return [] unless current_entity == entity
 
+        puts "CompanyPendingPars actions: #{ACTIONS}"
         ACTIONS
       end
 
@@ -22,6 +24,7 @@ module Engine
       end
 
       def active_entities
+        puts "active_entities #{companies_pending_par}"
         [@round.companies_pending_par.first&.owner].compact
       end
 
