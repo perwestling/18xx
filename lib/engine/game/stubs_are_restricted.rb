@@ -7,6 +7,7 @@
 
 module StubsAreRestricted
   def legal_tile_rotation?(_entity, hex, tile)
+    puts 'Using StubsAreRestricted legal_tile_rotation? method'
     legal_if_stubbed?(hex, tile)
   end
 

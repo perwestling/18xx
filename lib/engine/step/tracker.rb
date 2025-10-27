@@ -410,12 +410,14 @@ module Engine
       end
 
       def legal_tile_rotation?(entity_or_entities, hex, tile)
+        puts('legal_tile_rotation? called')
         # entity_or_entities is an array when combining private company abilities
         entities = Array(entity_or_entities)
         entity, *_combo_entities = entities
 
         return false unless @game.legal_tile_rotation?(entity, hex, tile)
 
+        puts('1')
         old_ctedges = hex.tile.city_town_edges
 
         new_exits = tile.exits
@@ -425,26 +427,37 @@ module Engine
 
         all_new_exits_valid = new_exits.all? { |edge| hex.neighbors[edge] }
         return false unless all_new_exits_valid
+        puts('2')
 
         neighbors = hex_neighbors(entity, hex) || []
         entity_reaches_a_new_exit = !(new_exits & neighbors).empty?
+        puts("entity: #{entity.name}")
+        puts("hex: #{hex.id}")
+        puts("new_exits: #{new_exits}")
+        puts("neighbors: #{neighbors.map(&:id)}")
+        puts("entity_reaches_a_new_exit: #{entity_reaches_a_new_exit}")
         return false unless entity_reaches_a_new_exit
+        puts('3')
 
         return false unless old_paths_maintained?(hex, tile)
+        puts('4')
 
         # Count how many cities on the new tile that aren't included by any of the old tile.
         # Make sure this isn't more than the number of new cities added.
         # 1836jr30 D6 -> 54 adds more cities
         valid_added_city_count = added_cities >= new_ctedges.count { |newct| old_ctedges.all? { |oldct| (newct & oldct).none? } }
         return false unless valid_added_city_count
+        puts('5')
 
         # 1867: Does every old city correspond to exactly one new city?
         old_cities_map_to_new =
           !multi_city_upgrade ||
           old_ctedges.all? { |oldct| new_ctedges.one? { |newct| (oldct & newct) == oldct } }
         return false unless old_cities_map_to_new
+        puts('6')
 
         return false unless city_sizes_maintained(hex, tile)
+        puts('7')
 
         true
       end
@@ -471,6 +484,7 @@ module Engine
       end
 
       def hex_neighbors(entity, hex)
+        puts "connected hexes for #{entity.name} and hex #{hex.id}: #{@game.graph_for_entity(entity)}"
         @game.graph_for_entity(entity).connected_hexes(entity)[hex]
       end
 

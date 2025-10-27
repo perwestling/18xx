@@ -1845,6 +1845,7 @@ module Engine
       end
 
       def legal_tile_rotation?(_entity, _hex, _tile)
+        puts "base game legal_tile_rotation? called - should be overridden in game-specific class"
         true
       end
 

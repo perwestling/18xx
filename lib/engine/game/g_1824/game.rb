@@ -199,6 +199,7 @@ module Engine
 
         # 1824 does not have any special cases here so use base version instead of 1837 version
         def legal_tile_rotation?(_entity, _hex, _tile)
+          puts 'Use base version of legal_tile_rotation? in 1824'
           true
         end
 

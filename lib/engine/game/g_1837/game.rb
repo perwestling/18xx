@@ -788,6 +788,7 @@ module Engine
         end
 
         def legal_tile_rotation?(entity, hex, tile)
+          puts "Using G1837 legal_tile_rotation? method"
           return tile.rotation == 5 if tile.name == '436'
           return false if !hex.tile.towns.empty? && !(hex.tile.exits - tile.towns.first.exits).empty?
 
