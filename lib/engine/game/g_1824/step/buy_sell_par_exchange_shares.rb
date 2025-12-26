@@ -112,7 +112,7 @@ module Engine
             bundle.share_price = 0
 
             # In case of exchange the company is passed, and also no president change allowed (according to rule IV.4.1 bullet 6)
-            buy_shares(company.owner, bundle, exchange: company, allow_president_change: company.nil?)
+            buy_shares(company.owner, bundle, exchange: company, allow_president_change: !bundle.corporation.par_price.nil?)
             company.close!
 
             # Exchange is treated as a Buy, and no more actions allowed as Sell-Buy
