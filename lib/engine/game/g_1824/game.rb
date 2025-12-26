@@ -460,6 +460,17 @@ module Engine
           corporation_by_id(exchange_ability.corporations.first)
         end
 
+        def regional_railway_with_active_association?(regional)
+          coal_railways = @companies.select do |c|
+            coal_railway?(c) && !c.closed?
+          end
+          associated_coal_railway = coal_railways.find do |coal|
+            target = get_associated_regional_railway(coal)
+            target == regional
+          end
+          associated_coal_railway != nil
+        end
+
         def coal_railway_exchangable?
           @phase.status.include?('may_exchange_coal_railways')
         end
@@ -715,16 +726,19 @@ module Engine
         end
 
         def float_str(entity)
+          puts "FLOAT STR FOR #{entity.id}"
           return super unless entity.corporation
 
           case entity.id
-          when 'BK', 'MS', 'CL', 'SB'
+          when 'BH', 'BK', 'MS', 'CL', 'SB' # Need all regionals here although some might not be associated with a coal railway
             needed = entity.percent_to_float
             if needed.positive?
-              need_exchange = entity.floatable ? '' : ' + exchange '
+              need_exchange = entity.floatable && regional_railway_with_active_association?(entity) ? '' : ' + exchange '
               "#{entity.percent_to_float}%#{need_exchange} to float"
-            else
+            elsif regional_railway_with_active_association?(entity)
               'Exchange to float'
+            else # An unassociated regional that has reached 50%+ by MR exchanges
+              'Par to float'
             end
           when 'UG'
             'UG formation to float'
