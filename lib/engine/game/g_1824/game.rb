@@ -757,6 +757,7 @@ module Engine
         # formation + float. Also use special float amount factor to handle unreserve of
         # IPO shares, which caused a bug previously.
         def float_corporation(corporation)
+          puts "FLOATING #{corporation.name}"
           @log << "#{corporation.name} floats"
           capitilization = corporation.par_price.price * corporation.capitalization_share_count
           @bank.spend(capitilization, corporation)

@@ -126,181 +126,223 @@ describe Engine::Game::G1824::Game do
       expect(get_percentage_owned(p4, sd)).to eq(10)
       expect(sd.president?(p2)).to be true
     end
+  end
 
-    describe '1824_game_end_reason_bank' do
-      it 'UG formation after OR 5.2' do
-        game = fixture_at_action(322) # Before last action in OR 5.2
+  describe '1824_game_end_reason_bank' do
+    it 'UG formation after OR 5.2' do
+      game = fixture_at_action(322) # Before last action in OR 5.2
 
-        ug = game.corporation_by_id('UG')
-        ug1 = game.corporation_by_id('UG1')
-        ug2 = game.corporation_by_id('UG2')
-        pre_staatsbahns = [ug1, ug2]
+      ug = game.corporation_by_id('UG')
+      ug1 = game.corporation_by_id('UG1')
+      ug2 = game.corporation_by_id('UG2')
+      pre_staatsbahns = [ug1, ug2]
 
-        # Check cash and status before formation
-        expect(ug.floated?).to be false
-        pre_staatsbahns.each { |corp| expect(corp.closed?).to be false }
-        expect(ug.cash).to eq(0)
-        expect(ug1.cash).to eq(80)
-        expect(ug2.cash).to eq(179)
+      # Check cash and status before formation
+      expect(ug.floated?).to be false
+      pre_staatsbahns.each { |corp| expect(corp.closed?).to be false }
+      expect(ug.cash).to eq(0)
+      expect(ug1.cash).to eq(80)
+      expect(ug2.cash).to eq(179)
 
-        # Check tokens before formation
-        budapest = 'F17'
-        funfkirchen = 'H15'
-        expect(get_token_owners_in_hex(game, budapest)).to eq([['UG1', nil]])
-        expect(get_token_owners_in_hex(game, funfkirchen)).to eq([['UG2', nil]])
+      # Check tokens before formation
+      budapest = 'F17'
+      funfkirchen = 'H15'
+      expect(get_token_owners_in_hex(game, budapest)).to eq([['UG1', nil]])
+      expect(get_token_owners_in_hex(game, funfkirchen)).to eq([['UG2', nil]])
 
-        # Check trains before formation
-        expect(ug1.trains.map(&:name)).to eq(['4'])
-        expect(ug2.trains.map(&:name)).to eq(['3'])
-        expect(ug.trains).to be_empty
+      # Check trains before formation
+      expect(ug1.trains.map(&:name)).to eq(['4'])
+      expect(ug2.trains.map(&:name)).to eq(['3'])
+      expect(ug.trains).to be_empty
 
-        # Check shares before formation
-        p1 = game.players.find { |p| p.name == 'Player 1' }
-        p2 = game.players.find { |p| p.name == 'Player 2' }
-        p3 = game.players.find { |p| p.name == 'Player 3' }
-        p4 = game.players.find { |p| p.name == 'Player 4' }
-        expect(get_percentage_owned(p1, ug)).to eq(0)
-        expect(get_percentage_owned(p2, ug)).to eq(0)
-        expect(get_percentage_owned(p3, ug)).to eq(0)
-        expect(get_percentage_owned(p3, ug1)).to eq(100)
-        expect(get_percentage_owned(p3, ug2)).to eq(100)
-        expect(get_percentage_owned(p4, ug)).to eq(0)
+      # Check shares before formation
+      p1 = game.players.find { |p| p.name == 'Player 1' }
+      p2 = game.players.find { |p| p.name == 'Player 2' }
+      p3 = game.players.find { |p| p.name == 'Player 3' }
+      p4 = game.players.find { |p| p.name == 'Player 4' }
+      expect(get_percentage_owned(p1, ug)).to eq(0)
+      expect(get_percentage_owned(p2, ug)).to eq(0)
+      expect(get_percentage_owned(p3, ug)).to eq(0)
+      expect(get_percentage_owned(p3, ug1)).to eq(100)
+      expect(get_percentage_owned(p3, ug2)).to eq(100)
+      expect(get_percentage_owned(p4, ug)).to eq(0)
 
-        # Step forward one step,to SR 6, when UG should have formed
-        game.process_to_action(323)
+      # Step forward one step,to SR 6, when UG should have formed
+      game.process_to_action(323)
 
-        # Check cash and status after formation
-        expect(ug.cash).to eq((7 * 120) + 80 + 179)
-        pre_staatsbahns.each { |corp| expect(corp.cash).to eq(0) }
-        expect(ug.floated?).to be true
-        pre_staatsbahns.each { |corp| expect(corp.closed?).to be true }
+      # Check cash and status after formation
+      expect(ug.cash).to eq((7 * 120) + 80 + 179)
+      pre_staatsbahns.each { |corp| expect(corp.cash).to eq(0) }
+      expect(ug.floated?).to be true
+      pre_staatsbahns.each { |corp| expect(corp.closed?).to be true }
 
-        # Check tokens after formation
-        expect(get_token_owners_in_hex(game, budapest)).to eq([['UG', nil]])
-        expect(get_token_owners_in_hex(game, funfkirchen)).to eq([['UG', nil]])
+      # Check tokens after formation
+      expect(get_token_owners_in_hex(game, budapest)).to eq([['UG', nil]])
+      expect(get_token_owners_in_hex(game, funfkirchen)).to eq([['UG', nil]])
 
-        # Check trains after formation
-        pre_staatsbahns.each { |corp| expect(corp.trains).to be_empty }
-        expect(ug.trains.map(&:name)).to eq(%w[4 3])
+      # Check trains after formation
+      pre_staatsbahns.each { |corp| expect(corp.trains).to be_empty }
+      expect(ug.trains.map(&:name)).to eq(%w[4 3])
 
-        # Check shares after formation
-        expect(get_percentage_owned(p1, ug)).to eq(0)
-        expect(get_percentage_owned(p2, ug)).to eq(0)
-        expect(get_percentage_owned(p3, ug)).to eq(30)
-        expect(get_percentage_owned(p4, ug)).to eq(0)
-        expect(ug.president?(p3)).to be true
-      end
+      # Check shares after formation
+      expect(get_percentage_owned(p1, ug)).to eq(0)
+      expect(get_percentage_owned(p2, ug)).to eq(0)
+      expect(get_percentage_owned(p3, ug)).to eq(30)
+      expect(get_percentage_owned(p4, ug)).to eq(0)
+      expect(ug.president?(p3)).to be true
+    end
 
-      it 'KK formation after OR 6.1' do
-        game = fixture_at_action(396) # Before last action in OR 6.1
+    it 'KK formation after OR 6.1' do
+      game = fixture_at_action(396) # Before last action in OR 6.1
 
-        kk = game.corporation_by_id('KK')
-        kk1 = game.corporation_by_id('KK1')
-        kk2 = game.corporation_by_id('KK2')
-        pre_staatsbahns = [kk1, kk2]
+      kk = game.corporation_by_id('KK')
+      kk1 = game.corporation_by_id('KK1')
+      kk2 = game.corporation_by_id('KK2')
+      pre_staatsbahns = [kk1, kk2]
 
-        # Check cash and status before formation
-        expect(kk.floated?).to be false
-        pre_staatsbahns.each { |corp| expect(corp.closed?).to be false }
-        expect(kk.cash).to eq(0)
-        expect(kk1.cash).to eq(195)
-        expect(kk2.cash).to eq(230)
+      # Check cash and status before formation
+      expect(kk.floated?).to be false
+      pre_staatsbahns.each { |corp| expect(corp.closed?).to be false }
+      expect(kk.cash).to eq(0)
+      expect(kk1.cash).to eq(195)
+      expect(kk2.cash).to eq(230)
 
-        # Check tokens before formation
-        vienna = 'E12'
-        expect(get_token_owners_in_hex(game, vienna)).to eq([['SD'], %w[KK1 KK2 MS]])
+      # Check tokens before formation
+      vienna = 'E12'
+      expect(get_token_owners_in_hex(game, vienna)).to eq([['SD'], %w[KK1 KK2 MS]])
 
-        # Check trains before formation
-        expect(kk1.trains.map(&:name)).to eq(['4'])
-        expect(kk.trains).to be_empty
-        expect(kk2.trains).to be_empty
+      # Check trains before formation
+      expect(kk1.trains.map(&:name)).to eq(['4'])
+      expect(kk.trains).to be_empty
+      expect(kk2.trains).to be_empty
 
-        # Check shares before formation
-        p1 = game.players.find { |p| p.name == 'Player 1' }
-        p2 = game.players.find { |p| p.name == 'Player 2' }
-        p3 = game.players.find { |p| p.name == 'Player 3' }
-        p4 = game.players.find { |p| p.name == 'Player 4' }
-        expect(get_percentage_owned(p1, kk)).to eq(0)
-        expect(get_percentage_owned(p2, kk)).to eq(30)
-        expect(get_percentage_owned(p2, kk2)).to eq(100)
-        expect(get_percentage_owned(p3, kk)).to eq(0)
-        expect(get_percentage_owned(p4, kk)).to eq(0)
-        expect(get_percentage_owned(p4, kk1)).to eq(100)
+      # Check shares before formation
+      p1 = game.players.find { |p| p.name == 'Player 1' }
+      p2 = game.players.find { |p| p.name == 'Player 2' }
+      p3 = game.players.find { |p| p.name == 'Player 3' }
+      p4 = game.players.find { |p| p.name == 'Player 4' }
+      expect(get_percentage_owned(p1, kk)).to eq(0)
+      expect(get_percentage_owned(p2, kk)).to eq(30)
+      expect(get_percentage_owned(p2, kk2)).to eq(100)
+      expect(get_percentage_owned(p3, kk)).to eq(0)
+      expect(get_percentage_owned(p4, kk)).to eq(0)
+      expect(get_percentage_owned(p4, kk1)).to eq(100)
 
-        # Step forward one step,to OR 6.2, when KK should have formed
-        game.process_to_action(397)
+      # Step forward one step,to OR 6.2, when KK should have formed
+      game.process_to_action(397)
 
-        # Check cash and status after formation
-        expect(kk.cash).to eq((7 * 120) + 195 + 230)
-        pre_staatsbahns.each { |corp| expect(corp.cash).to eq(0) }
-        expect(kk.floated?).to be true
-        pre_staatsbahns.each { |corp| expect(corp.closed?).to be true }
+      # Check cash and status after formation
+      expect(kk.cash).to eq((7 * 120) + 195 + 230)
+      pre_staatsbahns.each { |corp| expect(corp.cash).to eq(0) }
+      expect(kk.floated?).to be true
+      pre_staatsbahns.each { |corp| expect(corp.closed?).to be true }
 
-        # Check tokens after formation
-        expect(get_token_owners_in_hex(game, vienna)).to eq([['SD'], ['KK', nil, 'MS']])
+      # Check tokens after formation
+      expect(get_token_owners_in_hex(game, vienna)).to eq([['SD'], ['KK', nil, 'MS']])
 
-        # Check trains after formation
-        pre_staatsbahns.each { |corp| expect(corp.trains).to be_empty }
-        expect(kk.trains.map(&:name)).to eq(['4'])
+      # Check trains after formation
+      pre_staatsbahns.each { |corp| expect(corp.trains).to be_empty }
+      expect(kk.trains.map(&:name)).to eq(['4'])
 
-        # Check shares after formation
-        expect(get_percentage_owned(p1, kk)).to eq(0)
-        expect(get_percentage_owned(p2, kk)).to eq(40)
-        expect(get_percentage_owned(p3, kk)).to eq(0)
-        expect(get_percentage_owned(p4, kk)).to eq(20)
-        expect(kk.president?(p2)).to be true
-      end
+      # Check shares after formation
+      expect(get_percentage_owned(p1, kk)).to eq(0)
+      expect(get_percentage_owned(p2, kk)).to eq(40)
+      expect(get_percentage_owned(p3, kk)).to eq(0)
+      expect(get_percentage_owned(p4, kk)).to eq(20)
+      expect(kk.president?(p2)).to be true
+    end
 
-      it 'Forced MR exchange when 4 train is sold/exported' do
-        game = fixture_at_action(218) # Before last action in OR 4.2
-        p1 = game.players.find { |p| p.name == 'Player 1' }
-        p2 = game.players.find { |p| p.name == 'Player 2' }
-        p4 = game.players.find { |p| p.name == 'Player 4' }
-        b1 = game.company_by_id('B1')
-        expect(b1.owner).to eq(p2)
-        expect(game.active_step.class).to eq(Engine::Game::G1824::Step::BuyTrain)
+    it 'Forced MR exchange when 4 train is sold/exported' do
+      game = fixture_at_action(218) # Before last action in OR 4.2
+      p1 = game.players.find { |p| p.name == 'Player 1' }
+      p2 = game.players.find { |p| p.name == 'Player 2' }
+      p4 = game.players.find { |p| p.name == 'Player 4' }
+      b1 = game.company_by_id('B1')
+      expect(b1.owner).to eq(p2)
+      expect(game.active_step.class).to eq(Engine::Game::G1824::Step::BuyTrain)
 
-        # Player 4 passes, and 4 train is exported, which triggers a new phase
-        game.process_to_action(219)
+      # Player 4 passes, and 4 train is exported, which triggers a new phase
+      game.process_to_action(219)
 
-        # Player 2 owns MR 1, and goes first in the forced MR exchange
-        expect(game.current_entity).to eq(p2)
-        expect(game.active_step.class).to eq(Engine::Game::G1824::Step::ForcedMountainRailwayExchange)
+      # Player 2 owns MR 1, and goes first in the forced MR exchange
+      expect(game.current_entity).to eq(p2)
+      expect(game.active_step.class).to eq(Engine::Game::G1824::Step::ForcedMountainRailwayExchange)
 
-        # Perform MR exchange and check that player has received 10% in the regional
-        ms = game.corporation_by_id('MS')
-        action = Engine::Action::BuyShares.new(b1, shares: ms.available_share, percent: 10)
-        game.process_action(action)
-        expect(b1.owner).to eq(nil)
-        expect(b1.closed?).to be true
-        expect(get_percentage_owned(p2, game.corporation_by_id('MS'))).to eq(10)
+      # Perform MR exchange and check that player has received 10% in the regional
+      ms = game.corporation_by_id('MS')
+      action = Engine::Action::BuyShares.new(b1, shares: ms.available_share, percent: 10)
+      game.process_action(action)
+      expect(b1.owner).to eq(nil)
+      expect(b1.closed?).to be true
+      expect(get_percentage_owned(p2, game.corporation_by_id('MS'))).to eq(10)
 
-        # Player 4 owns MR 2, and goes next in the forced MR exchange
-        b2 = game.company_by_id('B2')
-        expect(game.current_entity).to eq(p4)
-        game.process_action(Engine::Action::BuyShares.new(b2, shares: ms.available_share, percent: 10))
+      # Player 4 owns MR 2, and goes next in the forced MR exchange
+      b2 = game.company_by_id('B2')
+      expect(game.current_entity).to eq(p4)
+      game.process_action(Engine::Action::BuyShares.new(b2, shares: ms.available_share, percent: 10))
 
-        # Player 1 owns MR 3, and goes next in the forced MR exchange
-        b3 = game.company_by_id('B3')
-        expect(game.current_entity).to eq(p1)
-        game.process_action(Engine::Action::BuyShares.new(b3, shares: ms.available_share, percent: 10))
+      # Player 1 owns MR 3, and goes next in the forced MR exchange
+      b3 = game.company_by_id('B3')
+      expect(game.current_entity).to eq(p1)
+      game.process_action(Engine::Action::BuyShares.new(b3, shares: ms.available_share, percent: 10))
 
-        # Player 2 owns MR 4, and goes next in the forced MR exchange
-        b4 = game.company_by_id('B4')
-        expect(game.current_entity).to eq(p2)
-        game.process_action(Engine::Action::BuyShares.new(b4, shares: ms.available_share, percent: 10))
+      # Player 2 owns MR 4, and goes next in the forced MR exchange
+      b4 = game.company_by_id('B4')
+      expect(game.current_entity).to eq(p2)
+      game.process_action(Engine::Action::BuyShares.new(b4, shares: ms.available_share, percent: 10))
 
-        # MR 5 already exchanged.
-        # Player 1 owns MR 6, and goes next in the forced MR exchange
-        b6 = game.company_by_id('B6')
-        expect(game.current_entity).to eq(p1)
-        sb = game.corporation_by_id('SB')
-        game.process_action(Engine::Action::BuyShares.new(b6, shares: sb.available_share, percent: 10))
+      # MR 5 already exchanged.
+      # Player 1 owns MR 6, and goes next in the forced MR exchange
+      b6 = game.company_by_id('B6')
+      expect(game.current_entity).to eq(p1)
+      sb = game.corporation_by_id('SB')
+      game.process_action(Engine::Action::BuyShares.new(b6, shares: sb.available_share, percent: 10))
 
-        # After the forced MR exchange, the normal SR commences
-        expect(game.current_entity).to eq(p1)
-        expect(game.active_step.class).to eq(Engine::Game::G1824::Step::BuySellParExchangeShares)
-      end
+      # After the forced MR exchange, the normal SR commences
+      expect(game.current_entity).to eq(p1)
+      expect(game.active_step.class).to eq(Engine::Game::G1824::Step::BuySellParExchangeShares)
+    end
+
+    it 'Verify #12275 - MR exchange wont float a regional, and parring is possible' do
+      game = fixture_at_action(128) # Start of SR4
+      share_price_100 = game.stock_market.par_prices.find { |par_price| par_price.price == 100 }
+
+      bh = game.corporation_by_id('BH')
+      p1 = game.players.find { |p| p.name == 'Player 1' }
+      p2 = game.players.find { |p| p.name == 'Player 2' }
+      p3 = game.players.find { |p| p.name == 'Player 3' }
+      p4 = game.players.find { |p| p.name == 'Player 4' }
+
+      expect(game.active_step.class).to eq(Engine::Game::G1824::Step::BuySellParExchangeShares)
+      game.process_action(Engine::Action::BuyShares.new(game.company_by_id('B4'), shares: bh.available_share, percent: 10))
+      game.process_action(Engine::Action::Pass.new(p3))
+      game.process_action(Engine::Action::BuyShares.new(game.company_by_id('B2'), shares: bh.available_share, percent: 10))
+      game.process_action(Engine::Action::BuyShares.new(game.company_by_id('B6'), shares: bh.available_share, percent: 10))
+      game.process_action(Engine::Action::BuyShares.new(game.company_by_id('B1'), shares: bh.available_share, percent: 10))
+      game.process_action(Engine::Action::Pass.new(p3))
+      game.process_action(Engine::Action::Pass.new(p4))
+
+      # BH has exchanged 40%. Another exchange will not float it as still not parred
+      expect(get_percentage_owned_by_players(game, bh)).to eq(40)
+      game.process_action(Engine::Action::BuyShares.new(game.company_by_id('B3'), shares: bh.available_share, percent: 10))
+      expect(bh.floated).to be false
+      expect(get_percentage_owned_by_players(game, bh)).to eq(50)
+
+      # Parring it will now float BH
+      expect(game.current_entity).to eq(p2)
+      expect(game.active_step.class).to eq(Engine::Game::G1824::Step::BuySellParExchangeShares)
+      expect(p2.cash).to eq(205)
+      puts " "
+      puts "---- PARRING BH ----"
+      puts "BEFORE PAR: p2 cash=#{p2.cash} BH share 0: #{bh.shares[0].inspect} owner #{bh.shares[0].owner&.name}"
+      game.process_action(Engine::Action::Par.new(p2, corporation: bh, share_price: share_price_100))
+      puts "AFTER PAR: p2 cash=#{p2.cash} BH share 0: #{bh.shares[0].inspect} owner #{bh.shares[0].owner&.name}"
+      expect(get_percentage_owned_by_players(game, bh)).to eq(70)
+      puts "BH floated?: #{bh.floated?}"
+      expect(bh.floated).to be true
+      puts "BH capitalization_share_count: #{bh.capitalization_share_count}"
+      expect(bh.cash).to eq(10 * 100)
+      puts "BH parred"
     end
   end
 
@@ -312,5 +354,9 @@ describe Engine::Game::G1824::Game do
 
   def get_percentage_owned(player, corporation)
     player.shares_of(corporation).sum(&:percent)
+  end
+
+  def get_percentage_owned_by_players(game, corporation)
+    game.players.sum { |p| p.shares_of(corporation).sum(&:percent) }
   end
 end

@@ -41,9 +41,10 @@ module Engine
         end
 
         def floated?
+          puts "CALL FLOATED? IN 1824 CORPORATION, floated would return #{@floatable && percent_to_float <= 0 && !@par_price.nil? ? 'true' : 'false'}, president share #{@presidents_share&.owned_by_player? ? 'owned by player' : 'not owned by player'}"
           return false unless @floatable
 
-          @floated ||= (percent_to_float <= 0 && @par_price)
+          @floated ||= (percent_to_float <= 0 && !@par_price.nil? && @shares[0].owned_by_player?)
         end
 
         def float!

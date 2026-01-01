@@ -37,6 +37,8 @@ module Engine
     def buy_shares(entity, shares, exchange: nil, exchange_price: nil, swap: nil,
                    allow_president_change: true, silent: nil, borrow_from: nil,
                    discounter: nil)
+
+      puts "BUY SHARES: entity=#{entity.name} shares=#{shares.inspect} allow_president_change=#{allow_president_change ? 'true' : 'false'}"
       bundle = shares.is_a?(ShareBundle) ? shares : ShareBundle.new(shares)
       if @allow_president_sale && !@no_rebundle_president_buy && bundle.presidents_share && bundle.owner == self
         bundle = ShareBundle.new(bundle.shares, bundle.corporation.share_percent)
@@ -44,12 +46,16 @@ module Engine
 
       raise GameError, 'Cannot buy share from player' if bundle.owner.player? && !@game.can_gain_from_player?(entity, bundle)
 
+      puts "Passed GameError"
       corporation = bundle.corporation
       ipoed = corporation.ipoed
+      puts "1"
       floated = corporation.floated?
+      puts "2"
       name = entity.name
       name += " (#{entity.owner.name})" if @game.round.is_a?(Engine::Round::Stock) && entity != entity.owner
 
+      puts "And some more"
       corporation.ipoed = true if bundle.presidents_share || corporation.owner&.player?
       price = bundle.price
       par_price = corporation.par_price&.price
@@ -59,6 +65,7 @@ module Engine
                 "#{@game.format_currency(par_price)}"
       end
 
+      puts "Even more"
       share_str = "a #{bundle.percent}% share "
       share_str += "of #{corporation.name}" unless entity == corporation
 
@@ -72,6 +79,7 @@ module Engine
                'the market'
              end
 
+      puts "Exchange?"
       if exchange
         price = exchange_price || 0
         case exchange
@@ -102,8 +110,10 @@ module Engine
       end
 
       if price.zero?
+        puts "ZERO PRICE BUY SHARES: entity=#{entity.name} shares=#{shares.inspect} allow_president_change=#{allow_president_change ? 'true' : 'false'}"
         transfer_shares(bundle, entity, allow_president_change: allow_president_change)
       else
+        puts "NON-ZERO PRICE BUY SHARES: entity=#{entity.name} shares=#{shares.inspect} price=#{price}"
         receiver = if (%i[escrow incremental].include?(corporation.capitalization) && bundle.owner.corporation?) ||
                        (bundle.owner.corporation? && !corporation.ipo_is_treasury?) ||
                        (bundle.owner.corporation? && bundle.owner != corporation) ||
@@ -125,6 +135,7 @@ module Engine
         )
       end
 
+      puts "FLOAT CORPORATION: #{corporation.name} floated=#{floated} now_floated=#{corporation.floated?}"
       @game.float_corporation(corporation) if corporation.floatable && floated != corporation.floated?
     end
 
@@ -239,6 +250,7 @@ module Engine
 
       # handle buying president's share from the pool
       # swap existing share for it
+      puts "HANDLE PRESIDENT CHANGE: allow_president_change=#{allow_president_change ? 'true' : 'false'} max_shares=#{max_shares} presidents_percent=#{corporation.presidents_percent} owner=#{owner.name} to_entity=#{to_entity.name} bundle_presidents_share=#{bundle.presidents_share ? 'true' : 'false'}"
       if @allow_president_sale && owner == self && bundle.presidents_share
         corporation.owner = to_entity
         @log << "#{to_entity.name} becomes the president of #{corporation.name}"
@@ -248,12 +260,15 @@ module Engine
       end
 
       # skip the rest if no player can be president yet
+      puts "2"
       return if @allow_president_sale && max_shares < corporation.presidents_percent
 
       majority_share_holders = presidency_check_shares(corporation).select { |_, p| p == max_shares }.keys
 
+      puts "3"
       return if majority_share_holders.any? { |player| player == previous_president }
 
+      puts "4"
       president = majority_share_holders.find { |player| player == corporation.presidents_share.owner } unless previous_president
       president ||= majority_share_holders
         .select { |p| p.percent_of(corporation) >= corporation.presidents_percent }
@@ -268,9 +283,11 @@ module Engine
            end)
         end
       end
+      puts "5"
       return unless president
 
       corporation.owner = president
+      puts "#{president.name} becomes the president of #{corporation.name}"
       @log << "#{president.name} becomes the president of #{corporation.name}"
 
       # skip the president's share swap if the new share owner is becoming president and

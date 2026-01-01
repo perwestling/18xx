@@ -184,19 +184,25 @@ module Engine
       end
 
       def process_par(action)
+        puts "PROCESS PAR: #{action.inspect}"
         raise GameError, 'Cannot par on behalf of other entities' if action.purchase_for
 
         share_price = action.share_price
         corporation = action.corporation
         entity = action.entity
+        puts "PROCESS PAR: entity=#{entity.name} corporation=#{corporation.name} share_price=#{share_price.price}"
         raise GameError, "#{corporation.name} cannot be parred" unless @game.can_par?(corporation, entity)
 
+        puts "PROCESS PAR: setting par for #{corporation.name} at #{share_price.price}"
         @game.stock_market.set_par(corporation, share_price)
         share = corporation.ipo_shares.first
         @round.players_bought[entity][corporation] += share.percent
+        puts "PROCESS PAR: buying share #{share.inspect} for #{entity.name}"
         buy_shares(entity, share.to_bundle)
+        puts "PROCESS PAR: completed buy share for #{entity.name}"
         @game.after_par(corporation)
         track_action(action, action.corporation)
+        puts "PROCESS PAR: completed after par for #{entity.name}"
       end
 
       def pass!
