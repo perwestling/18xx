@@ -148,10 +148,10 @@ module Engine
           @share_pool.buy_shares(@amira, first_amira.presidents_share, exchange: :free, exchange_price: 0)
           first_amira.building_permits = 'ABCD'
           par_70 = @stock_market.par_prices.find { |s| s.price == 70 }
-          puts "Amira pars #{first_amira.name} at #{par_70.price} in slot 1: #{first_amira.class} #{par_70.class} #{1.class}"
           @stock_market.set_par(first_amira, par_70)
           set_par(first_amira, par_70, 2)
           after_par(first_amira)
+          first_amira.float!
 
           @players << @amira
         end
