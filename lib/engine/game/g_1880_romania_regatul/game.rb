@@ -30,8 +30,18 @@ module Engine
           final_train: '6E train was sold or exported',
         }.freeze
 
+        EVENTS_TEXT = G1880Romania::Game::EVENTS_TEXT.merge(
+          'select_amira_corporation' => ['Amira select corporation', 'Amira selects one unlauched corporation to float, at end of Stock Round']
+        ).freeze
+
         def option_amira
           @optional_rules&.include?(:amira)
+        end
+
+        def init_share_pool
+          return super unless option_amira
+
+          G1880RomaniaRegatul::SharePool.new(self)
         end
 
         class Amira < Player
@@ -52,7 +62,22 @@ module Engine
         end
 
         def exclude_amira(entities)
+          return entities unless option_amira
+
           entities.reject { |item| item == @amira }
+        end
+
+        def reorder_players(order = nil, log_player_order: false, silent: false)
+          return super unless option_amira
+
+          # Amira does not act during SR so should not have priority deal
+
+          super(order, log_player_order: false, silent: true)
+          if @players.first == @amira
+            @players.rotate!
+          end
+
+          @log << "#{@players.first.name} has priority deal"
         end
 
         def optional_hexes
@@ -107,8 +132,11 @@ module Engine
             trains_2, trains_2p, trains_3, trains_3p, trains_4, trains_4p, trains_6, trains_6e, trains_8, trains_8e = @game_trains
             trains_2[:num] = 8
             trains_2p[:num] = 4
+            trains_2p[:events] = [{ 'type' => 'select_amira_corporation' }] if option_amira
             trains_3[:num] = 4
             trains_3p[:num] = option_amira ? 3 : 4
+            trains_3p[:events] = [{ 'type' => 'communist_takeover' }]
+            trains_3p[:events] << { 'type' => 'select_amira_corporation' } if option_amira
             trains_4[:num] = option_amira ? 3 : 4
             trains_4p[:num] = option_amira ? 3 : 4
             trains_6[:num] = 2
@@ -126,6 +154,9 @@ module Engine
         end
 
         def setup
+          @amira_corporations = []
+          @amira_selection_at_end_of_stock_round = false
+
           super
 
           return unless option_amira
@@ -135,25 +166,82 @@ module Engine
 
           @amira = Amira.new
 
+          @amira_always_president_ability =
+            Engine::Ability::Description.new(type: 'description', description: 'Amira always president')
+          @free_tile_lay_ability =
+            Engine::Ability::Description.new(type: 'description',
+                                             description: 'Free tile lay / token before phase D',
+                                             desc_detail: 'Can lay one yellow tile or one upgrade before gray phase. '\
+                                                          'Token placement is free.')
+          @borrow_trains_ability =
+            Engine::Ability::Description.new(type: 'description',
+                                             description: 'Borrows train like a Foreign Investor',
+                                             desc_detail: 'Does not buy trains. '\
+                                                          'Instead the corporation borrows the next train from the depot if needed.')
+          @amira_control_ability_1 =
+            Engine::Ability::Description.new(type: 'description',
+                                             description: 'Priority dealer lay track',
+                                             desc_detail: 'The player with the priority deal lays one track tile or upgrade. '\
+                                                          'The other player chose if token should be placed, and also choses the best route.')
+          @amira_control_ability_2 =
+            Engine::Ability::Description.new(type: 'description',
+                                             description: 'Player without priority deal lay track',
+                                             desc_detail: 'The player chose if token should be placed, and also choses the best route. '\
+                                                          'The player with the priority deal lays one track tile or upgrade. ')
+
           first_amira = nil
           until first_amira && first_amira.id != 'TR'
-            first_amira = @corporations[ rand & @corporations.size ]
+            first_amira = @corporations[ rand % @corporations.size ]
           end
 
-          @log << "Amira gets 30% of #{first_amira.id} as their first company"
-          first_amira.presidents_share.percent = 30
-          first_amira_share = first_amira.shares.first
-          share_to_remove = first_amira.shares.pop(1)
-          first_amira.delete_share!(share_to_remove.first)
-          @share_pool.buy_shares(@amira, first_amira.presidents_share, exchange: :free, exchange_price: 0)
-          first_amira.building_permits = 'ABCD'
-          par_70 = @stock_market.par_prices.find { |s| s.price == 70 }
-          @stock_market.set_par(first_amira, par_70)
-          set_par(first_amira, par_70, 2)
-          after_par(first_amira)
-          first_amira.float!
+          float_amira_corporation(first_amira, 70, 2)
 
           @players << @amira
+        end
+
+        def float_amira_corporation(amira_corporation, par_price_value, index)
+          case @amira_corporations.size
+          when 0
+            order_description = 'first'
+            order_ability = @amira_control_ability_1.dup
+          when 1
+            order_description = 'second'
+            order_ability = @amira_control_ability_2.dup
+          when 2
+            order_description = 'third'
+            order_ability = @amira_control_ability_1.dup
+          end
+
+          # Give AMirca 30% of the corporation
+          @log << "Amira gets 30% of #{amira_corporation.id} as their #{order_description} company"
+          amira_corporation.presidents_share.percent = 30
+          amira_corporation_share = amira_corporation.shares.first
+          share_to_remove = amira_corporation.shares.pop(1)
+          amira_corporation.delete_share!(share_to_remove.first)
+          @share_pool.buy_shares(@amira, amira_corporation.presidents_share, exchange: :free, exchange_price: 0)
+          amira_corporation.add_ability(@amira_always_president_ability.dup)
+
+          # Unreserve all shares
+          amira_corporation.shares.each { |s| s.buyable = true }
+
+          # Can build in all phases, all tookens are free, do not buy trains
+          amira_corporation.building_permits = 'ABC'
+          amira_corporation.add_ability(@free_tile_lay_ability.dup)
+          amira_corporation.add_ability(order_ability)
+          amira_corporation.tokens.each { |token| token.price = 0 }
+          amira_corporation.add_ability(@borrow_trains_ability.dup)
+
+          # Give par in the last free index of the specified par value
+          par_price = @stock_market.par_prices.find { |s| s.price == par_price_value }
+          @stock_market.set_par(amira_corporation, par_price)
+          set_par(amira_corporation, par_price, index)
+          after_par(amira_corporation)
+
+          # Amirca corporation is now floated and ready to use
+          amira_corporation.float!
+          amira_corporation.fully_funded = true
+          @log << "#{amira_corporation.id} floats at #{format_currency(par_price_value)}"
+          @amira_corporations << amira_corporation
         end
 
         def new_auction_round
@@ -179,10 +267,10 @@ module Engine
             Engine::Step::HomeToken,
             Engine::Step::Exchange,
             Engine::Step::DiscardTrain,
-            G1880::Step::Track,
-            G1880::Step::Token,
-            G1880::Step::Route,
-            G1880::Step::Dividend,
+            G1880RomaniaRegatul::Step::Track,
+            G1880RomaniaRegatul::Step::Token,
+            G1880RomaniaRegatul::Step::Route,
+            G1880RomaniaRegatul::Step::Dividend,
             G1880RomaniaRegatul::Step::BuyTrain,
             G1880::Step::CheckFIConnection,
           ], round_num: round_num)
@@ -196,6 +284,70 @@ module Engine
           )
           @dummy.close!
           @dummy
+        end
+
+        def amira_corporation?(corporation)
+          return false unless option_amira
+
+          @amira_corporations.include?(corporation)
+        end
+
+        def event_select_amira_corporation!
+          @log << "-- Event: #{EVENTS_TEXT['select_amira_corporation'][1]} --"
+          @amira_selection_at_end_of_stock_round = true
+        end
+
+        def amira_selection_at_end_of_stock_round
+          return unless @amira_selection_at_end_of_stock_round
+
+          @amira_selection_at_end_of_stock_round = false
+          candidates = @corporations.select { |c| c.player_share_holders.none? }
+          if candidates.empty?
+            @log << 'No unlaunched corporation excists, so Amira selection is skipped'
+            return
+          end
+
+          amira_corporation = candidates[ rand % candidates.size ]
+          sp, index = next_empty_slot_after_train_marker
+          puts sp, index
+          float_amira_corporation(amira_corporation, sp.price, index)
+        end
+
+        def acting_for_entity(entity)
+          return super unless amira_corporation?(entity)
+          return super unless current_entity == entity
+
+          case @round.active_step
+          when G1880RomaniaRegatul::Step::Track
+            players_without_amira[0]
+          when G1880RomaniaRegatul::Step::Token, G1880RomaniaRegatul::Step::Route
+            players_without_amira[1]
+          else
+            super
+          end
+        end
+
+        def route_trains(entity)
+          amira_corporation?(entity) ? [@depot.min_depot_train] : super
+        end
+
+        def upgrades_to_correct_label?(from, to)
+          if from.color == :white && from.cities.size == 2
+            return from.label == to.label if to.label&.to_s == 'B'
+          end
+
+          super
+        end
+
+        # Modified compared to 1880 as no BCR, and potential Amira corporation has only one tile lay
+        def tile_lays(entity)
+          return [] unless can_build_track?(entity)
+
+          tile_lays = [{ lay: true, upgrade: true }]
+          return tile_lays if entity.minor? || !@phase.tiles.include?(:green) || amira_corporation?(entity)
+
+          tile_lays << { lay: :not_if_upgraded, upgrade: false }
+          tile_lays
         end
 
         # Not used in this variant
@@ -231,6 +383,35 @@ module Engine
 
         # Not used in this variant
         def trans_siberian_bonus?(_stops); end
+
+        private
+
+        def stock_price_and_slot(corporation)
+          # The position for a coproration in the par chart
+          par_chart.each do |sp, slots|
+            index = slots.index { |entry| entry == corporation }
+            return [sp, index] if index
+          end
+        end
+
+        def empty_slots
+          # All empty slots, ordered in descedning stock price, but ascending index
+          empty = []
+          par_chart.each do |sp, slots|
+            slots.each_with_index do |entry, index|
+              empty << [sp, index] if entry.nil?
+            end
+          end
+          empty
+        end
+
+        def next_empty_slot_after_train_marker
+          # Get the first empty slots that are after the current train marker.
+          current = stock_price_and_slot(@train_marker)
+          empty_slots.find do |sp, index|
+            sp.price < current[0].price || (sp.price == current[0].price && index > current[1])
+          end || empty_slots.first
+        end
       end
     end
   end

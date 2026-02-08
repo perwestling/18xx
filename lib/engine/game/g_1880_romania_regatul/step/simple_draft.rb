@@ -7,6 +7,12 @@ module Engine
     module G1880RomaniaRegatul
       module Step
         class SimpleDraft < G1880::Step::SimpleDraft
+          def setup
+            super
+
+            @leftover_minors = @minors.size - @game.players_without_amira.size
+          end
+
           def entities
             @game.exclude_amira(@game.players)
           end

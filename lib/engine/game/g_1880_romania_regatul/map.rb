@@ -87,7 +87,7 @@ module Engine
 
             # double city
             ['P8'] => 'city=revenue:0;city=revenue:0',
-            ['W7'] => 'city=revenue:0;city=revenue:0;upgrade=cost:10,terrain:water;label=T;icon=image:port',
+            ['W7'] => 'city=revenue:0;city=revenue:0;upgrade=cost:10,terrain:water;icon=image:port',
             ['Q3'] => 'city=revenue:0;upgrade=cost:40,terrain:mountain',
             ['Q9'] => 'city=revenue:20;city=revenue:20;path=a:1,b:_0;path=a:4,b:_1;label=B',
 

@@ -10,6 +10,12 @@ module Engine
           def select_entities
             @game.players_without_amira
           end
+
+          def finish_round
+            super
+
+            @game.amira_selection_at_end_of_stock_round
+          end
         end
       end
     end
