@@ -70,7 +70,7 @@ module Engine
             train_limit: { minor: 1, regional: 1, major: 3, national: 4 },
             tiles: %i[yellow green],
             operating_rounds: 2,
-            status: ['can_buy_trains_from_others'],
+            status: [],
           },
           {
             name: '5',
@@ -78,7 +78,7 @@ module Engine
             train_limit: { minor: 1, regional: 1, major: 3, national: 4 },
             tiles: %i[yellow green brown],
             operating_rounds: 2,
-            status: ['can_buy_trains_from_others'],
+            status: [],
           },
           {
             name: '6',
@@ -86,7 +86,7 @@ module Engine
             train_limit: { major: 2, national: 3 },
             tiles: %i[yellow green brown],
             operating_rounds: 2,
-            status: ['can_buy_trains_from_others'],
+            status: [],
           },
           {
             name: '7',
@@ -94,7 +94,7 @@ module Engine
             train_limit: { major: 2, national: 3 },
             tiles: %i[yellow green brown gray],
             operating_rounds: 2,
-            status: ['can_buy_trains_from_others'],
+            status: [],
           },
           {
             name: '8',
@@ -102,7 +102,7 @@ module Engine
             train_limit: { major: 2, national: 3 },
             tiles: %i[yellow green brown gray],
             operating_rounds: 2,
-            status: ['can_buy_trains_from_others'],
+            status: [],
           },
         ].freeze
 
@@ -114,7 +114,7 @@ module Engine
                        { 'nodes' => %w[city offboard town], 'pay' => 2, 'visit' => 2 }],
             price: 100,
             rusts_on: '4',
-            num: 35,
+            num: 30,
           },
           # Level 3 — green double-sided (3 / 3+3); rust at Level 6
           {
@@ -207,6 +207,22 @@ module Engine
             num: 11,
           },
         ].freeze
+
+        # 2 chits per zone; 16 total for 12 minors.
+        # Asterisked zones (UK/PHS/FR): 6 chits combined but capped at 4 selections —
+        # when the 4th is taken the remaining chits for those zones are removed from play.
+        MINOR_TRACK_RIGHTS_CHITS = {
+          'UK' => 2,
+          'PHS' => 2,
+          'FR' => 2,
+          'AH' => 2,
+          'IT' => 2,
+          'SP' => 2,
+          'SC' => 2,
+          'RU' => 2,
+        }.freeze
+        ASTERISKED_ZONES = %w[UK PHS FR].freeze
+        ASTERISKED_ZONES_CAP = 4
 
         CORPORATIONS_TRACK_RIGHTS = {
           # United Kingdom
@@ -345,6 +361,7 @@ module Engine
         }.freeze
 
         MAX_FLOATED_REGIONALS = 18
+        CONVERSION_NEW_SHARES = 6
 
         # still need green+ OE specific track tiles
         TILES = {
@@ -625,15 +642,12 @@ module Engine
         def setup
           super
           @minor_regional_order = []
-          # Derive available regions from the regional corporations actually defined,
-          # using only zones present in CORPORATIONS_TRACK_RIGHTS. This is failsafe:
-          # zones not yet in NATIONAL_REGION_HEXES are simply skipped at token placement.
-          @minor_available_regions = corporations
-            .select { |c| c.type == :regional }
-            .map { |c| CORPORATIONS_TRACK_RIGHTS[c.id] }
-            .compact
+          @minor_available_regions = self.class::MINOR_TRACK_RIGHTS_CHITS.transform_values(&:itself)
+          @minor_asterisked_selected = 0
           @minor_floated_regions = {}
           @regional_corps_floated = 0
+          @fulfilled_train_obligation = Set.new
+          @first_or_done = false
 
           corporations.each do |corp|
             corp.par_via_exchange = companies.find { |c| c.sym == corp.id } if corp.type == :minor
@@ -649,7 +663,22 @@ module Engine
         # "Major Railroad Phase" entry: conversions and secondary-share purchases
         # become available from this point on.
         def major_phase?
-          @regional_corps_floated >= self.class::MAX_FLOATED_REGIONALS
+          return false unless @regional_corps_floated >= self.class::MAX_FLOATED_REGIONALS
+
+          total_minors = corporations.count { |c| c.type == :minor }
+          @minor_floated_regions.size >= total_minors
+        end
+
+        def fulfilled_train_obligation?(entity)
+          !phase.status.include?('train_obligation') || @fulfilled_train_obligation.include?(entity.id)
+        end
+
+        def fulfill_train_obligation!(entity)
+          @fulfilled_train_obligation.add(entity.id)
+        end
+
+        def non_starter_trains_available?
+          major_phase? && @first_or_done
         end
 
         def operating_order
@@ -662,12 +691,39 @@ module Engine
           hexes&.include?(hex.coordinates) || false
         end
 
+        def region_for_hex(hex)
+          self.class::CITY_NATIONAL_ZONE[hex.coordinates] ||
+            self.class::NATIONAL_REGION_HEXES.find { |_, hexes| hexes.include?(hex.coordinates) }&.first
+        end
+
+        def region_available?(region)
+          @minor_available_regions.key?(region)
+        end
+
+        def track_rights_cost(region)
+          self.class::TRACK_RIGHTS_COST[region] || 0
+        end
+
+        def claim_region!(entity, region)
+          @minor_floated_regions[entity.id] = region
+          @minor_available_regions[region] -= 1
+          @minor_available_regions.delete(region) if @minor_available_regions[region].zero?
+
+          return unless self.class::ASTERISKED_ZONES.include?(region)
+
+          @minor_asterisked_selected += 1
+          return unless @minor_asterisked_selected >= self.class::ASTERISKED_ZONES_CAP
+
+          self.class::ASTERISKED_ZONES.each { |z| @minor_available_regions.delete(z) }
+        end
+
         def home_token_locations(corporation)
           available_regions = self.class::NATIONAL_REGION_HEXES.select { |key, _| @minor_available_regions.include?(key) }
           region_hexes = available_regions.values.flatten
 
           @hexes
             .select { |hex| region_hexes.include?(hex.coordinates) }
+            .reject { |hex| (z = self.class::CITY_NATIONAL_ZONE[hex.coordinates]) && !@minor_available_regions.key?(z) }
             .select { |hex| hex.tile.cities.any? { |city| city.tokenable?(corporation, free: true) } }
             .reject { |hex| metropolis_hex?(hex) }
             .reject { |hex| self.class::MINOR_EXCLUDED_HOME_CITIES.include?(hex.coordinates) }
@@ -683,7 +739,11 @@ module Engine
         end
 
         def can_buy_train_from_others?
-          @phase.status.include?('can_buy_trains_from_others')
+          major_phase?
+        end
+
+        def train_obligation_active?
+          phase.status.include?('train_obligation')
         end
 
         # UP movement at end of SR: only for majors and nationals that are fully player-held
@@ -700,6 +760,7 @@ module Engine
           @round =
             case @round
             when Engine::Round::Operating
+              @first_or_done = true # Rule 8.3/11.6: level 3+ trains unblocked after first OR
               if @consolidation_triggered && !@consolidation_done
                 @log << '-- Consolidation Phase --'
                 new_consolidation_round
@@ -761,21 +822,12 @@ module Engine
           corporation.spend(cost, @bank) if cost&.positive?
         end
 
-        # Override stock price movement according to 18OE rules
-        # - Minors & Regionals: no movement
-        # - Majors & Nationals:
-        #   * revenue >= share price -> move right
-        #   * revenue between 0 and share price -> no move
-        #   * revenue = 0 -> move left
-        def change_share_price(entity, revenue)
-          return if entity.type == :minor || entity.type == :regional
-
-          share_price = entity.share_price.price
-          if revenue >= share_price
-            @stock_market.move_right(entity)
-          elsif revenue.zero?
-            @stock_market.move_left(entity)
-          end
+        def add_new_share(share)
+          owner = share.owner
+          corporation = share.corporation
+          corporation.share_holders[owner] += share.percent if owner
+          owner.shares_by_corporation[corporation] << share
+          @_shares[share.id] = share
         end
 
         def issuable_shares(entity)
@@ -783,6 +835,13 @@ module Engine
 
           bundles_for_corporation(entity, entity)
             .select { |bundle| @share_pool.fit_in_bank?(bundle) }
+        end
+
+        def redeemable_shares(entity)
+          return [] if !entity.corporation? || entity.type != :major
+
+          bundles_for_corporation(@share_pool, entity)
+            .reject { |bundle| entity.cash < bundle.price }
         end
 
         def value_for_dumpable(player, corporation)
