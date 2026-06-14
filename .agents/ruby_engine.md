@@ -205,6 +205,41 @@ end
 ### Inheritance & Modules
 - Prefer module inclusion over deep inheritance trees
 - Always call `super` when overriding parent methods
+- **Exception**: When explicitly controlling pass/blocking behavior, document why `super` is skipped
+
+---
+
+### Step Method Overrides
+
+**Standard pattern:**
+```ruby
+def process_action(action)
+  # Custom pre-processing
+  super  # Base class handles core logic and auto-pass
+  # Custom post-processing
+end
+```
+
+**When NOT to call `super`:**
+When you need explicit control over step flow (e.g., pass/blocking behavior):
+
+```ruby
+def process_lay_tile(action)
+  # Custom processing
+  lay_tile_action(action) # Manual call to base logic
+
+  # Explicit control
+  pass! if should_pass?(action.entity)
+end
+```
+
+**Requirements when skipping `super`:**
+- Document the reason in comments
+- Handle all base class functionality manually
+- Verify existing tests pass (no regression)
+- Consider all edge cases the base class handled
+
+**Common use case:** Controlling step blocking state based on game-specific conditions (e.g., ability availability).
 
 ---
 

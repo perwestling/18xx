@@ -1,7 +1,7 @@
 # Code Review Steering Guide - 18XX Game
 
 *Last updated: June 14, 2026*
-*Source: Lessons from PR reviews, including PR #12705*
+*Source: Lessons from PR reviews*
 
 ---
 
@@ -30,6 +30,28 @@ When reviewing a PR, ask:
 - "Could this break anything else?"
 - "Is there a simpler way to achieve this?"
 - "Will future maintainers understand this?"
+
+---
+
+## AI-Assisted Reviews
+
+### Best Practices
+- **Use AI for consistency checking**: Verify code against repository patterns and style guides
+- **Use AI for thoroughness**: Quickly cross-reference against all steering documents
+- **Human judgment for context**: Final decisions should consider project-specific norms
+- **Disclosure optional**: May mention AI assistance for transparency (e.g., "Reviewed with AI assistance")
+
+### Effective AI Use Cases
+- Pattern matching against repository conventions
+- RuboCop style compliance checking
+- Edge case identification
+- Documentation completeness verification
+- Comparison with established codebase patterns
+
+### Human Responsibilities
+- Project context and business logic
+- Team preferences and norms
+- Final approval decisions
 
 ---
 
@@ -79,8 +101,10 @@ Before diving into the code, verify:
 - [ ] **Minimal Fix**: Only the necessary code is changed
 - [ ] **No Side Effects**: Change doesn't affect other variants
 - [ ] **Regression Prevention**: Test prevents this bug from recurring
+- [ ] **Design Explanation**: PR description explains the fix approach clearly
+- [ ] **Alternative Considered**: Brief rationale for why this solution over others
 
-**Example from PR #12705**:
+**Example from a well-documented bug fix**:
 ```
 Bug: TR home token blocked when Nepal is full
 Root Cause: Danish EIC's cheater flag bypassed TR's reservation
@@ -242,6 +266,21 @@ super  # Routes to @extra_tokens instead of consuming reserved slot
 - [ ] Is the ability description accurate?
 - [ ] Does the ability work with other abilities?
 - [ ] Are there tests for ability interactions?
+
+---
+
+### 7. Step Method Overrides
+
+**Common Problems**:
+- Override doesn't explain why `super` is skipped
+- Base class functionality not fully replicated
+- Pass/blocking logic unclear
+
+**Review Checklist**:
+- [ ] If `super` is not called, reason is documented in comments
+- [ ] All base class behavior is handled manually
+- [ ] Pass/blocking state is explicitly controlled
+- [ ] Existing tests verify no regression
 
 ---
 
